@@ -1,0 +1,6 @@
+[submodule "vendor/common"]
+	path = vendor/common
+	url = https://github.com/ITLaboratorySokolov/common.git
+[submodule "vendor/server"]
+	path = vendor/server
+	url = https://github.com/ITLaboratorySokolov/server.git
