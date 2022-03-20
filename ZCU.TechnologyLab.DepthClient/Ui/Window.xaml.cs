@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -23,6 +24,10 @@ namespace Intel.RealSense
     /// </summary>
     public partial class ProcessingWindow : Window
     {
+
+        private const string SENSOR_PLAYBACK_FILE_PRIM = @"..\..\..\..\d435i_walk_around.bag";
+        private string SENSOR_PLAYBACK_FILE = @"..\..\..\..\stairs.bag";
+
         private Pipeline pipeline = new Pipeline();
         private Colorizer colorizer = new Colorizer();
         private Align align = new Align(Stream.Color);
@@ -105,19 +110,25 @@ namespace Intel.RealSense
 
         public ProcessingWindow()
         {
+            //default playback file
+            if (File.Exists(SENSOR_PLAYBACK_FILE_PRIM))
+                SENSOR_PLAYBACK_FILE = SENSOR_PLAYBACK_FILE_PRIM;
+
+
+
             InstanceWindow = this;
             InitializeComponent();
             try
             {
                 var cfg = new Config();
-                cfg.EnableDeviceFromFile(@"C:/D/Uni/gymso/d435i_sample_data/d435i_walk_around.bag", true);
+                cfg.EnableDeviceFromFile(SENSOR_PLAYBACK_FILE, true);
 
                 using (var ctx = new Context())
                 {
                     var devices = ctx.QueryDevices();
                     //var dev = devices[0];
                     var dev = PlaybackDevice.FromDevice(
-                        ctx.AddDevice(@"C:/D/Uni/gymso/d435i_sample_data/d435i_walk_around.bag"));
+                        ctx.AddDevice(SENSOR_PLAYBACK_FILE));
 
                     Console.WriteLine("\nUsing device 0, an {0}", dev.Info[CameraInfo.Name]);
                     Console.WriteLine("    Serial number: {0}", dev.Info[CameraInfo.SerialNumber]);
