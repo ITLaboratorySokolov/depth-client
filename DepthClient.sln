@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZCU.TechnologyLab.Common", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZCU.TechnologyLab.VirtualWorldServer", "vendor\server\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer.csproj", "{F7292E5A-F841-4783-9FA0-79FC175A92D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DepthClient", "DepthClient\DepthClient.csproj", "{41D4B1EE-99BE-480A-B784-7A530E687347}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZCU.TechnologyLab.DepthClient", "ZCU.TechnologyLab.DepthClient\ZCU.TechnologyLab.DepthClient.csproj", "{41D4B1EE-99BE-480A-B784-7A530E687347}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
