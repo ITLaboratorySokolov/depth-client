@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 // This demo showcases some of the more advanced API concepts:
@@ -33,7 +29,8 @@ namespace Intel.RealSense
         private CustomProcessingBlock block;
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-        public static ushort[] buffer = new ushort[1920 * 1080];
+        public static ushort[] depth_buffer = new ushort[640 * 360];
+        public static ushort[] depth_buffer_live = new ushort[640 * 360];
         public static float DepthScale { get; private set; }
         public static int DepthWidth { get; private set; }
         public static int DepthHeight { get; private set; }
@@ -41,30 +38,74 @@ namespace Intel.RealSense
         static Action<VideoFrame> UpdateImageRGB(Image img)
         {
             var wbmp = img.Source as WriteableBitmap;
-            return new Action<VideoFrame>(frame =>
+            return frame =>
             {
                 var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
                 wbmp.WritePixels(rect, frame.Data, frame.Stride * frame.Height, frame.Stride);
-            });
+            };
         }
+
+        static bool freezeDepth=false;
+
+        private static void MultiplyBitmap(WriteableBitmap wbmp)
+        {
+            var rect = new Int32Rect(0, 0, wbmp.PixelWidth, wbmp.PixelHeight);
+
+            unsafe
+            {
+
+                wbmp.Lock();
+
+                ushort* ss = (ushort*)wbmp.BackBuffer;
+
+                for (int i = 0; i < wbmp.PixelHeight * wbmp.PixelWidth; i++)
+                {
+                    *ss = (ushort)((*ss) * 10);
+                    ss++;
+                }
+
+                wbmp.AddDirtyRect(rect);
+                wbmp.Unlock();
+
+            }
+        }
+
         static Action<VideoFrame> UpdateImageDepth(Image img)
         {
             var wbmp = img.Source as WriteableBitmap;
-            return new Action<VideoFrame>(frame =>
+            Console.WriteLine("Killme " + wbmp.Format);
+            return frame =>
             {
+                //Console.WriteLine("Frame depth stride length in bytes + data si"+frame.Stride+" " + frame.DataSize);
+                frame.CopyTo(depth_buffer_live);
 
                 var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
+                
+                if(freezeDepth)
+                {
+                    wbmp.WritePixels(rect, depth_buffer, frame.Stride, 0);
+                    MultiplyBitmap(wbmp);
+                    return;
+                }
+
                 wbmp.WritePixels(rect, frame.Data, frame.Stride * frame.Height, frame.Stride);
+                MultiplyBitmap(wbmp);
 
-                DepthWidth = frame.Stride;
+                DepthWidth = frame.Width;
                 DepthHeight = frame.Height;
-                frame.CopyTo(buffer);
-
-            });
+            };
         }
+
+        public static void FreezeBuffer(bool b)
+        {
+            freezeDepth = b;
+        }
+
+        public static ProcessingWindow InstanceWindow;
 
         public ProcessingWindow()
         {
+            InstanceWindow = this;
             InitializeComponent();
             try
             {
@@ -73,11 +114,10 @@ namespace Intel.RealSense
 
                 using (var ctx = new Context())
                 {
-
                     var devices = ctx.QueryDevices();
                     //var dev = devices[0];
-                    var dev = PlaybackDevice.FromDevice(ctx.AddDevice(@"C:/D/Uni/gymso/d435i_sample_data/d435i_walk_around.bag"));
-
+                    var dev = PlaybackDevice.FromDevice(
+                        ctx.AddDevice(@"C:/D/Uni/gymso/d435i_sample_data/d435i_walk_around.bag"));
 
                     Console.WriteLine("\nUsing device 0, an {0}", dev.Info[CameraInfo.Name]);
                     Console.WriteLine("    Serial number: {0}", dev.Info[CameraInfo.SerialNumber]);
@@ -89,18 +129,21 @@ namespace Intel.RealSense
                     DepthScale = depthSensor.DepthScale;
 
                     var depthProfile = depthSensor.StreamProfiles
-                                        .Where(p => p.Stream == Stream.Depth)
-                                        .OrderBy(p => p.Framerate)
-                                        .Select(p => p.As<VideoStreamProfile>()).First();
+                        .Where(p => p.Stream == Stream.Depth)
+                        .OrderBy(p => p.Framerate)
+                        .Select(p => p.As<VideoStreamProfile>()).First();
 
                     var colorProfile = colorSensor.StreamProfiles
-                                        .Where(p => p.Stream == Stream.Color)
-                                        .OrderBy(p => p.Framerate)
-                                        .Select(p => p.As<VideoStreamProfile>()).First();
-
-                    cfg.EnableStream(Stream.Depth, depthProfile.Width, depthProfile.Height, depthProfile.Format, depthProfile.Framerate);
-                    cfg.EnableStream(Stream.Color, colorProfile.Width, colorProfile.Height, colorProfile.Format, colorProfile.Framerate);
+                        .Where(p => p.Stream == Stream.Color)
+                        .OrderBy(p => p.Framerate)
+                        .Select(p => p.As<VideoStreamProfile>()).First();
+                    Console.WriteLine("Format of depth " + depthProfile.Format);
+                    cfg.EnableStream(Stream.Depth, depthProfile.Width, depthProfile.Height, depthProfile.Format,
+                        depthProfile.Framerate);
+                    cfg.EnableStream(Stream.Color, colorProfile.Width, colorProfile.Height, colorProfile.Format,
+                        colorProfile.Framerate);
                 }
+
                 var pp = pipeline.Start(cfg);
 
                 // Get the recommended processing blocks for the depth sensor
@@ -112,10 +155,16 @@ namespace Intel.RealSense
                 using (var p = pp.GetStream(Stream.Color).As<VideoStreamProfile>())
                 {
                     imgColor.Source = new WriteableBitmap(p.Width, p.Height, 96d, 96d, PixelFormats.Rgb24, null);
-                    imgDepth.Source = new WriteableBitmap(p.Width, p.Height, 96d, 96d, PixelFormats.Rgb24, null);
                 }
+
+                using (var p = pp.GetStream(Stream.Depth).As<VideoStreamProfile>())
+                {
+                    Console.WriteLine("depth dimensions" +p.Width/2+" "+p.Height/2);
+                    imgDepth1.Source = new WriteableBitmap(p.Width/2, p.Height/2, 96d, 96d, PixelFormats.Gray16, null);
+                }
+
                 var updateColor = UpdateImageRGB(imgColor);
-                var updateDepth = UpdateImageDepth(imgDepth);
+                var updateDepth = UpdateImageDepth(imgDepth1);
                 // Create custom processing block
                 // For demonstration purposes it will:
                 // a. Get a frameset
@@ -136,13 +185,14 @@ namespace Intel.RealSense
                         foreach (ProcessingBlock p in blocks)
                             f = p.Process(f).DisposeWith(releaser);
 
-                        f = f.ApplyFilter(align).DisposeWith(releaser);
-                        f = f.ApplyFilter(colorizer).DisposeWith(releaser);
+                        //f = f.ApplyFilter(align).DisposeWith(releaser);
+                        //f = f.ApplyFilter(colorizer).DisposeWith(releaser);
 
                         var frames = f.As<FrameSet>().DisposeWith(releaser);
 
                         var colorFrame = frames[Stream.Color, Format.Rgb8].DisposeWith(releaser);
-                        var colorizedDepth = frames[Stream.Depth, Format.Rgb8].DisposeWith(releaser);
+                        //var colorizedDepth = frames[Stream.Depth, Format.Rgb8].DisposeWith(releaser);
+                        var colorizedDepth = frames[Stream.Depth, Format.Z16].DisposeWith(releaser);
 
                         // Combine the frames into a single result
                         var res = src.AllocateCompositeFrame(colorizedDepth, colorFrame).DisposeWith(releaser);
@@ -157,7 +207,8 @@ namespace Intel.RealSense
                     using (var frames = f.As<FrameSet>())
                     {
                         var colorFrame = frames.ColorFrame.DisposeWith(frames);
-                        var colorizedDepth = frames.First<VideoFrame>(Stream.Depth, Format.Rgb8).DisposeWith(frames);
+                        //var colorizedDepth = frames.First<VideoFrame>(Stream.Depth, Format.Rgb8).DisposeWith(frames);
+                        var colorizedDepth = frames.DepthFrame.DisposeWith(frames);
 
                         Dispatcher.Invoke(DispatcherPriority.Render, updateDepth, colorizedDepth);
                         Dispatcher.Invoke(DispatcherPriority.Render, updateColor, colorFrame);
@@ -187,7 +238,7 @@ namespace Intel.RealSense
             InitializeComponent();
         }
 
-        private void control_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void control_Closing(object sender, CancelEventArgs e)
         {
             tokenSource.Cancel();
         }

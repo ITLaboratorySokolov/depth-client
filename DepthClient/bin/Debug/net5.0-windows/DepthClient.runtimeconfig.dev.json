@@ -1,8 +1,0 @@
-{
-  "runtimeOptions": {
-    "additionalProbingPaths": [
-      "C:\\Users\\minek\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\minek\\.nuget\\packages"
-    ]
-  }
-}

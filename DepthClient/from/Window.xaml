@@ -12,10 +12,13 @@
         <viewModels:MainViewModel/>
     </Window.DataContext>
     <Grid>
-        <Image x:Name="imgDepth" Opacity="0.5" Margin="0,190,0,0"  />
-        <Image x:Name="imgColor" Opacity="0.5" Margin="0,190,0,0" />
-        <Button Content="Connect" HorizontalAlignment="Center" Margin="0,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding Connect}" RenderTransformOrigin="0.147,-1.144"/>
+        <Image x:Name="imgDepth" Opacity="0.5" Margin="0,190,278,0"  />
+        <Image x:Name="imgColor" Opacity="0.5" Margin="0,190,278,0" />
+        <Image x:Name="imgDepth1" Opacity="0.6" Margin="285,190,5,0"  />
+        <Image x:Name="imgColor1" Opacity="0.5" Margin="285,190,5,0" />
+        <Button Content="{Binding ConnectBtnLbl}" HorizontalAlignment="Center" Margin="0,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding Connect}" RenderTransformOrigin="0.147,-1.144"/>
         <Label Content="{Binding Message}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="268" Margin="0,147,0,0"/>
-        <Button Content="Send Image" HorizontalAlignment="Center" Margin="0,107,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding .SendImage}" RenderTransformOrigin="0.147,-1.144"/>
+        <Button Content="Send Image" HorizontalAlignment="Center" Margin="0,107,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding .SendImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
+        <Button Content="Remove obj&#xD;&#xA;from server" HorizontalAlignment="Left" Margin="375,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding RemoveImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
     </Grid>
 </Window>

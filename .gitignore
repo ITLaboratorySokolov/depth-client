@@ -32,6 +32,10 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+bin/Debug/
+bin
+obj
+packages
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
