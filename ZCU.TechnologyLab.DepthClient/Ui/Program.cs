@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
+using Intel.RealSense;
 
-namespace Intel.RealSense
+namespace ZCU.TechnologyLab.DepthClient.Ui
 {
     class Program
     {

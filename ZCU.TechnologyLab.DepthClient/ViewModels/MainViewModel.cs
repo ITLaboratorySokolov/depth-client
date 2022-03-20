@@ -1,21 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using Intel.RealSense;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
-using ZCU.TechnologyLab.Common.Entities;
 using ZCU.TechnologyLab.Common.Connections;
 using ZCU.TechnologyLab.Common.Connections.Session;
 
@@ -76,7 +64,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.SendImage = new Command(this.OnSendImage);
             this.RemoveImage = new Command(this.OnRemoveImage);
 
-            this.sessionClient = new SignalRSession("https://localhost:49155/", "virtualWorldHub");
+            this.sessionClient = new SignalRSession("https://localhost:49157/", "virtualWorldHub");
 
             this.serverConnection = new VirtualWorldServerConnection(this.sessionClient);
 
@@ -238,10 +226,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             if (!depthMapOnServer)
                 await this.serverConnection.AddWorldObjectAsync(w);
-            //await this.imageHubConnection.InvokeAsync<WorldObjectDto>("AddWorldObject", w);
             else
                 await this.serverConnection.UpdateWorldObjectAsync(w);
-            //await this.imageHubConnection.InvokeAsync<WorldObjectDto>("UpdateWorldObject", w);
             depthMapOnServer = true;
         }
 
@@ -249,7 +235,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             await this.serverConnection.RemoveWorldObjectAsync("DepthImage");
 
-            //await this.imageHubConnection.InvokeAsync<WorldObjectDto>("RemoveWorldObject", "DepthImage");
             this.Message = "Removed image from server";
             ProcessingWindow.FreezeBuffer(false);
             depthMapOnServer = false;
