@@ -1,0 +1,24 @@
+﻿<Window x:Class="Intel.RealSense.ProcessingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Intel.RealSense"
+        xmlns:viewModels="clr-namespace:ZCU.TechnologyLab.DepthClient.ViewModels"
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner"
+        Closing="control_Closing"
+        Title="Intel RealSense Processing .NET Example" Height="448" Width="552" x:Name="control">
+    <Window.DataContext>
+        <viewModels:MainViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Image x:Name="imgDepth" Opacity="0.5" Margin="0,190,278,0"  />
+        <Image x:Name="imgColor" Opacity="0.5" Margin="0,190,278,0" />
+        <Image x:Name="imgDepth1" Opacity="0.6" Margin="285,190,5,0"  />
+        <Image x:Name="imgColor1" Opacity="0.5" Margin="285,190,5,0" />
+        <Button Content="{Binding ConnectBtnLbl}" HorizontalAlignment="Center" Margin="0,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding Connect}" RenderTransformOrigin="0.147,-1.144"/>
+        <Label Content="{Binding Message}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="268" Margin="0,147,0,0"/>
+        <Button Content="Send Image" HorizontalAlignment="Center" Margin="0,107,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding .SendImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
+        <Button Content="Remove obj&#xD;&#xA;from server" HorizontalAlignment="Left" Margin="375,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding RemoveImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
+    </Grid>
+</Window>
