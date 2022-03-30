@@ -3,7 +3,7 @@
 ## Overview
 
 This sample demonstrates how to create a basic librealsense application using CMake.
-Currently this sample is supported only by Linux OS.
+Currently this sample is supported ~~only by Linux OS~~ not anymore :).
 
 ## Prerequisite
 Install the SDK or build it from source  ([Linux](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md))
