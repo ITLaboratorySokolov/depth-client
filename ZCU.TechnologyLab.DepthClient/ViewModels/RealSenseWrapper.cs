@@ -4,7 +4,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
     public static class RealSenseWrapper
     {
-        private const string DLL_PATH = @"C:\D\Uni\gymso\mylib\cmake\Release\hello_librealsense2.dll";
+        private const string DLL_PATH = @"C:\D\Uni\gymso\PROJECT\depth-client\ZCU.TechnologyLab.DepthClientLib\Release\";
 
         [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
         public static extern void Start(string filePath);
