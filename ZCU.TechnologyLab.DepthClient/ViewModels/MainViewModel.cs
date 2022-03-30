@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 using Intel.RealSense;
+using Newtonsoft.Json;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections;
 using ZCU.TechnologyLab.Common.Connections.Session;
+using ZCU.TechnologyLab.Common.Serialization;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -13,7 +16,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
     /// View model for the application.
     /// </summary>
     /// 
-
     public class MainViewModel : NotifyingClass
     {
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -26,19 +28,22 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private readonly ISessionClient sessionClient;
 
 
-
         /// <summary>
         /// Name of the Message property.
         /// </summary>
         private const string MESSAGE_PROPERTY = "Message";
+
         private const string CNTCBTLB_PROPERTY = "ConnectBtnLbl";
         private const string EN_BTN_PROPERTY = "EnabledButtons";
+
+        public const string DLL_PATH = "d435i_walk_around.bag";
 
         /// <summary>
         /// Message.
         /// </summary>
         private string message;
-        private string connectBtnLbl="Connect";
+
+        private string connectBtnLbl = "Connect";
         private bool enabledButtons = false;
 
         /// <summary>
@@ -59,12 +64,22 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             AllocConsole();
 
+           // Console.WriteLine("before initn");
+
+            // RealSenseWrapper.Start();
+            /*RealSenseWrapper.Start("d435i_walk_around.bag");
+
+           
+            RealSenseWrapper.Exit();*/
+         //   Console.WriteLine("after initn");
+
 
             this.Connect = new Command(this.OnConnect);
             this.SendImage = new Command(this.OnSendImage);
+            this.SendMesh = new Command(this.onSendMesh);
             this.RemoveImage = new Command(this.OnRemoveImage);
 
-            this.sessionClient = new SignalRSession("https://localhost:49157/", "virtualWorldHub");
+            this.sessionClient = new SignalRSession("https://localhost:49155/", "virtualWorldHub");
 
             this.serverConnection = new VirtualWorldServerConnection(this.sessionClient);
 
@@ -84,14 +99,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                         var pic = Base64ToPicture(pixel);
                         Buffer.BlockCopy(pic, 0, ProcessingWindow.depth_buffer, 0, pic.Length * sizeof(ushort));
-                        ProcessingWindow.FreezeBuffer(true);
+                        // ProcessingWindow.FreezeBuffer(true);
                         found = true;
                         break;
                     }
                 }
+
                 if (!found)
                     this.Message = "Image not found";
-
             });
         }
 
@@ -118,6 +133,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(CNTCBTLB_PROPERTY);
             }
         }
+
         public bool EnabledButtons
         {
             get => this.enabledButtons;
@@ -132,10 +148,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// Connect to server command
         /// </summary>
         public ICommand Connect { get; private set; }
-        public ICommand SendImage { get; private set; }
-        public ICommand RemoveImage { get; private set; }
 
-     
+        public ICommand SendImage { get; private set; }
+        public ICommand SendMesh { get; private set; }
+        public ICommand RemoveImage { get; private set; }
 
 
         /// <summary>
@@ -148,20 +164,23 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 try
                 {
                     await this.sessionClient.StartSessionAsync();
+                    RealSenseWrapper.Start(DLL_PATH);
+
                 }
                 catch (Exception e)
                 {
                     this.Message = "Cannot connect to a server: " + e.Message;
                     Console.WriteLine(e.Message);
                 }
-            }else
+            }
+            else
             {
-                ProcessingWindow.FreezeBuffer(false);
+                //ProcessingWindow.FreezeBuffer(false);
 
                 try
                 {
                     await this.sessionClient.StopSessionAsync();
-
+                    RealSenseWrapper.Exit();
                 }
                 catch (Exception e)
                 {
@@ -169,9 +188,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                     Console.WriteLine(e.Message);
                 }
             }
+
             if ((!this.connecting && this.sessionClient.SessionState == SessionState.Connected)
-            || (this.connecting && this.sessionClient.SessionState == SessionState.Closed)
-            ) {
+                || (this.connecting && this.sessionClient.SessionState == SessionState.Closed)
+               )
+            {
                 this.connecting = !this.connecting;
 
                 this.ConnectBtnLbl = this.connecting ? "Disconnect" : "Connect";
@@ -181,7 +202,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     Console.WriteLine("Asking for worldobjects");
                     await serverConnection.GetAllWorldObjectsAsync();
-                    
                 }
             }
         }
@@ -201,6 +221,52 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             return result;
         }
 
+        private async void onSendMesh()
+        {
+            Console.WriteLine("Parsing mesh");
+            WorldObjectDto w = new()
+            {
+                Name = "DepthMesh",
+                Type = "Mesh"
+            };
+
+            float[] managedVertices=null;
+            int[] managedFaces=null;
+
+
+            unsafe
+            {
+
+                float* vertices;
+                int* faces;
+                int vertexCount;
+                int faceCount;
+
+                Console.WriteLine("getting frame from realsense dll");
+                RealSenseWrapper.GetFrame(out vertices, out faces, out vertexCount, out faceCount);
+                Console.WriteLine("got frame");
+
+                managedVertices = new float[vertexCount];
+                managedFaces = new int[faceCount];
+
+                Console.WriteLine("copying to managed memory");
+                Marshal.Copy((IntPtr)vertices, managedVertices, 0, vertexCount);
+                Marshal.Copy((IntPtr)faces, managedFaces, 0, faceCount);
+
+                
+                RealSenseWrapper.DropFrame(vertices, faces);
+
+            }
+            Console.WriteLine("serialization");
+            w.Properties = new MeshWorldObjectSerializer().SerializeProperties(managedVertices, managedFaces, "Triangle");
+            Console.WriteLine("serialization done");
+
+            await this.serverConnection.AddWorldObjectAsync(w);
+
+            Console.WriteLine("Sent mesh");
+
+        }
+
         private async void OnSendImage()
         {
             WorldObjectDto w = new()
@@ -214,9 +280,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             };
 
             // update snapshot
-            ProcessingWindow.FreezeBuffer(true);
-            Buffer.BlockCopy(ProcessingWindow.depth_buffer_live,0,
-                ProcessingWindow.depth_buffer,0,sizeof(ushort)*ProcessingWindow.depth_buffer_live.Length);
+            //ProcessingWindow.FreezeBuffer(true);
+            Buffer.BlockCopy(ProcessingWindow.depth_buffer_live, 0,
+                ProcessingWindow.depth_buffer, 0, sizeof(ushort) * ProcessingWindow.depth_buffer_live.Length);
 
             Console.WriteLine("Snapshot taken of pixels of count: " + w.Properties["pixels"].Length);
 
@@ -236,8 +302,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             await this.serverConnection.RemoveWorldObjectAsync("DepthImage");
 
             this.Message = "Removed image from server";
-            ProcessingWindow.FreezeBuffer(false);
+            //  ProcessingWindow.FreezeBuffer(false);
             depthMapOnServer = false;
         }
+
     }
 }
