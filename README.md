@@ -14,6 +14,9 @@ Contains simple Window Client to connect, receive, and send image to the server.
 git clone --recurse-submodules https://github.com/Cooble/depth-client
 cd depth-client
 curl -O https://librealsense.intel.com/rs-tests/TestData/stairs.bag
+cd ./ZCU.TechnologyLab.DepthClientLib
+cmake .
+cd ..
 start DepthClient.sln
 ```
 
