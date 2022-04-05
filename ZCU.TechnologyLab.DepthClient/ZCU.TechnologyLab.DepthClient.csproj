@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\vendor\common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common.csproj" />
+    <ProjectReference Include="..\ZCU.TechnologyLab.DepthClientLib\ZCU.TechnologyLab.DepthClientLib.vcxproj" />
   </ItemGroup>
 
 </Project>

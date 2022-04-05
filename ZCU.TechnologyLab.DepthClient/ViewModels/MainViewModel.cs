@@ -79,7 +79,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.SendMesh = new Command(this.onSendMesh);
             this.RemoveImage = new Command(this.OnRemoveImage);
 
-            this.sessionClient = new SignalRSession("https://localhost:49155/", "virtualWorldHub");
+            this.sessionClient = new SignalRSession("https://localhost:49153/", "virtualWorldHub");
 
             this.serverConnection = new VirtualWorldServerConnection(this.sessionClient);
 
@@ -232,6 +232,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             float[] managedVertices=null;
             int[] managedFaces=null;
+            byte[] managedPly = null;
 
 
             unsafe
@@ -239,29 +240,49 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 float* vertices;
                 int* faces;
+                byte* plyBinary;
                 int vertexCount;
                 int faceCount;
+                int plyLength;
 
                 Console.WriteLine("getting frame from realsense dll");
-                RealSenseWrapper.GetFrame(out vertices, out faces, out vertexCount, out faceCount);
+                RealSenseWrapper.GetFrame(out vertices, out faces, out vertexCount, out faceCount,out plyBinary,out plyLength);
                 Console.WriteLine("got frame");
 
                 managedVertices = new float[vertexCount];
                 managedFaces = new int[faceCount];
+                managedPly = new byte[plyLength];
 
                 Console.WriteLine("copying to managed memory");
                 Marshal.Copy((IntPtr)vertices, managedVertices, 0, vertexCount);
                 Marshal.Copy((IntPtr)faces, managedFaces, 0, faceCount);
+                Marshal.Copy((IntPtr)plyBinary, managedPly, 0, plyLength);
 
                 
-                RealSenseWrapper.DropFrame(vertices, faces);
+                RealSenseWrapper.DropFrame(vertices, faces, plyBinary);
 
             }
             Console.WriteLine("serialization");
             w.Properties = new MeshWorldObjectSerializer().SerializeProperties(managedVertices, managedFaces, "Triangle");
             Console.WriteLine("serialization done");
 
+            // adding mesh file
             await this.serverConnection.AddWorldObjectAsync(w);
+
+            
+            //adding ply file to server
+            w = new()
+            {
+                Name = "DepthPly",
+                Type = "File"
+            };
+            w.Properties = new Dictionary<string, string>
+            {
+                ["data"] =Convert.ToBase64String(managedPly)
+            };
+
+            await this.serverConnection.AddWorldObjectAsync(w);
+
 
             Console.WriteLine("Sent mesh");
 
