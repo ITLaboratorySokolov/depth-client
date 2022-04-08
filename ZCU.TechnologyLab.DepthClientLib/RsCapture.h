@@ -14,9 +14,11 @@ extern "C" {
 #else
 #  define MODULE_API
 #endif
-MODULE_API void Start(const char* filePath);
+MODULE_API bool Start(const char* filePath);
 MODULE_API void Exit();
-MODULE_API bool GetFrame(float** vertices, int** faces, int* itemCount, int* faceCount,uint8_t** binaryPly,int* plyLength);
+MODULE_API bool GetFrame(float** vertices, int** faces, uint8_t** binaryPly, int* vertexCount,int* faceCount,int* plyLength);
+MODULE_API bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height);
+MODULE_API void DropDepthFrame(uint16_t* depths);
 MODULE_API void DropFrame(float* items, int* indices,uint8_t* ply);
 //	MODULE_API void PrintHelloWorld();
 #ifdef __cplusplus

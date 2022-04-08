@@ -7,19 +7,21 @@
         xmlns:viewModels="clr-namespace:ZCU.TechnologyLab.DepthClient.ViewModels"
         mc:Ignorable="d" WindowStartupLocation="CenterOwner"
         Closing="control_Closing"
-        Title="Intel RealSense Processing .NET Example" Height="448" Width="552" x:Name="control">
+        Title="Depth Data Client" Height="448" Width="552">
     <Window.DataContext>
         <viewModels:MainViewModel/>
     </Window.DataContext>
     <Grid>
-        <Image x:Name="imgDepth" Opacity="0.5" Margin="0,190,278,0"  />
-        <Image x:Name="imgColor" Opacity="0.5" Margin="0,190,278,0" />
-        <Image x:Name="imgDepth1" Opacity="0.6" Margin="285,190,5,0"  />
-        <Image x:Name="imgColor1" Opacity="0.5" Margin="285,190,5,0" />
-        <Button Content="{Binding ConnectBtnLbl}" HorizontalAlignment="Center" Margin="0,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding Connect}" RenderTransformOrigin="0.147,-1.144" Click="Button_Click"/>
-        <Label Content="{Binding Message}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="268" Margin="0,147,0,0"/>
-        <Button Content="Send Image" HorizontalAlignment="Center" Margin="0,107,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding .SendImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
-        <Button Content="Remove obj&#xD;&#xA;from server" HorizontalAlignment="Left" Margin="375,47,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding RemoveImage}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
-        <Button Content="Send Mesh" HorizontalAlignment="Left" Margin="27,107,0,0" VerticalAlignment="Top" Height="35" Width="142" Command="{Binding .SendMesh}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}"/>
+        <TextBox TextChanged="TextBoxBase_OnTextChanged" Text="{Binding ServerUrl }" HorizontalAlignment="Center" Margin="0,10,0,0" Width="142" RenderTransformOrigin="0.147,-1.144" Height="19" VerticalAlignment="Top"/>
+
+        <Image x:Name="imgColor1" Opacity="1" Margin="5,190,5,5"  />
+        <Image x:Name="imgDepth1" Opacity="0" Margin="291,0,0,0" Height="242" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="262" />
+        <Button Content="{Binding ConnectBtnLbl}" HorizontalAlignment="Center" Margin="0,47,0,0" Width="142" Command="{Binding Connect}" RenderTransformOrigin="0.147,-1.144" Height="35" VerticalAlignment="Top"/>
+        <Label Name="messageLbl" Content="{Binding Message}" HorizontalContentAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="356" Margin="0,147,0,0"/>
+        <Button Content="Connect camera" HorizontalAlignment="Center" Margin="0,107,0,0" Width="142" RenderTransformOrigin="0.147,-1.144" Height="35" VerticalAlignment="Top" Command="{Binding ConnectCamera}"/>
+        <Button Content="Remove obj&#xD;&#xA;from server" Margin="27,47,0,0" Command="{Binding RemoveMesh}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}" HorizontalAlignment="Left" Width="142" Height="35" VerticalAlignment="Top"/>
+        <Button Content="Send Mesh" Margin="27,107,0,0" Command="{Binding .SendMesh}" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding EnabledButtons}" HorizontalAlignment="Left" Width="142" Height="35" VerticalAlignment="Top"/>
+        <Button Name="savePlyBtn" Content="Save snapshot&#xD;&#xA;   to PLY file" Margin="0,47,35,0" RenderTransformOrigin="0.147,-1.144" IsEnabled="{Binding SavePlyBtnEnable}" Command="{Binding SavePly}" Height="35" VerticalAlignment="Top" HorizontalAlignment="Right" Width="142"/>
+        <Button Content="Open RealSense file" Command="{Binding .OpenRealSenseFile}" Margin="0,107,35,0" RenderTransformOrigin="0.147,-1.144" Height="35" VerticalAlignment="Top" HorizontalAlignment="Right" Width="142"/>
     </Grid>
 </Window>

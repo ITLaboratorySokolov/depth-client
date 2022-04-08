@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Intel.RealSense;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections;
@@ -12,10 +15,6 @@ using ZCU.TechnologyLab.Common.Serialization;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
-    /// <summary>
-    /// View model for the application.
-    /// </summary>
-    /// 
     public class MainViewModel : NotifyingClass
     {
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -23,20 +22,22 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         static extern bool AllocConsole();
 
 
-        private readonly VirtualWorldServerConnection serverConnection;
+        private VirtualWorldServerConnection serverConnection;
 
-        private readonly ISessionClient sessionClient;
+        private ISessionClient sessionClient;
 
 
-        /// <summary>
-        /// Name of the Message property.
-        /// </summary>
         private const string MESSAGE_PROPERTY = "Message";
 
         private const string CNTCBTLB_PROPERTY = "ConnectBtnLbl";
         private const string EN_BTN_PROPERTY = "EnabledButtons";
+        private const string SAVE_PLY_BTN_PROPERTY = "SavePlyBtnEnable";
 
-        public const string DLL_PATH = "d435i_walk_around.bag";
+        public const string MESH_NAME = "DepthMesh";
+        public const string MESH_TYPE = "Mesh";
+        public const string PLY_NAME = "DepthPly";
+        public const string PLY_TYPE = "PlyFile";
+
 
         /// <summary>
         /// Message.
@@ -47,15 +48,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private bool enabledButtons = false;
 
         /// <summary>
-        /// Multiple start calls throw an error so check if it is already connecting.
+        /// Multiple start calls throw an error so check if it is already connected.
         /// </summary>
-        private bool connecting;
-
-        /// <summary>
-        /// Is depth map saved on the server
-        /// </summary>
-        private bool depthMapOnServer = false;
-
+        private bool connected;
 
         /// <summary>
         /// Initialize commands and variables.
@@ -64,50 +59,24 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             AllocConsole();
 
-           // Console.WriteLine("before initn");
+            // Console.WriteLine("before initn");
 
             // RealSenseWrapper.Start();
             /*RealSenseWrapper.Start("d435i_walk_around.bag");
 
            
             RealSenseWrapper.Exit();*/
-         //   Console.WriteLine("after initn");
+            //   Console.WriteLine("after initn");
 
 
             this.Connect = new Command(this.OnConnect);
-            this.SendImage = new Command(this.OnSendImage);
-            this.SendMesh = new Command(this.onSendMesh);
-            this.RemoveImage = new Command(this.OnRemoveImage);
+            this.SendMesh = new Command(this.OnSendMesh);
+            this.RemoveMesh = new Command(this.OnRemoveImage);
+            this.OpenRealSenseFile = new Command(this.OnOpenRealSenseFile);
+            this.ConnectCamera = new Command(this.OnConnectCamera);
+            this.SavePly = new Command(this.OnSavePly);
 
-            this.sessionClient = new SignalRSession("https://localhost:49153/", "virtualWorldHub");
-
-            this.serverConnection = new VirtualWorldServerConnection(this.sessionClient);
-
-
-            serverConnection.OnGetAllWorldObjects((list) =>
-            {
-                depthMapOnServer = false;
-
-                bool found = false;
-                foreach (var worldObject in list)
-                {
-                    if (worldObject.Name == "DepthImage")
-                    {
-                        depthMapOnServer = true;
-                        var pixel = worldObject.Properties["pixels"];
-                        this.Message = "Found image on server";
-
-                        var pic = Base64ToPicture(pixel);
-                        Buffer.BlockCopy(pic, 0, ProcessingWindow.depth_buffer, 0, pic.Length * sizeof(ushort));
-                        // ProcessingWindow.FreezeBuffer(true);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    this.Message = "Image not found";
-            });
+            OnConnectCamera();
         }
 
 
@@ -124,6 +93,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        public bool SavePlyBtnEnable
+        {
+            get => this.savePlyBtnEnable;
+            set
+            {
+                this.savePlyBtnEnable = value;
+                RaisePropertyChanged(SAVE_PLY_BTN_PROPERTY);
+            }
+        }
+
         public string ConnectBtnLbl
         {
             get => this.connectBtnLbl;
@@ -133,6 +112,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(CNTCBTLB_PROPERTY);
             }
         }
+
+        public static string ServerUrl { get; set; } = "https://localhost:49155/";
 
         public bool EnabledButtons
         {
@@ -149,26 +130,49 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         public ICommand Connect { get; private set; }
 
-        public ICommand SendImage { get; private set; }
         public ICommand SendMesh { get; private set; }
-        public ICommand RemoveImage { get; private set; }
+        public ICommand RemoveMesh { get; private set; }
+        public ICommand OpenRealSenseFile { get; private set; }
+        public ICommand ConnectCamera { get; private set; }
 
+        public ICommand SavePly { get; private set; }
+
+        private bool inConnectProcess = false;
+        private bool savePlyBtnEnable;
 
         /// <summary>
         /// Connects connection to a server.
         /// </summary>
         private async void OnConnect()
         {
-            if (!this.connecting)
+            if (inConnectProcess)
+                return;
+            inConnectProcess = true;
+            if (!ServerUrl.EndsWith("/"))
+                ServerUrl += "/";
+            if (!this.connected)
             {
+                this.ConnectBtnLbl = "Connecting";
                 try
                 {
-                    await this.sessionClient.StartSessionAsync();
-                    RealSenseWrapper.Start(DLL_PATH);
+                    if (sessionClient is { SessionState: SessionState.Connected })
+                        await sessionClient.StopSessionAsync();
+                    sessionClient = null;
 
+
+                    sessionClient = new SignalRSession(ServerUrl, "virtualWorldHub");
+                    if (sessionClient == null)
+                        throw new Exception();
+                    serverConnection = new VirtualWorldServerConnection(this.sessionClient);
+
+                    serverConnection.OnGetAllWorldObjects((list) => { });
+
+                    await this.sessionClient.StartSessionAsync();
+                    this.Message = "Connected to server: " + ServerUrl;
                 }
                 catch (Exception e)
                 {
+                    this.ConnectBtnLbl = "Connect";
                     this.Message = "Cannot connect to a server: " + e.Message;
                     Console.WriteLine(e.Message);
                 }
@@ -180,7 +184,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 try
                 {
                     await this.sessionClient.StopSessionAsync();
-                    RealSenseWrapper.Exit();
                 }
                 catch (Exception e)
                 {
@@ -189,143 +192,157 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
             }
 
-            if ((!this.connecting && this.sessionClient.SessionState == SessionState.Connected)
-                || (this.connecting && this.sessionClient.SessionState == SessionState.Closed)
+            if (sessionClient == null)
+            {
+                inConnectProcess = false;
+                return;
+            }
+
+            if ((!this.connected && this.sessionClient.SessionState == SessionState.Connected)
+                || (this.connected && this.sessionClient.SessionState == SessionState.Closed)
                )
             {
-                this.connecting = !this.connecting;
+                this.connected = !this.connected;
 
-                this.ConnectBtnLbl = this.connecting ? "Disconnect" : "Connect";
-                EnabledButtons = this.connecting;
+                this.ConnectBtnLbl = this.connected ? "Disconnect" : "Connect";
+                EnabledButtons = this.connected;
 
-                if (this.connecting)
+                if (this.connected)
                 {
-                    Console.WriteLine("Asking for worldobjects");
+                    // Console.WriteLine("Asking for worldobjects");
                     await serverConnection.GetAllWorldObjectsAsync();
                 }
             }
+
+            inConnectProcess = false;
         }
 
-        private String PictureToBase64(ushort[] depths)
-        {
-            byte[] result = new byte[depths.Length * sizeof(ushort)];
-            Buffer.BlockCopy(depths, 0, result, 0, result.Length);
-            return Convert.ToBase64String(result);
-        }
-
-        private ushort[] Base64ToPicture(String s)
-        {
-            var c = Convert.FromBase64String(s);
-            var result = new ushort[c.Length / sizeof(ushort)];
-            Buffer.BlockCopy(c, 0, result, 0, c.Length);
-            return result;
-        }
-
-        private async void onSendMesh()
+        private async void OnSendMesh()
         {
             Console.WriteLine("Parsing mesh");
             WorldObjectDto w = new()
             {
-                Name = "DepthMesh",
-                Type = "Mesh"
+                Name = MESH_NAME,
+                Type = MESH_TYPE
             };
 
-            float[] managedVertices=null;
-            int[] managedFaces=null;
-            byte[] managedPly = null;
-
-
-            unsafe
             {
+                using var frames = RealS.MeshFrame.Obtain();
+                if (!frames.HasValue)
+                {
+                    Message = "No mesh available";
+                    return;
+                }
 
-                float* vertices;
-                int* faces;
-                byte* plyBinary;
-                int vertexCount;
-                int faceCount;
-                int plyLength;
+                var frame = frames.Value;
 
-                Console.WriteLine("getting frame from realsense dll");
-                RealSenseWrapper.GetFrame(out vertices, out faces, out vertexCount, out faceCount,out plyBinary,out plyLength);
-                Console.WriteLine("got frame");
-
-                managedVertices = new float[vertexCount];
-                managedFaces = new int[faceCount];
-                managedPly = new byte[plyLength];
-
-                Console.WriteLine("copying to managed memory");
-                Marshal.Copy((IntPtr)vertices, managedVertices, 0, vertexCount);
-                Marshal.Copy((IntPtr)faces, managedFaces, 0, faceCount);
-                Marshal.Copy((IntPtr)plyBinary, managedPly, 0, plyLength);
-
-                
-                RealSenseWrapper.DropFrame(vertices, faces, plyBinary);
-
-            }
-            Console.WriteLine("serialization");
-            w.Properties = new MeshWorldObjectSerializer().SerializeProperties(managedVertices, managedFaces, "Triangle");
-            Console.WriteLine("serialization done");
-
-            // adding mesh file
-            await this.serverConnection.AddWorldObjectAsync(w);
-
-            
-            //adding ply file to server
-            w = new()
-            {
-                Name = "DepthPly",
-                Type = "File"
-            };
-            w.Properties = new Dictionary<string, string>
-            {
-                ["data"] =Convert.ToBase64String(managedPly)
-            };
-
-            await this.serverConnection.AddWorldObjectAsync(w);
+                w.Properties =
+                    new MeshWorldObjectSerializer().SerializeProperties(frame.Vertices, frame.Faces, "Triangle");
 
 
-            Console.WriteLine("Sent mesh");
-
-        }
-
-        private async void OnSendImage()
-        {
-            WorldObjectDto w = new()
-            {
-                Name = "DepthImage",
-                Type = "DepthBitmap"
-            };
-            w.Properties = new Dictionary<string, string>
-            {
-                ["pixels"] = PictureToBase64(ProcessingWindow.depth_buffer_live)
-            };
-
-            // update snapshot
-            //ProcessingWindow.FreezeBuffer(true);
-            Buffer.BlockCopy(ProcessingWindow.depth_buffer_live, 0,
-                ProcessingWindow.depth_buffer, 0, sizeof(ushort) * ProcessingWindow.depth_buffer_live.Length);
-
-            Console.WriteLine("Snapshot taken of pixels of count: " + w.Properties["pixels"].Length);
-
-            Console.WriteLine("Snapshot taken of pixel: \n . " + ProcessingWindow.DepthScale + " " +
-                              ProcessingWindow.DepthWidth);
-
-
-            if (!depthMapOnServer)
+                // adding mesh file
                 await this.serverConnection.AddWorldObjectAsync(w);
-            else
-                await this.serverConnection.UpdateWorldObjectAsync(w);
-            depthMapOnServer = true;
+                Console.WriteLine("Mesh Sent");
+
+
+                //adding ply file to server
+                w = new()
+                {
+                    Name = PLY_NAME,
+                    Type = PLY_TYPE
+                };
+                w.Properties = new Dictionary<string, string>
+                {
+                    ["data"] = Convert.ToBase64String(frame.Ply)
+                };
+
+                await this.serverConnection.AddWorldObjectAsync(w);
+                Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME;
+            }
         }
 
         private async void OnRemoveImage()
         {
-            await this.serverConnection.RemoveWorldObjectAsync("DepthImage");
-
-            this.Message = "Removed image from server";
-            //  ProcessingWindow.FreezeBuffer(false);
-            depthMapOnServer = false;
+            await this.serverConnection.RemoveWorldObjectAsync(MESH_NAME);
+            await this.serverConnection.RemoveWorldObjectAsync(PLY_NAME);
+            this.Message = "Ply & Mesh removed from server";
         }
 
+        private void OnOpenRealSenseFile()
+        {
+            // freezeDepth = true;
+
+
+            OpenFileDialog openDialog = new OpenFileDialog();
+
+            openDialog.Filter = "bag files (*.bag)|*.bag|All files (*.*)|*.*";
+            openDialog.FilterIndex = 1;
+            //openDialog.RestoreDirectory = true;
+            openDialog.CheckFileExists = true;
+            openDialog.InitialDirectory = "";
+            var success = openDialog.ShowDialog();
+            if (success != null && success.Value)
+            {
+                if (!File.Exists(openDialog.FileName))
+                    return;
+                var t = new Thread(() =>
+                {
+                    var success = RealS.Init(openDialog.FileName);
+                    Message = success
+                        ? "Opened RealSense file"
+                        : "Could not open file";
+
+                    SavePlyBtnEnable = success;
+
+                    Console.WriteLine(Message +": "+ openDialog.FileName);
+                });
+                t.Start();
+            }
+
+            // freezeDepth = false;
+        }
+
+        private void OnConnectCamera()
+        {
+            var t = new Thread(() =>
+            {
+                var success = RealS.Init("");
+                Message = success ? "Camera connected" : "Camera not found";
+                SavePlyBtnEnable = success;
+            });
+            t.Start();
+        }
+
+        private void OnSavePly()
+        {
+            if (!RealS.Started)
+                return;
+
+            ProcessingWindow.FreezeBuffer(true);
+
+            using var frames = RealS.MeshFrame.Obtain();
+            if (!frames.HasValue)
+                return;
+            var frame = frames.Value;
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            saveDialog.Filter = "ply files (*.ply)|*.ply|All files (*.*)|*.*";
+            saveDialog.FilterIndex = 1;
+            saveDialog.InitialDirectory = "";
+
+
+            var success = saveDialog.ShowDialog();
+            if (success.HasValue && success.Value)
+            {
+                using var myStream = saveDialog.OpenFile();
+                myStream.Write(frame.Ply);
+            }
+
+            Message = "Ply file saved";
+            Console.WriteLine("Saved ply file to " + saveDialog.FileName);
+
+            ProcessingWindow.FreezeBuffer(false);
+            saveDialog.Reset();
+        }
     }
 }
