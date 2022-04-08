@@ -6,7 +6,7 @@ Contains simple Window Client to connect, receive, and send image to the server.
 
 #### Dependencies
 - *ZCU.TechnologyLab.Common*
-- NuGet: *Intel.RealSenseWithNativeDll*
+- *Intel RealSense SDK 2.0* [Install](https://www.intelrealsense.com/sdk-2/)
 - NuGet: *Microsoft.AspNetCore.SignalR.Client*
 
 #### Installation
