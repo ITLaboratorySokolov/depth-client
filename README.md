@@ -1,8 +1,10 @@
 # DepthSensorClient
 
 Sends depth map from **Intel® RealSense™ SDK 2.0** depth sensor to the server.  
-Contains simple Window Client to connect, receive, and send image to the server.  
+Contains simple Window Client to connect and send images/meshes to the server,and save them locally.  
 [Download Sample Playback Files](https://github.com/IntelRealSense/librealsense/blob/master/doc/sample-data.md)
+
+![Alt text](view.png?raw=true "Client Window")
 
 #### Dependencies
 - *ZCU.TechnologyLab.Common*
@@ -19,6 +21,4 @@ cmake .
 cd ..
 start DepthClient.sln
 ```
-
-
 
