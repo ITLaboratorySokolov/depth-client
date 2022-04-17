@@ -20,8 +20,6 @@ int main(const char** args)
 }
 
 
-
-
 /**
 Class to encapsulate a filter alongside its options
 */
@@ -155,14 +153,21 @@ std::string disparity_filter_name = "Disparity";
 rs2::disparity_transform depth_to_disparity(true);
 rs2::disparity_transform disparity_to_depth(false);
 
+void UpdateFilters(bool* filterss)
+{
+	for (int i = 0; i < filters.size(); ++i)
+		filters[i].is_enabled = filterss[i];
+}
+rs2::align align_to_depth(RS2_STREAM_DEPTH);
+
 bool Start(const char* filePath) try
 {
-
-
 	pipe = new rs2::pipeline;
 	std::string file = filePath;
 
-	std::cout << "LibRealSense - " << RS2_API_VERSION_STR << ": from "<< (strlen(filePath)!=0?"file: " + file:"camera") << std::endl;
+	std::cout << "LibRealSense - " << RS2_API_VERSION_STR << ": from " << (strlen(filePath) != 0
+		                                                                       ? "file: " + file
+		                                                                       : "camera") << std::endl;
 
 	rs2::config cfg;
 	cfg.enable_stream(RS2_STREAM_DEPTH);
@@ -175,7 +180,7 @@ bool Start(const char* filePath) try
 	{
 		if (!device_with_streams({RS2_STREAM_COLOR, RS2_STREAM_DEPTH}, serial))
 		{
-			std::cout << "No device found"<<std::endl;
+			std::cout << "No device found" << std::endl;
 			return false;
 		}
 	}
@@ -184,7 +189,6 @@ bool Start(const char* filePath) try
 		cfg.enable_device(serial);
 
 	pipe->start(cfg);
-
 
 
 	// Initialize a vector that holds filters and their options
@@ -199,12 +203,14 @@ bool Start(const char* filePath) try
 	for (auto& filter_options : filters)
 	{
 		//if (filter_options.filter_name == "Decimate")
-			filter_options.is_enabled = true;
+		filter_options.is_enabled = true;
 	}
 
 	// Declare depth colorizer for pretty visualization of depth data
 
 	stopped = false;
+
+
 	// Create a thread for getting frames from the device and process them
 	// to prevent UI thread from blocking due to long computations.
 	processing_thread = std::thread([]
@@ -212,11 +218,11 @@ bool Start(const char* filePath) try
 		while (!stopped) //While application is running
 		{
 			rs2::frameset data = pipe->wait_for_frames(); // Wait for next set of frames from the camera
+			auto d2 = align_to_depth.process(data);
 
-			rs2::frame depth_frame = data.get_depth_frame(); //Take the depth frame from the frameset
+			rs2::frame depth_frame = d2.get_depth_frame(); //Take the depth frame from the frameset
 			if (!depth_frame) // Should not happen but if the pipeline is configured differently
 				return; //  it might not provide depth and we don't want to crash
-
 
 
 			rs2::frame filtered = depth_frame; // Does not copy the frame, only adds a reference
@@ -234,7 +240,6 @@ bool Start(const char* filePath) try
 			bool revert_disparity = false;
 			for (auto&& filter : filters)
 			{
-				
 				if (filter.is_enabled)
 				{
 					filtered = filter.filter.process(filtered);
@@ -251,7 +256,8 @@ bool Start(const char* filePath) try
 
 			std::vector<rs2::frame> bundle;
 
-			rs2::processing_block bundler([&](rs2::frame f, rs2::frame_source& src) {
+			rs2::processing_block bundler([&](rs2::frame f, rs2::frame_source& src)
+			{
 				bundle.push_back(f);
 
 				if (bundle.size() == 2)
@@ -260,14 +266,14 @@ bool Start(const char* filePath) try
 					src.frame_ready(fs);
 					bundle.clear();
 				}
-				});
+			});
 
 
 			bundler.start(filteredQueue);
-			
+
 			//filteredQueue.enqueue(filtered);
 
-			bundler.invoke(data.get_color_frame());
+			bundler.invoke(d2.get_color_frame());
 			bundler.invoke(filtered);
 		}
 	});
@@ -336,10 +342,11 @@ void update_data(rs2::frame_queue& data, rs2::frame& colorized_depth, rs2::point
 
 std::vector<uint16_t> depthBuffer;
 std::vector<uint8_t> colorBuffer;
+std::vector<uint8_t> textureBuffer;
+std::vector<float> uvBuffer;
 
-bool GetFrameOnce(uint16_t** depths,uint8_t** colors, int* width, int* height)try
+bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height)try
 {
-
 	rs2::frameset f;
 
 
@@ -368,16 +375,24 @@ bool GetFrameOnce(uint16_t** depths,uint8_t** colors, int* width, int* height)tr
 		return true;
 	}
 	return false;
-}catch(std::exception& e)
+}
+catch (std::exception& e)
 {
 	std::cout << e.what();
 	return false;
 }
 
-
-void generateFaces(int* faces, float* vertices, int width, int height, int* facesCount)
+float dist2(const rs2_vector& a, const rs2_vector& b)
 {
-	*facesCount = 0;
+	auto x = a.x - b.x;
+	auto y = a.y - b.y;
+	auto z = a.z - b.z;
+	return x * x + y * y + z * z;
+}
+
+void generateFaces(int* faces, float* vertices, int width, int height, int& facesCount)
+{
+	facesCount = 0;
 
 	for (int i = 0; i < height - 1; ++i)
 	{
@@ -385,8 +400,8 @@ void generateFaces(int* faces, float* vertices, int width, int height, int* face
 
 		for (int j = 0; j < width - 1; ++j)
 		{
-			(*facesCount) += 2;
-			const float epsilon = 0.001;
+			facesCount += 6;
+			const float epsilon = 0.1;
 
 
 			int s = lineStart + j;
@@ -394,39 +409,49 @@ void generateFaces(int* faces, float* vertices, int width, int height, int* face
 			*faces++ = s + width;
 			*faces++ = s + 1;
 
-			//invalid triangle
-			if (vertices[*(faces - 3) * 3 + 2] < epsilon ||
-				vertices[*(faces - 2) * 3 + 2] < epsilon ||
-				vertices[*(faces - 1) * 3 + 2] < epsilon)
 			{
-				faces -= 3;
-				(*facesCount) -= 1;
-			}
+				//invalid triangle
+				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
+				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
+				auto& v2 = (rs2_vector&)vertices[*(faces - 1) * 3];
 
+				if (dist2(v0, v1) > epsilon
+					|| dist2(v1, v2) > epsilon
+					|| dist2(v2, v0) > epsilon)
+				{
+					faces -= 3;
+					facesCount -= 3;
+				}
+			}
 
 			*faces++ = s + width;
 			*faces++ = s + width + 1;
 			*faces++ = s + 1;
-
-			//invalid triangle
-			if (vertices[*(faces - 3) * 3 + 2] < epsilon ||
-				vertices[*(faces - 2) * 3 + 2] < epsilon ||
-				vertices[*(faces - 1) * 3 + 2] < epsilon)
 			{
-				faces -= 3;
-				(*facesCount) -= 1;
+				//invalid triangle
+				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
+				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
+				auto& v2 = (rs2_vector&)vertices[*(faces - 1) * 3];
+
+				if (dist2(v0, v1) > epsilon
+					|| dist2(v1, v2) > epsilon
+					|| dist2(v2, v0) > epsilon)
+				{
+					faces -= 3;
+					facesCount -= 3;
+				}
 			}
 		}
 	}
 }
 
-void writeToObj(const std::string& filePath, int* faces, float* vertices, int count, int facesCount)
+void writeToObj(const std::string& filePath, float* vertices, int* faces, int vertexCount, int facesCount)
 {
 	std::ofstream myfile;
 	myfile.open(filePath);
 	myfile << "#Vertices\n";
 	auto oldVert = vertices;
-	for (int i = 0; i < count; ++i)
+	for (int i = 0; i < vertexCount; ++i)
 	{
 		myfile << "v ";
 		myfile << *vertices++;
@@ -470,7 +495,7 @@ rs2::pointcloud pc;
 
 rs2::points points;
 
-std::string export_to_ply_string(rs2::points p, rs2::video_frame color)
+std::string export_to_ply_string(const rs2::points& p, const rs2::video_frame& color)
 {
 	const bool use_texcoords = true;
 	bool mesh = false;
@@ -683,11 +708,24 @@ std::string export_to_ply_string(rs2::points p, rs2::video_frame color)
 	}
 }
 
-bool GetFrame(float** vertices, int** faces, uint8_t** binaryPly, int* vertexCount, int* faceCount, int* plyLength)
+
+bool GetFrame(
+	float** vertices,
+	int** faces,
+	float** uvs,
+	uint8_t** colors,
+	uint8_t** binaryPly,
+	int* vertexCount,
+	int* faceCount,
+	int* uvsCount,
+	int* colorsLength,
+	int* plyLength,
+	int* width)
 {
 	rs2::frameset frameset = filteredQueue.wait_for_frame();
 
 	auto color = frameset.get_color_frame();
+	*width = color.get_width();
 
 	// Tell pointcloud object to map to this color frame
 	pc.map_to(color);
@@ -704,6 +742,8 @@ bool GetFrame(float** vertices, int** faces, uint8_t** binaryPly, int* vertexCou
 	//draw_pointcloud(app.width(), app.height(), app_state, points);
 
 	//points.export_to_ply("my_ply.ply", color);
+
+	//=================ply=====================
 	{
 		std::ofstream myfile("my_ply_string.ply", std::_Iosb<int>::out | std::_Iosb<int>::binary);
 		auto s = export_to_ply_string(points, color);
@@ -713,19 +753,34 @@ bool GetFrame(float** vertices, int** faces, uint8_t** binaryPly, int* vertexCou
 		*plyLength = s.length();
 		myfile << s;
 	}
-	auto length = points.size() * sizeof(rs2::vertex);
-	*vertices = (float*)malloc(length);
 
-	memcpy(*vertices, points.get_vertices(), depth.get_width() * depth.get_height() * sizeof(uint16_t));
+	//=================uv=====================
+	auto uvLength = points.size() * 2;
+	if (uvBuffer.size() < uvLength)
+		uvBuffer.resize(uvLength);
+	memcpy(uvBuffer.data(), points.get_texture_coordinates(), sizeof(float) * points.size() * 2);
+	*uvs = uvBuffer.data();
+	*uvsCount = points.size() * 2;
 
+	//=================texture================
+	if (textureBuffer.size() < color.get_data_size())
+		textureBuffer.resize(color.get_data_size());
+	memcpy(textureBuffer.data(), color.get_data(), color.get_data_size());
+	*colors = textureBuffer.data();
+	*colorsLength = color.get_data_size();
 
-	*faces = (int*)malloc((depth.get_width() - 1) * (depth.get_height() - 1) * 2 * 3 * sizeof(int));
-
-	generateFaces(*faces, *vertices, depth.get_width(), depth.get_height(), faceCount);
-
-	//writeToObj("myObj.obj", *faces, *vertices, depth.get_width() * depth.get_height(),*faceCount);
-
+	//================vertices================
+	auto vertexLength = points.size() * sizeof(rs2::vertex);
+	*vertices = (float*)malloc(vertexLength);
 	*vertexCount = points.size() * 3;
+	memcpy(*vertices, points.get_vertices(), vertexLength);
+
+	//================faces===================
+	*faces = (int*)malloc((depth.get_width() - 1) * (depth.get_height() - 1) * 2 * 3 * sizeof(int));
+	generateFaces(*faces, *vertices, depth.get_width(), depth.get_height(), *faceCount);
+
+
+	//writeToObj("C:/Users/minek/Desktop/killme.obj", *vertices, *faces, *vertexCount, *faceCount);
 
 	return true;
 }

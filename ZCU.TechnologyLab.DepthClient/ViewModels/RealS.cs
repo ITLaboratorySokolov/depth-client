@@ -35,8 +35,18 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
             [return: MarshalAs(UnmanagedType.I1)]
-            public static extern unsafe bool GetFrame(out float* vertices, out int* faces, out byte* binaryPly,
-                out int vertexCount, out int faceCount, out int plyLength);
+            public static extern unsafe bool GetFrame(
+                out float* vertices,
+                out int* faces,
+                out float* uvs,
+                out byte* colors,
+                out byte* binaryPly,
+                out int vertexCount,
+                out int faceCount,
+                out int uvCount,
+                out int colorsCount,
+                out int plyLength,
+                out int width);
 
 
             [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
@@ -49,6 +59,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
             public static extern unsafe void DropFrame(float* items, int* faces, byte* ply);
+
+            [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+            public static extern unsafe void UpdateFilters(bool* filterEnables);
         }
 
         // Initializes depth stream from file or camera
@@ -94,6 +107,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        public static void updateFilters(bool[] enables)
+        {
+            unsafe
+            {
+                fixed (bool* FirstResult = &enables[0])
+                {
+                    RealSenseWrapper.UpdateFilters(FirstResult);
+                }
+            }
+        }
 
         // Managed memory block that can be recycled
         public class DepthFrameBuffer
@@ -189,8 +212,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public IntPtr VertexPtr, FacePtr, PlyPtr;
 
             public float[] Vertices;
+            public float[] UVs;
             public int[] Faces;
             public byte[] Ply;
+            public byte[] Colors;
+            public int Width;
 
             public static MeshFrame? Obtain()
             {
@@ -207,25 +233,34 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                         if (!RealSenseWrapper.GetFrame(
                                 out var vertices,
                                 out var faces,
-                                out var plyBinary,
+                                out var uvs,
+                                out var colors,
+                                out var binaryPly,
                                 out var vertexCount,
                                 out var faceCount,
-                                out var plyLength))
+                                out var uvCount,
+                                out var colorsCount,
+                                out var plyLength,
+                                out var width))
                             throw new Exception();
 
-
+                        meshFrame.Width = width;
                         meshFrame.Vertices = new float[vertexCount];
                         meshFrame.Faces = new int[faceCount];
                         meshFrame.Ply = new byte[plyLength];
+                        meshFrame.UVs = new float[uvCount];
+                        meshFrame.Colors = new byte[colorsCount];
 
 
                         Marshal.Copy((IntPtr)vertices, meshFrame.Vertices, 0, vertexCount);
                         Marshal.Copy((IntPtr)faces, meshFrame.Faces, 0, faceCount);
-                        Marshal.Copy((IntPtr)plyBinary, meshFrame.Ply, 0, plyLength);
+                        Marshal.Copy((IntPtr)binaryPly, meshFrame.Ply, 0, plyLength);
+                        Marshal.Copy((IntPtr)uvs, meshFrame.UVs, 0, uvCount);
+                        Marshal.Copy((IntPtr)colors, meshFrame.Colors, 0, colorsCount);
 
                         meshFrame.VertexPtr = (IntPtr)vertices;
                         meshFrame.FacePtr = (IntPtr)faces;
-                        meshFrame.PlyPtr = (IntPtr)plyBinary;
+                        meshFrame.PlyPtr = (IntPtr)binaryPly;
                     }
 
                     return meshFrame;

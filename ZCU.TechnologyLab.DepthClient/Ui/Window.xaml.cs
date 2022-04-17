@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
@@ -31,6 +32,7 @@ namespace Intel.RealSense
 
         static volatile bool freezeDepth = false;
         public static ProcessingWindow InstanceWindow;
+
 
         private void ResizeImageSrc(int width, int height)
         {
@@ -101,6 +103,8 @@ namespace Intel.RealSense
         {
             InstanceWindow = this;
             InitializeComponent();
+
+
             try
             {
                 var updateDepth = UpdateImageDepth();
@@ -182,6 +186,13 @@ namespace Intel.RealSense
         {
             var ee = sender as TextBox;
             MainViewModel.ServerUrl = ee.Text;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine(Hell.Camera.Position);
+            Console.WriteLine(Hell.Camera.LookDirection);
+            Hell.SetView(new Point3D(18, -0.8, 0.8), new Vector3D(-1, 0, 0), new Vector3D(0, 0, 1), 1000);
         }
     }
 }
