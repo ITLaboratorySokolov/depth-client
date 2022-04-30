@@ -125,6 +125,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public byte[] Colors = Array.Empty<byte>();
             public int Width, Height;
         }
+    
 
         // Frame read from unmanaged memory, after use Dispose
         // Depth Map + Colorized Depth Map
@@ -205,6 +206,32 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+
+        public class MeshFrameBuffer
+        {
+            public int[] Faces;
+            public int[] TempFaces;
+            public float[] Vertices;
+
+            public int Width;
+            public int Height;
+
+
+            public MeshFrameBuffer(MeshFrame frame)
+            {
+                Faces = new int[frame.Faces.Length];
+                TempFaces = new int[frame.Faces.Length];
+                Vertices = new float[frame.Vertices.Length];
+                Width = frame.Width;
+                Height = frame.Height;
+
+                Array.Copy(frame.Faces,Faces,frame.Faces.Length);
+                Array.Copy(frame.Faces,TempFaces,frame.Faces.Length);
+                Array.Copy(frame.Vertices,Vertices,frame.Vertices.Length);
+            }
+
+        }
+
         // Frame read from unmanaged memory, after use Dispose
         // Mesh + Ply File as binary data
         public struct MeshFrame : IDisposable
@@ -214,9 +241,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public float[] Vertices;
             public float[] UVs;
             public int[] Faces;
+            public int[] TempFaces;
             public byte[] Ply;
             public byte[] Colors;
             public int Width;
+
+            public int Height => Vertices.Length / 3 - Width;
 
             public static MeshFrame? Obtain()
             {
@@ -247,6 +277,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                         meshFrame.Width = width;
                         meshFrame.Vertices = new float[vertexCount];
                         meshFrame.Faces = new int[faceCount];
+                        meshFrame.TempFaces = new int[faceCount];
                         meshFrame.Ply = new byte[plyLength];
                         meshFrame.UVs = new float[uvCount];
                         meshFrame.Colors = new byte[colorsCount];

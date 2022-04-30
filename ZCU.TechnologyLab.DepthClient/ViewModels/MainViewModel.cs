@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
@@ -46,7 +47,200 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string MESH_TYPE = "Mesh";
         public const string PLY_NAME = "DepthPly";
         public const string PLY_TYPE = "PlyFile";
+        public const string THRESHOLD = "ThresholdSlider";
         public const string MODEL = "Model";
+        private Model3D model;
+
+
+        private bool inConnectProcess = false;
+        private bool savePlyBtnEnable;
+        private readonly DispatcherTimer timer;
+        private double angle;
+
+        /// <summary>
+        /// Gets and sets a message.
+        /// </summary>
+        public string Message
+        {
+            get => this.message;
+            set
+            {
+                this.message = value;
+                RaisePropertyChanged(MESSAGE_PROPERTY);
+            }
+        }
+
+        public bool SavePlyBtnEnable
+        {
+            get => this.savePlyBtnEnable;
+            set
+            {
+                this.savePlyBtnEnable = value;
+                RaisePropertyChanged(SAVE_PLY_BTN_PROPERTY);
+            }
+        }
+
+        public string ConnectBtnLbl
+        {
+            get => this.connectBtnLbl;
+            set
+            {
+                this.connectBtnLbl = value;
+                RaisePropertyChanged(CNTCBTLB_PROPERTY);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the model.
+        /// </summary>
+        /// <value>The model.</value>
+        public Model3D Model
+        {
+            get => model;
+            set
+            {
+                model = value;
+                RaisePropertyChanged(MODEL);
+            }
+        }
+
+        private double thresholdSlider;
+
+        private volatile bool thresholding = false;
+        public double ThresholdSlider
+        {
+            get => thresholdSlider;
+            set
+            {
+                thresholdSlider = value;
+
+                if (thresholding)
+                    return;
+                thresholding = true;
+
+
+                if (meshBuffer != null)
+                {
+                    Stopwatch wa = Stopwatch.StartNew();
+                    GenerateFaces(meshBuffer, (float)thresholdSlider);
+
+                    meshGeo.TriangleIndices.Clear();
+                    Console.WriteLine(wa.ElapsedMilliseconds);
+
+                    meshGeo.TriangleIndices = new Int32Collection(meshBuffer.TempFaces);
+
+
+                    Console.WriteLine(wa.ElapsedMilliseconds);
+
+
+                    RaisePropertyChanged(MODEL);
+
+
+                }
+
+                thresholding = false;
+
+                Thread tt = new Thread(() =>
+                {
+                    if (meshBuffer != null)
+                    {
+                        Stopwatch wa = Stopwatch.StartNew();
+                        GenerateFaces(meshBuffer, (float)thresholdSlider);
+
+                        meshGeo.TriangleIndices.Clear();
+
+                        foreach (int t in meshBuffer.TempFaces)
+                            meshGeo.TriangleIndices.Add(t);
+
+
+                        RaisePropertyChanged(MODEL);
+
+                        Console.WriteLine(wa.ElapsedMilliseconds);
+                    }
+
+                    thresholding = false;
+                });
+                //tt.Start();
+            }
+        }
+
+        public static string ServerUrl { get; set; } = "https://localhost:49153/";
+
+        public bool EnabledButtons
+        {
+            get => this.enabledButtons;
+            set
+            {
+                this.enabledButtons = value;
+                RaisePropertyChanged(EN_BTN_PROPERTY);
+            }
+        }
+
+        /// <summary>
+        /// Connect to server command
+        /// </summary>
+        public ICommand Connect { get; private set; }
+
+        public ICommand SendMesh { get; private set; }
+        public ICommand RemoveMesh { get; private set; }
+        public ICommand OpenRealSenseFile { get; private set; }
+        public ICommand ConnectCamera { get; private set; }
+
+        public ICommand SavePly { get; private set; }
+        public ICommand ReloadMesh { get; private set; }
+
+
+        private bool[] filters = Enumerable.Repeat(true, 5).ToArray();
+
+        public bool Filter0
+        {
+            get => filters[0];
+            set
+            {
+                this.filters[0] = value;
+                OnFilterChange();
+            }
+        }
+
+        public bool Filter1
+        {
+            get => filters[1];
+            set
+            {
+                this.filters[1] = value;
+                OnFilterChange();
+            }
+        }
+
+        public bool Filter2
+        {
+            get => filters[2];
+            set
+            {
+                this.filters[2] = value;
+                OnFilterChange();
+            }
+        }
+
+        public bool Filter3
+        {
+            get => filters[3];
+            set
+            {
+                this.filters[3] = value;
+                OnFilterChange();
+            }
+        }
+
+        public bool Filter4
+        {
+            get => filters[4];
+            set
+            {
+                this.filters[4] = value;
+                OnFilterChange();
+            }
+        }
 
 
         /// <summary>
@@ -95,6 +289,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.timer.Start();
         }
 
+        private RealS.MeshFrameBuffer meshBuffer;
+
         private void OnReloadMesh()
         {
             if (!RealS.Started)
@@ -108,6 +304,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             var frame = frames.Value;
+            meshBuffer = new RealS.MeshFrameBuffer(frame);
             BuildModelFromFrame(frame);
         }
 
@@ -188,6 +385,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             return bitmapImage;
         }
+
+        public static void GenerateFaces(RealS.MeshFrameBuffer frame, float threshold)
+        {
+            threshold *= threshold;
+
+            Array.Copy(frame.Faces, frame.TempFaces, frame.Faces.Length);
+
+            for (int i = 0; i < frame.TempFaces.Length; i += 3)
+            {
+                Vector3 v0 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 0] * 3, 3));
+                Vector3 v1 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 1] * 3, 3));
+                Vector3 v2 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 2] * 3, 3));
+
+                if ((v0-v1).LengthSquared() > threshold
+                    || (v1 - v2).LengthSquared() > threshold
+                    || (v2 - v0).LengthSquared() > threshold)
+                {
+                    frame.TempFaces[i + 0] = 0;
+                    frame.TempFaces[i + 1] = 0;
+                    frame.TempFaces[i + 2] = 0;
+                }
+            }
+        }
+
 
         private void BuildModelFromFrame(RealS.MeshFrame frame)
         {
@@ -279,10 +500,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             return wbm;
         }
 
+        private MeshGeometry3D meshGeo;
         private void PrepareModel(MeshGeometry3D mesh, Material frontMaterial)
         {
+            meshGeo = mesh;
             var modelGroup = new Model3DGroup();
-
 
             var insideMaterial = MaterialHelper.CreateMaterial(Colors.CadetBlue);
 
@@ -298,132 +520,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
 
-        private Model3D model;
-
-        /// <summary>
-        /// Gets and sets a message.
-        /// </summary>
-        public string Message
-        {
-            get => this.message;
-            set
-            {
-                this.message = value;
-                RaisePropertyChanged(MESSAGE_PROPERTY);
-            }
-        }
-
-        public bool SavePlyBtnEnable
-        {
-            get => this.savePlyBtnEnable;
-            set
-            {
-                this.savePlyBtnEnable = value;
-                RaisePropertyChanged(SAVE_PLY_BTN_PROPERTY);
-            }
-        }
-
-        public string ConnectBtnLbl
-        {
-            get => this.connectBtnLbl;
-            set
-            {
-                this.connectBtnLbl = value;
-                RaisePropertyChanged(CNTCBTLB_PROPERTY);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the model.
-        /// </summary>
-        /// <value>The model.</value>
-        public Model3D Model
-        {
-            get => model;
-            set
-            {
-                model = value;
-                RaisePropertyChanged(MODEL);
-            }
-        }
-
-        public static string ServerUrl { get; set; } = "https://localhost:49153/";
-
-        public bool EnabledButtons
-        {
-            get => this.enabledButtons;
-            set
-            {
-                this.enabledButtons = value;
-                RaisePropertyChanged(EN_BTN_PROPERTY);
-            }
-        }
-
-        /// <summary>
-        /// Connect to server command
-        /// </summary>
-        public ICommand Connect { get; private set; }
-
-        public ICommand SendMesh { get; private set; }
-        public ICommand RemoveMesh { get; private set; }
-        public ICommand OpenRealSenseFile { get; private set; }
-        public ICommand ConnectCamera { get; private set; }
-
-        public ICommand SavePly { get; private set; }
-        public ICommand ReloadMesh { get; private set; }
-
-
-        private bool[] filters = Enumerable.Repeat(true, 5).ToArray();
-
-        public bool Filter0
-        {
-            get => filters[0];
-            set
-            {
-                this.filters[0] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter1
-        {
-            get => filters[1];
-            set
-            {
-                this.filters[1] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter2
-        {
-            get => filters[2];
-            set
-            {
-                this.filters[2] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter3
-        {
-            get => filters[3];
-            set
-            {
-                this.filters[3] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter4
-        {
-            get => filters[4];
-            set
-            {
-                this.filters[4] = value;
-                OnFilterChange();
-            }
-        }
+      
 
 
         private void OnFilterChange()
@@ -433,10 +530,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
 
-        private bool inConnectProcess = false;
-        private bool savePlyBtnEnable;
-        private readonly DispatcherTimer timer;
-        private double angle;
+ 
 
         /// <summary>
         /// Connects connection to a server.

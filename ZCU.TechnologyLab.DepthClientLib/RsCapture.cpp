@@ -143,7 +143,7 @@ std::vector<filter_options> filters;
 rs2::pipeline* pipe;
 
 // Declare filters
-rs2::decimation_filter dec_filter; // Decimation - reduces depth frame density
+rs2::decimation_filter dec_filter(2); // Decimation - reduces depth frame density
 rs2::threshold_filter thr_filter; // Threshold  - removes values outside recommended range
 rs2::spatial_filter spat_filter; // Spatial    - edge-preserving spatial smoothing
 rs2::temporal_filter temp_filter; // Temporal   - reduces temporal noise
@@ -409,7 +409,7 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 			*faces++ = s + width;
 			*faces++ = s + 1;
 
-			{
+			/* {
 				//invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
@@ -422,12 +422,12 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 					faces -= 3;
 					facesCount -= 3;
 				}
-			}
+			}*/
 
 			*faces++ = s + width;
 			*faces++ = s + width + 1;
 			*faces++ = s + 1;
-			{
+			/* {
 				//invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
@@ -440,7 +440,7 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 					faces -= 3;
 					facesCount -= 3;
 				}
-			}
+			}*/
 		}
 	}
 }

@@ -39,7 +39,7 @@ namespace Intel.RealSense
             if (imgColor1.Source != null && Math.Abs(imgColor1.Source.Width - width) < 0.01)
                 return;
             imgColor1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Rgb24, null);
-            imgDepth1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Gray16, null);
+           // imgDepth1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Gray16, null);
         }
 
         private static void MultiplyBitmap(WriteableBitmap wbmp)
@@ -74,9 +74,9 @@ namespace Intel.RealSense
                 if (freezeDepth)
                     return;
 
-                var target = imgDepth1.Source as WriteableBitmap;
-                var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
-                target.WritePixels(rect, frame.Data, frame.Stride, 0);
+               // var target = imgDepth1.Source as WriteableBitmap;
+              //  var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
+               // target.WritePixels(rect, frame.Data, frame.Stride, 0);
                 //MultiplyBitmap(target);
             };
         }
