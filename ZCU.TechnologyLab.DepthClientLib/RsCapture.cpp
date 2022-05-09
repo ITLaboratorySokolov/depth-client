@@ -390,6 +390,11 @@ float dist2(const rs2_vector& a, const rs2_vector& b)
 	return x * x + y * y + z * z;
 }
 
+bool isZero(rs2_vector& v)
+{
+	return v.x == 0 || v.y == 0 || v.z == 0;
+
+}
 void generateFaces(int* faces, float* vertices, int width, int height, int& facesCount)
 {
 	facesCount = 0;
@@ -401,7 +406,7 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 		for (int j = 0; j < width - 1; ++j)
 		{
 			facesCount += 6;
-			const float epsilon = 0.1;
+			const float epsilon = 1;
 
 
 			int s = lineStart + j;
@@ -409,7 +414,7 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 			*faces++ = s + width;
 			*faces++ = s + 1;
 
-			/* {
+			 {
 				//invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
@@ -417,17 +422,18 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 
 				if (dist2(v0, v1) > epsilon
 					|| dist2(v1, v2) > epsilon
-					|| dist2(v2, v0) > epsilon)
+					|| dist2(v2, v0) > epsilon
+					|| isZero(v0)||isZero(v1)||isZero(v2))
 				{
 					faces -= 3;
 					facesCount -= 3;
 				}
-			}*/
+			}
 
 			*faces++ = s + width;
 			*faces++ = s + width + 1;
 			*faces++ = s + 1;
-			/* {
+			 {
 				//invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
@@ -435,12 +441,13 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 
 				if (dist2(v0, v1) > epsilon
 					|| dist2(v1, v2) > epsilon
-					|| dist2(v2, v0) > epsilon)
+					|| dist2(v2, v0) > epsilon
+					|| isZero(v0) || isZero(v1) || isZero(v2))
 				{
 					faces -= 3;
 					facesCount -= 3;
 				}
-			}*/
+			}
 		}
 	}
 }

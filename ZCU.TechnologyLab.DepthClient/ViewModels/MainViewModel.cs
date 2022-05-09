@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Runtime.InteropServices;
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -17,9 +17,9 @@ using System.Windows.Threading;
 using HelixToolkit.Wpf;
 using Intel.RealSense;
 using Microsoft.Win32;
-using Newtonsoft.Json;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections;
+using ZCU.TechnologyLab.Common.Connections.Data;
 using ZCU.TechnologyLab.Common.Connections.Session;
 using ZCU.TechnologyLab.Common.Serialization;
 
@@ -32,10 +32,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         static extern bool AllocConsole();
 
 
-        private ServerConnection serverConnection;
-
-        private ISessionClient sessionClient;
-
 
         private const string MESSAGE_PROPERTY = "Message";
 
@@ -44,18 +40,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private const string SAVE_PLY_BTN_PROPERTY = "SavePlyBtnEnable";
 
         public const string MESH_NAME = "DepthMesh";
-        public const string MESH_TYPE = "Mesh";
         public const string PLY_NAME = "DepthPly";
-        public const string PLY_TYPE = "PlyFile";
         public const string THRESHOLD = "ThresholdSlider";
         public const string MODEL = "Model";
-        private Model3D model;
+        private Model3D _model;
 
 
-        private bool inConnectProcess = false;
-        private bool savePlyBtnEnable;
+        private bool _inConnectProcess = false;
+        private bool _savePlyBtnEnable;
         private readonly DispatcherTimer timer;
-        private double angle;
+        private double _angle;
 
         /// <summary>
         /// Gets and sets a message.
@@ -72,10 +66,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         public bool SavePlyBtnEnable
         {
-            get => this.savePlyBtnEnable;
+            get => this._savePlyBtnEnable;
             set
             {
-                this.savePlyBtnEnable = value;
+                this._savePlyBtnEnable = value;
                 RaisePropertyChanged(SAVE_PLY_BTN_PROPERTY);
             }
         }
@@ -96,71 +90,43 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// <value>The model.</value>
         public Model3D Model
         {
-            get => model;
+            get => _model;
             set
             {
-                model = value;
+                _model = value;
                 RaisePropertyChanged(MODEL);
             }
         }
 
-        private double thresholdSlider;
+        private double _thresholdSlider;
 
-        private volatile bool thresholding = false;
+        public void UpdateSliderModel()
+        {
+            if (meshBuffer != null)
+            {
+                Stopwatch wa = Stopwatch.StartNew();
+                GenerateFaces(meshBuffer, (float)_thresholdSlider);
+
+                meshGeo.TriangleIndices.Clear();
+                Console.WriteLine(wa.ElapsedMilliseconds);
+
+                meshGeo.TriangleIndices = new Int32Collection(meshBuffer.TempFaces);
+
+
+                Console.WriteLine(wa.ElapsedMilliseconds);
+
+
+                RaisePropertyChanged(MODEL);
+            }
+        }
+
         public double ThresholdSlider
         {
-            get => thresholdSlider;
+            get => _thresholdSlider;
             set
             {
-                thresholdSlider = value;
-
-                if (thresholding)
-                    return;
-                thresholding = true;
-
-
-                if (meshBuffer != null)
-                {
-                    Stopwatch wa = Stopwatch.StartNew();
-                    GenerateFaces(meshBuffer, (float)thresholdSlider);
-
-                    meshGeo.TriangleIndices.Clear();
-                    Console.WriteLine(wa.ElapsedMilliseconds);
-
-                    meshGeo.TriangleIndices = new Int32Collection(meshBuffer.TempFaces);
-
-
-                    Console.WriteLine(wa.ElapsedMilliseconds);
-
-
-                    RaisePropertyChanged(MODEL);
-
-
-                }
-
-                thresholding = false;
-
-                Thread tt = new Thread(() =>
-                {
-                    if (meshBuffer != null)
-                    {
-                        Stopwatch wa = Stopwatch.StartNew();
-                        GenerateFaces(meshBuffer, (float)thresholdSlider);
-
-                        meshGeo.TriangleIndices.Clear();
-
-                        foreach (int t in meshBuffer.TempFaces)
-                            meshGeo.TriangleIndices.Add(t);
-
-
-                        RaisePropertyChanged(MODEL);
-
-                        Console.WriteLine(wa.ElapsedMilliseconds);
-                    }
-
-                    thresholding = false;
-                });
-                //tt.Start();
+                _thresholdSlider = value;
+                UpdateSliderModel();
             }
         }
 
@@ -261,6 +227,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         public MainViewModel()
         {
+            DispatcherTimer timer;
             AllocConsole();
 
             // Console.WriteLine("before initn");
@@ -272,6 +239,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             RealSenseWrapper.Exit();*/
             //   Console.WriteLine("after initn");
 
+            this._thresholdSlider = 0.2;
 
             this.Connect = new Command(this.OnConnect);
             this.SendMesh = new Command(this.OnSendMesh);
@@ -304,8 +272,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             var frame = frames.Value;
-            meshBuffer = new RealS.MeshFrameBuffer(frame);
             BuildModelFromFrame(frame);
+            UpdateSliderModel();
         }
 
         private Material blueMat = MaterialHelper.CreateMaterial(Colors.Blue);
@@ -316,10 +284,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             if (mo != null && mo.Children.Count != 0)
             {
                 var m = ((Model3DGroup)Model).Children[0];
-                if (this.angle >= 360)
-                    this.angle = 0;
+                if (this._angle >= 360)
+                    this._angle = 0;
 
-                this.angle += 1;
+                this._angle += 1;
                 //You can adapt the code if you have many children 
                 GeometryModel3D geometryModel3D = (GeometryModel3D)m;
                 if (geometryModel3D.Transform is RotateTransform3D rotateTransform3 &&
@@ -398,7 +366,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 Vector3 v1 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 1] * 3, 3));
                 Vector3 v2 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 2] * 3, 3));
 
-                if ((v0-v1).LengthSquared() > threshold
+                if ((v0 - v1).LengthSquared() > threshold
                     || (v1 - v2).LengthSquared() > threshold
                     || (v2 - v0).LengthSquared() > threshold)
                 {
@@ -412,22 +380,29 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         private void BuildModelFromFrame(RealS.MeshFrame frame)
         {
+            meshBuffer = new RealS.MeshFrameBuffer(frame);
+            GenerateFaces(meshBuffer, (float)ThresholdSlider);
+
             Stopwatch watch = new Stopwatch();
-            watch.Restart();
             MeshGeometry3D d = new MeshGeometry3D();
+
+            var vertexI = 0;
             for (int i = 0; i < frame.Vertices.Length; i += 3)
             {
                 Point3D p = new(
                     frame.Vertices[i],
                     frame.Vertices[i + 1],
                     frame.Vertices[i + 2]);
+                Point uv = new Point(frame.UVs[vertexI * 2], frame.UVs[vertexI * 2 + 1]);
+
                 d.Positions.Add(p);
-                d.TextureCoordinates.Add(new Point(frame.UVs[i / 3 * 2], frame.UVs[i / 3 * 2 + 1]));
+                d.TextureCoordinates.Add(uv);
+
+                vertexI++;
             }
 
-            foreach (int t in frame.Faces)
-                d.TriangleIndices.Add(t);
 
+            d.TriangleIndices = new Int32Collection(meshBuffer.TempFaces);
 
             Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
 
@@ -501,6 +476,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         private MeshGeometry3D meshGeo;
+        private ServerDataConnection dataConnection;
+        private SignalRSession sessionClient;
+        private ServerSessionConnection sessionConnection;
+
         private void PrepareModel(MeshGeometry3D mesh, Material frontMaterial)
         {
             meshGeo = mesh;
@@ -520,9 +499,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
 
-      
-
-
         private void OnFilterChange()
         {
             Console.WriteLine("Updating filters");
@@ -530,37 +506,37 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
 
- 
-
         /// <summary>
         /// Connects connection to a server.
         /// </summary>
         private async void OnConnect()
         {
-            if (inConnectProcess)
+            if (_inConnectProcess)
                 return;
-            inConnectProcess = true;
+            _inConnectProcess = true;
             if (!ServerUrl.EndsWith("/"))
                 ServerUrl += "/";
             if (!this.connected)
             {
-                this.ConnectBtnLbl = "Connecting";
                 try
                 {
+                    Message = "Connecting";
+
+                    var restClient = new RestDataClient(ServerUrl);
+                    this.dataConnection = new ServerDataConnection(restClient);
+
+                    var signalrClient = new SignalRSession(ServerUrl, "virtualWorldHub");
+                    signalrClient.Disconnected += SessionClient_Disconnected;
+                    this.sessionClient = signalrClient;
+
+                    this.sessionConnection = new ServerSessionConnection(signalrClient);
+
                     if (sessionClient is { SessionState: SessionState.Connected })
                         await sessionClient.StopSessionAsync();
-                    sessionClient = null;
-
-
-                    sessionClient = new SignalRSession(ServerUrl, "virtualWorldHub");
-                    if (sessionClient == null)
-                        throw new Exception();
-                    serverConnection = new ServerConnection(this.sessionClient);
-
-                    serverConnection.AllWorldObjectsReceived += OnAllWorldObjectsReceived;
 
                     await this.sessionClient.StartSessionAsync();
                     this.Message = "Connected to server: " + ServerUrl;
+                    this.ConnectBtnLbl = "Disconnect";
                 }
                 catch (Exception e)
                 {
@@ -576,6 +552,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 try
                 {
                     await this.sessionClient.StopSessionAsync();
+                    this.ConnectBtnLbl = "Connect";
+                    Message = "Disconnected";
+
                 }
                 catch (Exception e)
                 {
@@ -586,7 +565,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             if (sessionClient == null)
             {
-                inConnectProcess = false;
+                _inConnectProcess = false;
                 return;
             }
 
@@ -602,11 +581,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 if (this.connected)
                 {
                     // Console.WriteLine("Asking for worldobjects");
-                    await serverConnection.GetAllWorldObjectsAsync();
+                    await dataConnection.GetAllWorldObjectsAsync();
                 }
             }
 
-            inConnectProcess = false;
+            _inConnectProcess = false;
+        }
+
+        private void SessionClient_Disconnected(object sender, Exception e)
+        {
+            //server disconnected 
         }
 
         /// Changes message when the SignalR client is disconnected.
@@ -621,14 +605,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private async void OnSendMesh()
         {
             Console.WriteLine("Parsing mesh");
-            WorldObjectDto w = new()
-            {
-                Name = MESH_NAME,
-                Type = MESH_TYPE
-            };
 
+
+            using (var frames = RealS.MeshFrame.Obtain())
             {
-                using var frames = RealS.MeshFrame.Obtain();
                 if (!frames.HasValue)
                 {
                     Message = "No mesh available";
@@ -636,40 +616,71 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
 
                 var frame = frames.Value;
-
                 BuildModelFromFrame(frame);
-                w.Properties =
-                    new MeshSerializer().SerializeProperties(frame.Vertices, frame.Faces, "Triangle");
 
-
-                // adding mesh file
-
-                //    await this.serverConnection.AddWorldObjectAsync(w);
-
-                Console.WriteLine("Mesh not sent Sent");
-
-
-                //adding ply file to server
-                w = new()
+                //send ply
                 {
-                    Name = PLY_NAME,
-                    Type = PLY_TYPE
-                };
-                w.Properties = new Dictionary<string, string>
-                {
-                    ["data"] = Convert.ToBase64String(frame.Ply)
-                };
+                    var p = new Dictionary<string, byte[]>
+                    {
+                        ["data"] = frame.Ply
+                    };
+                    var w = new WorldObjectDto
+                    {
+                        Name = PLY_NAME,
+                        Type = "PlyFile",
+                        Properties = p
+                    };
+                    try
+                    {
+                        //if object already on server wanna update instead
+                        await dataConnection.AddWorldObjectAsync(w);
+                    }
+                    catch (Exception e)
+                    {
+                        await dataConnection.UpdateWorldObjectAsync(w);
+                    }
+                }
 
-                //await this.serverConnection.AddWorldObjectAsync(w);
+                //send mesh
+                {
+                    var properties =
+                        new MeshSerializer().SerializeProperties(frame.Vertices, meshBuffer.TempFaces, "Triangle");
+                    var w = new WorldObjectDto
+                    {
+                        Name = MESH_NAME,
+                        Type = "Mesh",
+                        Position = new RemoteVectorDto(),
+                        Properties = properties,
+                        Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
+                        Rotation = new RemoteVectorDto()
+                    };
+                    try
+                    {
+                        //if object already on server wanna update instead
+                        await dataConnection.AddWorldObjectAsync(w);
+                    }
+                    catch (Exception e)
+                    {
+                        await dataConnection.UpdateWorldObjectAsync(w);
+                    }
+                }
+
                 Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME;
             }
         }
 
         private async void OnRemoveImage()
         {
-            await this.serverConnection.RemoveWorldObjectAsync(MESH_NAME);
-            await this.serverConnection.RemoveWorldObjectAsync(PLY_NAME);
-            this.Message = "Ply & Mesh removed from server";
+            try
+            {
+                await this.dataConnection.RemoveWorldObjectAsync(MESH_NAME);
+                await this.dataConnection.RemoveWorldObjectAsync(PLY_NAME);
+                this.Message = "Ply & Mesh removed from server";
+            }
+            catch (Exception ex)
+            {
+                this.Message = "No Ply & Mesh found on server";
+            }
         }
 
         private void OnOpenRealSenseFile()
