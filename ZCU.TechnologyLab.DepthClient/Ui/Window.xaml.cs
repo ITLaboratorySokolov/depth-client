@@ -3,10 +3,12 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -14,6 +16,9 @@ using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using TextBox = System.Windows.Controls.TextBox;
 
 // This demo showcases some of the more advanced API concepts:
 // a. Post-processing and stream alignment
@@ -27,7 +32,6 @@ namespace Intel.RealSense
     /// </summary>
     public partial class ProcessingWindow : Window
     {
-
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         static volatile bool freezeDepth = false;
@@ -39,7 +43,7 @@ namespace Intel.RealSense
             if (imgColor1.Source != null && Math.Abs(imgColor1.Source.Width - width) < 0.01)
                 return;
             imgColor1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Rgb24, null);
-           // imgDepth1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Gray16, null);
+            // imgDepth1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Gray16, null);
         }
 
         private static void MultiplyBitmap(WriteableBitmap wbmp)
@@ -74,9 +78,9 @@ namespace Intel.RealSense
                 if (freezeDepth)
                     return;
 
-               // var target = imgDepth1.Source as WriteableBitmap;
-              //  var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
-               // target.WritePixels(rect, frame.Data, frame.Stride, 0);
+                // var target = imgDepth1.Source as WriteableBitmap;
+                //  var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
+                // target.WritePixels(rect, frame.Data, frame.Stride, 0);
                 //MultiplyBitmap(target);
             };
         }
@@ -94,10 +98,10 @@ namespace Intel.RealSense
             };
         }
 
-         public static void FreezeBuffer(bool b)
-         {
-             freezeDepth = b;
-         }
+        public static void FreezeBuffer(bool b)
+        {
+            freezeDepth = b;
+        }
 
         public ProcessingWindow()
         {
@@ -114,7 +118,7 @@ namespace Intel.RealSense
 
                 var t = Task.Factory.StartNew(() =>
                 {
-                    RealS.DepthFrameBuffer buffer=new();
+                    RealS.DepthFrameBuffer buffer = new();
 
                     while (!token.IsCancellationRequested)
                     {
@@ -175,8 +179,9 @@ namespace Intel.RealSense
                 Console.WriteLine("Exit");
                 allowExit = true;
 
-                Action action = () => Close(); ;
-                Dispatcher.Invoke(DispatcherPriority.Normal,action);
+                Action action = () => Close();
+                ;
+                Dispatcher.Invoke(DispatcherPriority.Normal, action);
             });
             t.Start();
         }
@@ -193,6 +198,28 @@ namespace Intel.RealSense
             Console.WriteLine(Hell.Camera.Position);
             Console.WriteLine(Hell.Camera.LookDirection);
             Hell.SetView(new Point3D(18, -0.8, 0.8), new Vector3D(-1, 0, 0), new Vector3D(0, 0, 1), 1000);
+        }
+
+        private void AutoMenu_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dc = DataContext as MainViewModel;
+            dc.OnChangeAuto();
+        }
+
+        private void UIElement_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new Regex("^[0-9]+$");
+            e.Handled = regex.IsMatch(e.Text);
+            if (e.Handled && int.Parse(e.Text) == 0)
+                e.Handled = false;
+        }
+
+        private void NumericUpDown_OnValueChanged(object? sender, EventArgs e)
+        {
+            var dc = DataContext as MainViewModel;
+            var s = sender as NumericUpDown;
+
+            dc.AutoInterval = (int)s.Value;
         }
     }
 }

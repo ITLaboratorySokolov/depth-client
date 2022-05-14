@@ -208,38 +208,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
-
-        public class MeshFrameBuffer
-        {
-            public int[] Faces;
-            public int[] TempFaces;
-            public float[] Vertices;
-
-            public int Width;
-            public int Height;
-
-
-            public MeshFrameBuffer(MeshFrame frame)
-            {
-                Faces = new int[frame.Faces.Length];
-                TempFaces = new int[frame.Faces.Length];
-                Vertices = new float[frame.Vertices.Length];
-                Width = frame.Width;
-                Height = frame.Height;
-
-                Array.Copy(frame.Faces,Faces,frame.Faces.Length);
-                Array.Copy(frame.Faces,TempFaces,frame.Faces.Length);
-                Array.Copy(frame.Vertices,Vertices,frame.Vertices.Length);
-            }
-
-        }
-
-        // Frame read from unmanaged memory, after use Dispose
+        // Frame read from unmanaged memory
         // Mesh + Ply File as binary data
-        public struct MeshFrame : IDisposable
+        public struct MeshFrame
         {
-            public IntPtr VertexPtr, FacePtr, PlyPtr;
-
             public float[] Vertices;
             public float[] UVs;
             public int[] Faces;
@@ -248,7 +220,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public byte[] Colors;
             public int Width;
 
-            public int Height => Vertices.Length / 3 - Width;
+            public int Height => Colors.Length / 3 / Width;
 
             public static MeshFrame? Obtain()
             {
@@ -274,7 +246,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                                 out var colorsCount,
                                 out var plyLength,
                                 out var width))
-                            throw new Exception();
+                            throw new Exception("Cannot get frame from Realsense");
 
                         meshFrame.Width = width;
                         meshFrame.Vertices = new float[vertexCount];
@@ -291,9 +263,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                         Marshal.Copy((IntPtr)uvs, meshFrame.UVs, 0, uvCount);
                         Marshal.Copy((IntPtr)colors, meshFrame.Colors, 0, colorsCount);
 
-                        meshFrame.VertexPtr = (IntPtr)vertices;
-                        meshFrame.FacePtr = (IntPtr)faces;
-                        meshFrame.PlyPtr = (IntPtr)binaryPly;
+                        RealSenseWrapper.DropFrame(vertices, faces, binaryPly);
+                        Interlocked.Decrement(ref FramesAllocated);
                     }
 
                     return meshFrame;
@@ -303,16 +274,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                     Interlocked.Decrement(ref FramesAllocated);
                     return null;
                 }
-            }
-
-            public void Dispose()
-            {
-                unsafe
-                {
-                    RealSenseWrapper.DropFrame((float*)VertexPtr, (int*)FacePtr, (byte*)PlyPtr);
-                }
-
-                Interlocked.Decrement(ref FramesAllocated);
             }
         }
     }

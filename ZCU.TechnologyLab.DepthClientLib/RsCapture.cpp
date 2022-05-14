@@ -752,13 +752,13 @@ bool GetFrame(
 
 	//=================ply=====================
 	{
-		std::ofstream myfile("my_ply_string.ply", std::_Iosb<int>::out | std::_Iosb<int>::binary);
+		//std::ofstream myfile("my_ply_string.ply", std::_Iosb<int>::out | std::_Iosb<int>::binary);
 		auto s = export_to_ply_string(points, color);
 
 		*binaryPly = (uint8_t*)malloc(s.length());
 		memcpy(*binaryPly, s.c_str(), s.length());
 		*plyLength = s.length();
-		myfile << s;
+		//myfile << s;
 	}
 
 	//=================uv=====================
