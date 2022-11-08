@@ -5,7 +5,7 @@
         xmlns:HelixToolkit="http://helix-toolkit.org/wpf"
         xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         Closing="control_Closing"
-        Title="Depth Data Client" Height="448" Width="916">
+        Title="Depth Data Client" Height="655" Width="916">
     <Window.DataContext>
         <viewModels:MainViewModel />
     </Window.DataContext>
@@ -57,7 +57,7 @@
             </Menu>
         </Grid>
 
-        <DockPanel DockPanel.Dock="Bottom">
+        <DockPanel DockPanel.Dock="Top">
             <DockPanel.Resources>
                 <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
                 <HelixToolkit:NotNullToVisibilityConverter x:Key="NotNullToVisibilityConverter" />
@@ -321,6 +321,11 @@
                     <ColumnDefinition Width="5" />
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5*" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*" />
@@ -427,6 +432,7 @@
                     </Grid>
                 </DockPanel>
             </Grid>
+            
         </DockPanel>
     </DockPanel>
 </Window>
