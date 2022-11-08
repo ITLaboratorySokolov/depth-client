@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -220,6 +221,21 @@ namespace Intel.RealSense
             var s = sender as NumericUpDown;
 
             dc.AutoInterval = (int)s.Value;
+        }
+
+        private void ApplyCodeBT_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO
+            // get pointcloud in snapshot
+            // write out first 10 points into textbox
+        }
+
+        private void CodeBlock_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextRange textRange = new TextRange( CodeBlock.Document.ContentStart, CodeBlock.Document.ContentEnd);
+
+            var dc = DataContext as MainViewModel;
+            dc.UserCode = textRange.Text;
         }
     }
 }

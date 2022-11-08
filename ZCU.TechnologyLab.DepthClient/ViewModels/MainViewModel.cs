@@ -39,6 +39,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private const string AUTO_PROPERTY = "AutoEnabledLbl";
         private const string SAVE_PLY_BTN_PROPERTY = "SavePlyBtnEnable";
         public const string MODEL_PROPERTY = "Model";
+        public const string FRAME_PROPERTY = "Frame";
+        public const string USER_CODE = "UserCode";
 
         public const string MESH_NAME = "DepthMesh";
         public const string MESH_TEXTURE_NAME = "DepthMeshTexture";
@@ -60,6 +62,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private RealS.MeshFrame? _meshBuffer;
         private MeshGeometry3D _meshGeo;
 
+        // last snapped frame
+        private RealS.MeshFrame _frame;
+
+        // user code
+        private string _userCode;
+
         // networking
         private ServerDataConnection _dataConnection;
         private SignalRSession _sessionClient;
@@ -67,7 +75,28 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
 
+
         #region PublicProperties
+
+        public RealS.MeshFrame Frame
+        {
+            get => this._frame;
+            set
+            {
+                this._frame = value;
+                RaisePropertyChanged(FRAME_PROPERTY);
+            }
+        }
+
+        public string UserCode
+        {
+            get => this._userCode;
+            set
+            {
+                this._userCode = value;
+                RaisePropertyChanged(USER_CODE);
+            }
+        }
 
         public string Message
         {
@@ -200,6 +229,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand ConnectCamera { get; private set; }
         public ICommand SavePly { get; private set; }
         public ICommand ReloadMesh { get; private set; }
+        public ICommand EditPointcloud { get; private set; }
 
 
 
@@ -217,6 +247,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.ConnectCamera = new Command(this.OnConnectCamera);
             this.SavePly = new Command(this.OnSavePly);
             this.ReloadMesh = new Command(this.OnSnapshot);
+            this.EditPointcloud = new Command(this.OnApplyClicked);
 
             OnConnectCamera();
             BuildMeshDefault();
@@ -224,6 +255,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
             this.timer.Tick += Timer_Tick;
             this.timer.Start();
+        }
+
+        private void OnApplyClicked()
+        {
+            // no captured frame
+            if (Frame.Vertices == null)
+            {
+                Message = "No pointcloud available";
+                return;
+            }
+
+            string code = UserCode;
+            var frm = Frame;
+
+            // edit pointcloud according to code
+            //      - need to change vertices, UV coords
+            // reset mesh according to the pointcloud change
+            //      - create a new mesh with same texture but different points
+
+            // TODO how will the texture change
+            // TODO what is the mesh on init? do i want to save it and potentialy edit it too?
+            // TODO need to have setting and generating mesh separately?
+
+            // TODO how is it sent to server?
         }
 
         private void UpdateAutoLabel(int remaining)
@@ -274,6 +329,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
+            _frame = frames.Value;
             BuildMesh(frames.Value);
         }
 
@@ -363,11 +419,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             _meshBuffer = frame;
             GenerateFaces(frame, (float)ThresholdSlider);
 
-            
-
             Stopwatch watch = new Stopwatch();
             MeshGeometry3D d = new MeshGeometry3D();
-
 
             d.Positions = new Point3DCollection(frame.Vertices.Length / 3);
 
