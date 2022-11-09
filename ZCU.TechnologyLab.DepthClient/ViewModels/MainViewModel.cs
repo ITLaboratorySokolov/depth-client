@@ -269,17 +269,117 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             string code = UserCode;
             var frm = Frame;
 
+            /*
+            Frame.Faces;
+            Frame.TempFaces;
+            Frame.Faces.Length;
+            Frame.Vertices;
+            frame.UVs.Length;
+            */
+
+            Message = "Processing...";
+            int prev = Frame.Vertices.Length;
+
+            // Test of editing
+            {
+                // sanity check before unsafe
+                if (Frame.Vertices.Length / 3 != Frame.UVs.Length / 2)
+                    throw new Exception("wrong array dimensions");
+
+                unsafe
+                {
+                    Thread t = new Thread(() =>
+                    {
+                        for (int i = 0; i < Frame.Vertices.Length; i += 3)
+                        {
+                            Frame.Vertices[i] = Frame.Vertices[i] + 0.5f;
+                            Frame.Vertices[i + 1] = Frame.Vertices[i + 1] + 0.5f;
+                            Frame.Vertices[i + 2] = Frame.Vertices[i + 2] + 0.5f;
+                        }
+
+                        DeletePoint(Frame.Vertices.Length / 3 - 1);
+                        Message = "Code executed";
+                    });
+
+                    // TODO didnt help myself here did i
+                    t.Start();
+                    t.Join();
+                }
+            }
+
             // edit pointcloud according to code
-            //      - need to change vertices, UV coords
+            //      - need to change vertices, UV coords and faces
+            //      - data from realsense is taken as meshframe
             // reset mesh according to the pointcloud change
             //      - create a new mesh with same texture but different points
 
-            // TODO how will the texture change
-            // TODO what is the mesh on init? do i want to save it and potentialy edit it too?
-            // TODO need to have setting and generating mesh separately?
-
+            // TODO mesh on init - do i want to save it and potentialy edit it too?
             // TODO how is it sent to server?
+
+            // rebuild mesh
+            BuildMesh(Frame);
         }
+
+
+        private void DeletePoint(int index)
+        {
+            RealS.MeshFrame frame = Frame;
+
+            // copy of vertices array but without the point
+            // copy of UVs array but without the point
+            float[] newUV = new float[frame.UVs.Length - 2];
+            float[] newVerts = new float[frame.Vertices.Length - 3];
+
+            int newi = 0;
+            for (int i = 0; i < frame.Vertices.Length / 3; i++)
+            {
+                if (i == index)
+                    continue;
+
+                newUV[newi * 2] = frame.UVs[i * 2];
+                newUV[newi * 2 + 1] = frame.UVs[i * 2 + 1];
+
+                newVerts[newi * 3] = frame.Vertices[i * 3];
+                newVerts[newi * 3 + 1] = frame.Vertices[i * 3 + 1];
+                newVerts[newi * 3 + 2] = frame.Vertices[i * 3 + 2];
+                newi++;
+            }
+
+            // faces that contain that point have to be removed
+            List<int> newFaces = new List<int>();
+            List<int> newTempFaces = new List<int>();
+
+            for (int i = 0; i < frame.TempFaces.Length; i += 3)
+            {
+                if (frame.TempFaces[i] == index || frame.TempFaces[i + 1] == index || frame.TempFaces[i + 2] == index)
+                    continue;
+
+                int newV0 = frame.TempFaces[i] > index ? (frame.TempFaces[i] - 1) : frame.TempFaces[i];
+                int newV1 = (frame.TempFaces[i + 1] > index) ? (frame.TempFaces[i + 1] - 1) : frame.TempFaces[i + 1];
+                int newV2 = (frame.TempFaces[i + 2] > index) ? (frame.TempFaces[i + 2] - 1) : frame.TempFaces[i + 2];
+
+                newTempFaces.Add(newV0);
+                newTempFaces.Add(newV1);
+                newTempFaces.Add(newV2);
+
+                newV0 = (frame.Faces[i] > index) ? (frame.Faces[i] - 1) : frame.Faces[i];
+                newV1 = (frame.Faces[i + 1] > index) ? (frame.Faces[i + 1] - 1) : frame.Faces[i + 1];
+                newV2 = (frame.Faces[i + 2] > index) ? (frame.Faces[i + 2] - 1) : frame.Faces[i + 2];
+                
+                newFaces.Add(newV0);
+                newFaces.Add(newV1);
+                newFaces.Add(newV2);
+            }
+
+            frame.TempFaces = newTempFaces.ToArray();
+            frame.Faces = newFaces.ToArray();
+            frame.Vertices = newVerts;
+            frame.UVs = newUV;
+
+            // apply changes
+            Frame = frame;
+        }
+
 
         private void UpdateAutoLabel(int remaining)
         {
