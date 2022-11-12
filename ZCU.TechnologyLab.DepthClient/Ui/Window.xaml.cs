@@ -223,13 +223,6 @@ namespace Intel.RealSense
             dc.AutoInterval = (int)s.Value;
         }
 
-        private void ApplyCodeBT_Click(object sender, RoutedEventArgs e)
-        {
-            //TODO
-            // get pointcloud in snapshot
-            // write out first 10 points into textbox
-        }
-
         private void CodeBlock_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextRange textRange = new TextRange( CodeBlock.Document.ContentStart, CodeBlock.Document.ContentEnd);

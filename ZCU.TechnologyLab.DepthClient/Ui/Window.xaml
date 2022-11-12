@@ -399,14 +399,16 @@
                                                       RotateAroundMouseDownPoint="True"
                                                       IsTopBottomViewOrientedToFrontBack="True"
                                                       IsViewCubeEdgeClicksEnabled="True" Name="Hell"
-                                                      Grid.ColumnSpan="2">
+                                                      Grid.ColumnSpan="2" ChangeFieldOfViewCursor="ScrollNS" PanCursor="Hand" RotateCursor="SizeAll" ZoomCursor="SizeNS" ZoomRectangleCursor="ScrollSE">
 
 
                             <HelixToolkit:SunLight />
                             <!--  Remember to add light to the scene  -->
                             <HelixToolkit:DefaultLights></HelixToolkit:DefaultLights>
                             <!--  The content of this visual is defined in MainViewModel.cs  -->
+                            <HelixToolkit:PointsVisual3D Points="{Binding Points}" Size="1" Color="Red" Transform="{Binding ModelTF}" />
                             <ModelVisual3D Content="{Binding Model}" />
+                            <!--  <HelixToolkit:LinesVisual3D Content="{Binding Lines}" /> -->
 
                             <!--  You can also add elements here in the xaml  -->
                             <HelixToolkit:GridLinesVisual3D

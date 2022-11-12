@@ -23,6 +23,8 @@ using ZCU.TechnologyLab.Common.Connections.Data;
 using ZCU.TechnologyLab.Common.Connections.Session;
 using ZCU.TechnologyLab.Common.Serialization;
 using ZCU.TechnologyLab.DepthClient.ViewModels.ZCU.TechnologyLab.Common.Serialization;
+using _3DTools;
+using System.Windows.Controls;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -33,6 +35,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
          static extern bool AllocConsole();*/
 
         // property names
+        private const string POINTS_PROPERTY = "Points";
+        public const string MODELTF_PROPERTY = "ModelTF";
         private const string MESSAGE_PROPERTY = "Message";
         private const string CNTCBTLB_PROPERTY = "ConnectBtnLbl";
         private const string EN_BTN_PROPERTY = "EnabledButtons";
@@ -65,6 +69,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         // last snapped frame
         private RealS.MeshFrame _frame;
 
+        private Point3DCollection _points;
+        private Transform3D _modelTF;
+
         // user code
         private string _userCode;
 
@@ -77,6 +84,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
 
         #region PublicProperties
+
+        public Point3DCollection Points
+        {
+            get => this._points;
+            set
+            {
+                this._points = value;
+                RaisePropertyChanged(POINTS_PROPERTY);
+            }
+        }
 
         public RealS.MeshFrame Frame
         {
@@ -135,6 +152,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 _model = value;
                 RaisePropertyChanged(MODEL_PROPERTY);
+            }
+        }
+
+        public Transform3D ModelTF
+        {
+            get => _modelTF;
+            set
+            {
+                _modelTF = value;
+                RaisePropertyChanged(MODELTF_PROPERTY);
             }
         }
 
@@ -634,10 +661,20 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             });
             transforms.Children.Add(new ScaleTransform3D(3, 3, 3, 0, 0, 0.5));
 
-            modelGroup.Children.Add(new GeometryModel3D
-                { Geometry = mesh, Material = frontMaterial, BackMaterial = insideMaterial, Transform = transforms });
+            var model = new GeometryModel3D
+            { 
+                Geometry = mesh,
+                Material = frontMaterial,
+                BackMaterial = insideMaterial,
+                Transform = transforms
+            };
+            modelGroup.Children.Add(model);
+
+            var pc = new Point3DCollection(mesh.Positions);
+            ModelTF = transforms;
 
             this.Model = modelGroup;
+            this.Points = pc;
         }
 
 
