@@ -345,6 +345,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
 
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
@@ -382,6 +383,11 @@
                         <Label Grid.Row="5" Grid.Column="0" Content="{Binding ElementName=triangleSlider, Path=Value}"
                                ContentStringFormat="{}Triangle Thres:{0:#,0.00}" />
 
+                        <CheckBox Grid.Row="6" Grid.Column="1" x:Name="PointFilter" HorizontalAlignment="Left"
+                                  Margin="0,5,0,0"
+                                  VerticalAlignment="Top" IsChecked="{Binding PointFilter}" />
+                        <Label Grid.Row="6" Grid.Column="0" Content="Visible points" />
+
 
                     </Grid>
 
@@ -407,8 +413,8 @@
                             <HelixToolkit:DefaultLights></HelixToolkit:DefaultLights>
                             <!--  The content of this visual is defined in MainViewModel.cs  -->
                             <HelixToolkit:PointsVisual3D Points="{Binding Points}" Size="1" Color="Red" Transform="{Binding ModelTF}" />
-                            <ModelVisual3D Content="{Binding Model}" />
-                            <!--  <HelixToolkit:LinesVisual3D Content="{Binding Lines}" /> -->
+                            <ModelVisual3D Content="{Binding Model}"  />
+                            <!-- <HelixToolkit:LinesVisual3D Content="{Binding Lines}" /> -->
 
                             <!--  You can also add elements here in the xaml  -->
                             <HelixToolkit:GridLinesVisual3D

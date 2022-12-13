@@ -60,6 +60,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _message;
         private bool _enabledButtons;
         private bool _connected;
+        
+        private bool _pointFilter = true;
 
         // mesh
         private Model3D _model;
@@ -69,6 +71,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         // last snapped frame
         private RealS.MeshFrame _frame;
 
+        private Point3DCollection _pointsStor;
         private Point3DCollection _points;
         private Transform3D _modelTF;
 
@@ -245,6 +248,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 this._filters[4] = value;
                 OnFilterChange();
+            }
+        }
+
+        public bool PointFilter
+        {
+            get => _pointFilter;
+            set
+            {
+                this._pointFilter = value;
+                OnPointFilterChange();
             }
         }
 
@@ -674,7 +687,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             ModelTF = transforms;
 
             this.Model = modelGroup;
-            this.Points = pc;
+            this._pointsStor = pc;
+            if (PointFilter)
+                this.Points = pc;
         }
 
 
@@ -976,5 +991,22 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             ProcessingWindow.FreezeBuffer(false);
             saveDialog.Reset();
         }
+
+        private void OnPointFilterChange()
+        {
+            // if true - set to points
+            if (_pointFilter)
+            {
+                this.Points = _pointsStor;
+            }
+            // if untrue - unset points
+            else
+            {
+                this.Points = new Point3DCollection();
+            }
+
+            RaisePropertyChanged(POINTS_PROPERTY);
+        }
+
     }
 }
