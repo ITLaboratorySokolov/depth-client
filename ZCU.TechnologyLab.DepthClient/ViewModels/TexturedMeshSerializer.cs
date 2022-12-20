@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ZCU.TechnologyLab.Common.Serialization;
+using ZCU.TechnologyLab.Common.Serialization.Mesh;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -21,7 +21,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// If you want to receive a mesh from a server, you again need a class that holds and manages data, but the order of steps is reversed.
         /// ServerConnection will give you dto object you take its properties deserialize them in this class and set data to your class.
         /// </summary>
-        public class TexturedMeshSerializer : MeshSerializer
+        public class TexturedMeshSerializer : RawMeshSerializer
         {
 
 
@@ -40,9 +40,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             /// <param name="primitive">Primitive type.</param>
             /// <param name="textureName">name of texture object</param>
             /// <returns>The dictionary.</returns>
-            public Dictionary<string, byte[]> SerializeProperties(float[] vertices,float[] uvs, int[] indices, string primitive,string textureName)
+            public Dictionary<string, byte[]> SerializeProperties(float[] vertices, float[] uvs, int[] indices, string primitive, string textureName)
             {
-                var o = SerializeProperties(vertices, indices, primitive);
+                var o = Serialize(vertices, indices, primitive);
                 o.Add(UVKey, this.SerializeFloats(uvs));
                 o.Add(UVTextureNameKey, Encoding.ASCII.GetBytes(textureName));
                 return o;
@@ -60,7 +60,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return byteArray;
             }
 
-           
+
             /// <summary>
             /// Deserializes vertices from properties.
             /// If vertices are not saved in properties throw an exception.
@@ -69,10 +69,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             /// <exception cref="ArgumentException">Thrown when properties do not contain vertices.</exception>
             public float[] DeserializeUVs(Dictionary<string, byte[]> properties)
             {
-                return base.DeserializeProperty(
+                throw new NotImplementedException();
+                /*
+                return DeserializeProperty(
                     UVKey,
                     properties,
                     this.DeserializeFloats);
+                */
             }
 
             /// <summary>
@@ -86,7 +89,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 Buffer.BlockCopy(property, 0, floatArray, 0, property.Length);
                 return floatArray;
             }
+
+
         }
     }
-
 }

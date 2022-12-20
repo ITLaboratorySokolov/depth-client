@@ -19,12 +19,15 @@ using Intel.RealSense;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections;
-using ZCU.TechnologyLab.Common.Connections.Data;
-using ZCU.TechnologyLab.Common.Connections.Session;
-using ZCU.TechnologyLab.Common.Serialization;
+using ZCU.TechnologyLab.Common.Connections.Client.Data;
+using ZCU.TechnologyLab.Common.Connections.Client.Session;
+using ZCU.TechnologyLab.Common.Connections.Repository.Server;
+using ZCU.TechnologyLab.Common.Serialization.Bitmap;
+using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.ViewModels.ZCU.TechnologyLab.Common.Serialization;
 using _3DTools;
 using System.Windows.Controls;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -79,9 +82,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _userCode;
 
         // networking
-        private ServerDataConnection _dataConnection;
+        private ServerDataAdapter _dataConnection;
         private SignalRSession _sessionClient;
-        private ServerSessionConnection _sessionConnection;
+        private ServerSessionAdapter _sessionConnection;
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
 
@@ -716,16 +719,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     Message = "Connecting";
 
-                    var restClient = new RestDataClient(ServerUrl);
-                    this._dataConnection = new ServerDataConnection(restClient);
+                    var restClient = new RestDataClient(ServerUrl, NullLogger<RestDataClient>.Instance);
+                    this._dataConnection = new ServerDataAdapter(restClient, NullLogger<ServerDataAdapter>.Instance);
 
                     var signalrClient = new SignalRSession(ServerUrl, "virtualWorldHub");
                     signalrClient.Disconnected += SessionClient_Disconnected;
                     this._sessionClient = signalrClient;
 
-                    this._sessionConnection = new ServerSessionConnection(signalrClient);
+                    this._sessionConnection = new ServerSessionAdapter(signalrClient);
 
-                    if (_sessionClient is { SessionState: SessionState.Connected })
+                    if (_sessionClient is { State: SessionState.Connected })
                         await _sessionClient.StopSessionAsync();
 
                     await this._sessionClient.StartSessionAsync();
@@ -762,8 +765,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
-            if ((!this._connected && this._sessionClient.SessionState == SessionState.Connected)
-                || (this._connected && this._sessionClient.SessionState == SessionState.Closed)
+            if ((!this._connected && this._sessionClient.State == SessionState.Connected)
+                || (this._connected && this._sessionClient.State == SessionState.Closed)
                )
             {
                 this._connected = !this._connected;
@@ -777,12 +780,23 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         private void SessionClient_Disconnected(object sender, Exception e)
         {
+            // If disconnected automatically - change buttons
+            if ((!this._connected && this._sessionClient.State == SessionState.Connected)
+                || (this._connected && this._sessionClient.State == SessionState.Closed)
+               )
+            {
+                this._connected = !this._connected;
+
+                this.ConnectBtnLbl = this._connected ? "Disconnect" : "Connect";
+                EnabledButtons = this._connected;
+            }
+
             Message = "Disconnected from server";
         }
 
         private async void OnMeshDownloaded()
         {
-            if (_sessionClient.SessionState != SessionState.Connected)
+            if (_sessionClient.State != SessionState.Connected)
                 return;
 
             WorldObjectDto wo;
@@ -799,12 +813,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             var mesh = new RealS.MeshFrame();
-            mesh.Faces = new TexturedMeshSerializer().DeserializeIndices(wo.Properties);
+            mesh.Faces = new RawMeshSerializer().IndicesSerializer.Deserialize(wo.Properties);
             mesh.TempFaces = new int[mesh.Faces.Length];
-            mesh.Vertices = new TexturedMeshSerializer().DeserializeVertices(wo.Properties);
-            mesh.UVs = new TexturedMeshSerializer().DeserializeUVs(wo.Properties);
-            mesh.Colors = new BitmapSerializer().DeserializePixels(tex.Properties);
-            mesh.Width = new BitmapSerializer().DeserializeWidth(tex.Properties);
+            mesh.Vertices = new RawMeshSerializer().VerticesSerializer.Deserialize(wo.Properties);
+            mesh.UVs = new RawMeshSerializer().UvSerializer.Deserialize(wo.Properties);
+            mesh.Colors = new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
+            mesh.Width = new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
             BuildMesh(mesh);
         }
 
@@ -850,7 +864,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 GenerateFaces(frame, (float)_thresholdSlider);
 
                 var properties =
-                    new TexturedMeshSerializer().SerializeProperties(frame.Vertices,frame.UVs, frame.TempFaces, "Triangle",MESH_TEXTURE_NAME);
+                    new RawMeshSerializer().Serialize(frame.Vertices,frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
                 var w = new WorldObjectDto
                 {
                     Name = MESH_NAME,
@@ -876,7 +890,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             //send texture
             {
                 var properties =
-                    new BitmapSerializer().SerializeRawBitmap(frame.Width, frame.Height, "RGB", frame.Colors);
+                    new BitmapSerializerFactory().RawBitmapSerializer.Serialize(frame.Width, frame.Height, "RGB", frame.Colors);
 
                 var w = new WorldObjectDto
                 {
