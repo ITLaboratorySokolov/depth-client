@@ -605,6 +605,23 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
 
             Material mat;
+            
+            // BGR data from sensor to RBG data
+            byte[] results = new byte[frame.Colors.Length];
+            Array.Copy(frame.Colors, results, frame.Colors.Length);
+            // reverse every four bytes
+            {
+                byte tmp;
+                int pos = 0;
+                while (pos + 2 < frame.Colors.Length)
+                {
+                    tmp = results[pos];
+                    results[pos] = results[pos + 2];
+                    results[pos + 2] = tmp;
+                    pos += 3;
+                }
+            }
+            frame.Colors = results;
 
             var m = BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
 
@@ -719,8 +736,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     Message = "Connecting";
 
-                    var restClient = new RestDataClient(ServerUrl, NullLogger<RestDataClient>.Instance);
-                    this._dataConnection = new ServerDataAdapter(restClient, NullLogger<ServerDataAdapter>.Instance);
+                    var restClient = new RestDataClient(ServerUrl);
+                    this._dataConnection = new ServerDataAdapter(restClient);
 
                     var signalrClient = new SignalRSession(ServerUrl, "virtualWorldHub");
                     signalrClient.Disconnected += SessionClient_Disconnected;
@@ -840,21 +857,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             if(frame.Ply!=null){
                 var p = new Dictionary<string, byte[]>
                 {
-                    ["data"] = frame.Ply
+                    ["Data"] = frame.Ply
                 };
                 var w = new WorldObjectDto
                 {
                     Name = PLY_NAME,
                     Type = "PlyFile",
-                    Properties = p
+                    Properties = p,
+                    Position = new RemoteVectorDto(),
+                    Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
+                    Rotation = new RemoteVectorDto()
                 };
+                w.Position.X = 0;
+                w.Position.Y = 0;
+                w.Position.Z = 0;
+
+
                 try
                 {
                     //if object already on server wanna update instead
                     await _dataConnection.AddWorldObjectAsync(w);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
                     await _dataConnection.UpdateWorldObjectAsync(w);
                 }
             }
@@ -887,6 +913,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                     await _dataConnection.UpdateWorldObjectAsync(w);
                 }
             }
+
             //send texture
             {
                 var properties =
@@ -897,7 +924,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                     Name = MESH_TEXTURE_NAME,
                     Type = "Bitmap",
                     Properties = properties,
+                    Position = new RemoteVectorDto(),
+                    Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
+                    Rotation = new RemoteVectorDto()
                 };
+                w.Position.X = 0;
+                w.Position.Y = 0;
+                w.Position.Z = 0;
+
                 try
                 {
                     //if object already on server wanna update instead
@@ -929,7 +963,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private void OnOpenRealSenseFile()
         {
             // freezeDepth = true;
-
 
             OpenFileDialog openDialog = new OpenFileDialog();
 
