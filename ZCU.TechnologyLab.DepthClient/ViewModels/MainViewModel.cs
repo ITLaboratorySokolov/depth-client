@@ -5,10 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Windows.Input;
-using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -18,16 +15,11 @@ using HelixToolkit.Wpf;
 using Intel.RealSense;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
-using ZCU.TechnologyLab.Common.Connections;
 using ZCU.TechnologyLab.Common.Connections.Client.Data;
 using ZCU.TechnologyLab.Common.Connections.Client.Session;
 using ZCU.TechnologyLab.Common.Connections.Repository.Server;
 using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
-using ZCU.TechnologyLab.DepthClient.ViewModels.ZCU.TechnologyLab.Common.Serialization;
-using _3DTools;
-using System.Windows.Controls;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -49,34 +41,40 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string FRAME_PROPERTY = "Frame";
         public const string USER_CODE = "UserCode";
 
+        // labels
+        private string _connectBtnLbl = "Connect";
+        private string _message;
+
+        // object names
         public const string MESH_NAME = "DepthMesh";
         public const string MESH_TEXTURE_NAME = "DepthMeshTexture";
         public const string PLY_NAME = "DepthPly";
 
-
-        private string _connectBtnLbl = "Connect";
+        // signifiers
         private bool _inConnectProcess;
         private bool _savePlyBtnEnable;
-        private double _thresholdSlider = 0.2;
-        private DispatcherTimer timer;
-        private readonly bool[] _filters = Enumerable.Repeat(true, 5).ToArray();
-        private string _message;
         private bool _enabledButtons;
         private bool _connected;
-        
+
+        // filters
+        private readonly bool[] _filters = Enumerable.Repeat(true, 5).ToArray();
         private bool _pointFilter = true;
+        private double _thresholdSlider = 0.2;
+        
+        private DispatcherTimer timer;
 
         // mesh
         private Model3D _model;
+        private Transform3D _modelTF;
         private RealS.MeshFrame? _meshBuffer;
         private MeshGeometry3D _meshGeo;
 
         // last snapped frame
         private RealS.MeshFrame _frame;
 
-        private Point3DCollection _pointsStor;
+        // points
+        private Point3DCollection _pointsStorage;
         private Point3DCollection _points;
-        private Transform3D _modelTF;
 
         // user code
         private string _userCode;
@@ -90,6 +88,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
 
         #region PublicProperties
+
+        public static string ServerUrl { get; set; } = "https://localhost:49153/";
 
         public Point3DCollection Points
         {
@@ -180,8 +180,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 UpdateSliderModel();
             }
         }
-
-        public static string ServerUrl { get; set; } = "https://localhost:49153/";
 
         public string AutoEnabledLbl
         {
@@ -282,6 +280,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public MainViewModel()
         {
             //  AllocConsole();
+            
+            // Create reactions
             this.Connect = new Command(this.OnConnect);
             this.SendMesh = new Command(this.OnSendMesh);
             this.RemoveMesh = new Command(this.OnRemoveImage);
@@ -292,14 +292,20 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.ReloadMesh = new Command(this.OnSnapshot);
             this.EditPointcloud = new Command(this.OnApplyClicked);
 
+            // Set up default view
             OnConnectCamera();
             BuildMeshDefault();
 
+            // Set up timer
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
             this.timer.Tick += Timer_Tick;
             this.timer.Start();
         }
 
+        /// <summary>
+        /// Reaction to Apply button clicked
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         private void OnApplyClicked()
         {
             // no captured frame
@@ -423,7 +429,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             Frame = frame;
         }
 
-
+        /// <summary>
+        ///  Update Update label
+        /// </summary>
+        /// <param name="remaining"> Time until auto update </param>
         private void UpdateAutoLabel(int remaining)
         {
             if (_autoEnable)
@@ -435,6 +444,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 AutoEnabledLbl = "AutoSend: OFF";
             }
         }
+
+        /// <summary>
+        /// Reaction to change of auto update settings
+        /// </summary>
         public void OnChangeAuto()
         {
             if ((!RealS.Started|| !_connected)&&!_autoEnable)
@@ -448,6 +461,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             UpdateAutoLabel(nextAuto);
         }
 
+        /// <summary>
+        /// Update model according to a new value of slider
+        /// </summary>
         public void UpdateSliderModel()
         {
             if (!_meshBuffer.HasValue) return;
@@ -457,6 +473,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             RaisePropertyChanged(MODEL_PROPERTY);
         }
 
+        /// <summary>
+        /// Reaction to snapshot of depth camera view being taken
+        /// - take mesh frame (depth + texture) snapshot
+        /// - create a new mesh to display
+        /// </summary>
         private void OnSnapshot()
         {
             if (!RealS.Started)
@@ -477,6 +498,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         private int nextAuto = 0;
+
+        /// <summary>
+        /// Timer tick
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Timer_Tick(object? sender, EventArgs e)
         {
             if (!_autoEnable)
@@ -489,8 +516,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
-
-
             if (nextAuto > 0)
                 nextAuto--;
             else
@@ -501,9 +526,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 OnSendMesh();
             }
             UpdateAutoLabel(nextAuto);
-
         }
 
+        /// <summary>
+        /// Helper method for encoding BitmapSource into Bitmap image
+        /// </summary>
+        /// <param name="bitmapSource"> Bitmap source </param>
+        /// <returns> Bitmap image </returns>
         public static BitmapImage Bitmap2Image(BitmapSource bitmapSource)
         {
             // before encoding/decoding, check if bitmapSource is already a BitmapImage
@@ -530,6 +559,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             return bitmapImage;
         }
 
+        /// <summary>
+        /// Generate triangle faces
+        /// </summary>
+        /// <param name="frame"> Captured mesh frame </param>
+        /// <param name="threshold"> Filtering threshold </param>
         public static void GenerateFaces(RealS.MeshFrame frame, float threshold)
         {
             threshold *= threshold;
@@ -553,10 +587,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
             }
 
-            Console.WriteLine("generate faces took " + w.ElapsedMilliseconds);
+            Console.WriteLine("generating faces took " + w.ElapsedMilliseconds);
         }
 
-
+        /// <summary>
+        /// Build new objects to display from Mesh frame
+        /// - create a mesh
+        /// - create a point cloud
+        /// </summary>
+        /// <param name="frame"> Mesh frame </param>
+        /// <exception cref="Exception"></exception>
         private void BuildMesh(RealS.MeshFrame frame)
         {
             _meshBuffer = frame;
@@ -599,37 +639,20 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
             }
           
-
             d.TriangleIndices = new Int32Collection(frame.TempFaces);
 
             Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
 
             Material mat;
-            
-            // BGR data from sensor to RBG data
-            byte[] results = new byte[frame.Colors.Length];
-            Array.Copy(frame.Colors, results, frame.Colors.Length);
-            // reverse every four bytes
-            {
-                byte tmp;
-                int pos = 0;
-                while (pos + 2 < frame.Colors.Length)
-                {
-                    tmp = results[pos];
-                    results[pos] = results[pos + 2];
-                    results[pos + 2] = tmp;
-                    pos += 3;
-                }
-            }
-            frame.Colors = results;
-
             var m = BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
-
             mat = MaterialHelper.CreateImageMaterial(Bitmap2Image(m), 1);
 
             SetModel(d, mat);
         }
 
+        /// <summary>
+        /// Build default mesh
+        /// </summary>
         private void BuildMeshDefault()
         {
             // Create a mesh builder and add a box to it
@@ -642,13 +665,21 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             SetModel(mesh, MaterialHelper.CreateMaterial(Colors.Green));
         }
 
+        /// <summary>
+        /// Build bitmap from byte array
+        /// </summary>
+        /// <param name="data"> Data </param>
+        /// <param name="w"> Width </param>
+        /// <param name="h"> Height </param>
+        /// <param name="ch"> Pixel format - 1 = Gray8, 3 = RGB24, 4 = BGR+alpha </param>
+        /// <returns></returns>
         public static BitmapSource BuildBitmap(byte[] data, int w, int h, int ch)
         {
             PixelFormat format = PixelFormats.Default;
 
             if (ch == 1) format = PixelFormats.Gray8; //grey scale image 0-255
-            if (ch == 3) format = PixelFormats.Bgr24; //RGB
-            if (ch == 4) format = PixelFormats.Bgr32; //RGB + alpha
+            if (ch == 3) format = PixelFormats.Rgb24; //RGB
+            if (ch == 4) format = PixelFormats.Bgr32; //BGR + alpha
 
 
             WriteableBitmap wbm = new WriteableBitmap(w, h, 96, 96, format, null);
@@ -657,7 +688,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             return wbm;
         }
 
-
+        /// <summary>
+        /// Set model to display
+        /// </summary>
+        /// <param name="mesh"> Mesh </param>
+        /// <param name="frontMaterial"> Material to use </param>
         private void SetModel(MeshGeometry3D mesh, Material frontMaterial)
         {
             _meshGeo = mesh;
@@ -707,29 +742,36 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             ModelTF = transforms;
 
             this.Model = modelGroup;
-            this._pointsStor = pc;
+            this._pointsStorage = pc;
             if (PointFilter)
                 this.Points = pc;
         }
 
-
+        /// <summary>
+        /// Filters changed
+        /// </summary>
         private void OnFilterChange()
         {
             Console.WriteLine("Updating filters");
             RealS.updateFilters(_filters);
         }
 
+        // TODO Connection to different class
 
         /// <summary>
-        /// Connects connection to a server.
+        /// Set up connection to a server.
         /// </summary>
         private async void OnConnect()
         {
+            // Currently connecting
             if (_inConnectProcess)
                 return;
+
             _inConnectProcess = true;
             if (!ServerUrl.EndsWith("/"))
                 ServerUrl += "/";
+            
+            // Not yet connected
             if (!this._connected)
             {
                 try
@@ -782,6 +824,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
+            // Update menu items
             if ((!this._connected && this._sessionClient.State == SessionState.Connected)
                 || (this._connected && this._sessionClient.State == SessionState.Closed)
                )
@@ -795,6 +838,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             _inConnectProcess = false;
         }
 
+        /// <summary>
+        /// If client has disconnected / has been disconnected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SessionClient_Disconnected(object sender, Exception e)
         {
             // If disconnected automatically - change buttons
@@ -811,6 +859,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             Message = "Disconnected from server";
         }
 
+        /// <summary>
+        /// Downloading mesh + texture from server
+        /// </summary>
         private async void OnMeshDownloaded()
         {
             if (_sessionClient.State != SessionState.Connected)
@@ -839,10 +890,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             BuildMesh(mesh);
         }
 
+        /// <summary>
+        /// Send mesh to server
+        /// </summary>
         private async void OnSendMesh()
         {
             Console.WriteLine("Parsing mesh");
-
 
             if (!_meshBuffer.HasValue)
             {
@@ -871,7 +924,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.X = 0;
                 w.Position.Y = 0;
                 w.Position.Z = 0;
-
 
                 try
                 {
@@ -903,6 +955,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.X = 0;
                 w.Position.Y = 0;
                 w.Position.Z = 0;
+
                 try
                 {
                     //if object already on server wanna update instead
@@ -945,6 +998,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME+", "+MESH_TEXTURE_NAME;
         }
 
+        /// <summary>
+        /// Remove mesh from server
+        /// </summary>
         private async void OnRemoveImage()
         {
             try
@@ -960,6 +1016,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        /// <summary>
+        /// Open realsense file
+        /// </summary>
         private void OnOpenRealSenseFile()
         {
             // freezeDepth = true;
@@ -993,6 +1052,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             // freezeDepth = false;
         }
 
+        /// <summary>
+        /// Camera connected
+        /// </summary>
         private void OnConnectCamera()
         {
             var t = new Thread(() =>
@@ -1004,6 +1066,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             t.Start();
         }
 
+        /// <summary>
+        /// Save snapshot to a ply file
+        /// </summary>
         private void OnSavePly()
         {
             if (!RealS.Started)
@@ -1039,12 +1104,15 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             saveDialog.Reset();
         }
 
+        /// <summary>
+        /// Change point filters
+        /// </summary>
         private void OnPointFilterChange()
         {
             // if true - set to points
             if (_pointFilter)
             {
-                this.Points = _pointsStor;
+                this.Points = _pointsStorage;
             }
             // if untrue - unset points
             else
