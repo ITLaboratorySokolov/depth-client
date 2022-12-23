@@ -20,6 +20,7 @@ using ZCU.TechnologyLab.Common.Connections.Client.Session;
 using ZCU.TechnologyLab.Common.Connections.Repository.Server;
 using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
+using ZCU.TechnologyLab.DepthClient.DataModel;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -29,6 +30,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
          [return: MarshalAs(UnmanagedType.Bool)]
          static extern bool AllocConsole();*/
 
+        #region Constants
         // property names
         private const string POINTS_PROPERTY = "Points";
         public const string MODELTF_PROPERTY = "ModelTF";
@@ -50,11 +52,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string MESH_TEXTURE_NAME = "DepthMeshTexture";
         public const string PLY_NAME = "DepthPly";
 
+        #endregion
+
         // signifiers
-        private bool _inConnectProcess;
         private bool _savePlyBtnEnable;
         private bool _enabledButtons;
-        private bool _connected;
 
         // filters
         private readonly bool[] _filters = Enumerable.Repeat(true, 5).ToArray();
@@ -80,9 +82,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _userCode;
 
         // networking
-        private ServerDataAdapter _dataConnection;
-        private SignalRSession _sessionClient;
-        private ServerSessionAdapter _sessionConnection;
+        ConnectionHandler connection;
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
 
@@ -279,8 +279,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         public MainViewModel()
         {
-            //  AllocConsole();
-            
+            connection = new ConnectionHandler();
+
             // Create reactions
             this.Connect = new Command(this.OnConnect);
             this.SendMesh = new Command(this.OnSendMesh);
@@ -317,14 +317,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             string code = UserCode;
             var frm = Frame;
-
-            /*
-            Frame.Faces;
-            Frame.TempFaces;
-            Frame.Faces.Length;
-            Frame.Vertices;
-            frame.UVs.Length;
-            */
 
             Message = "Processing...";
             int prev = Frame.Vertices.Length;
@@ -436,13 +428,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private void UpdateAutoLabel(int remaining)
         {
             if (_autoEnable)
-            {
                 AutoEnabledLbl = "AutoSend: ON, " + $"{remaining,2}";
-            }
             else
-            {
                 AutoEnabledLbl = "AutoSend: OFF";
-            }
         }
 
         /// <summary>
@@ -450,7 +438,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         public void OnChangeAuto()
         {
-            if ((!RealS.Started|| !_connected)&&!_autoEnable)
+            if ((!RealS.Started|| !connection._connected)&&!_autoEnable)
             {
                 Message = "No Camera or Server connected";
                 return;
@@ -468,7 +456,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             if (!_meshBuffer.HasValue) return;
 
-            GenerateFaces(_meshBuffer.Value, (float)ThresholdSlider);
+            MeshProcessor.GenerateFaces(_meshBuffer.Value, (float)ThresholdSlider);
             _meshGeo.TriangleIndices = new Int32Collection(_meshBuffer.Value.TempFaces);
             RaisePropertyChanged(MODEL_PROPERTY);
         }
@@ -501,6 +489,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         /// <summary>
         /// Timer tick
+        /// - update label
+        /// - make a new snapshot
+        /// - send mesh to server
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -529,68 +520,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
-        /// Helper method for encoding BitmapSource into Bitmap image
-        /// </summary>
-        /// <param name="bitmapSource"> Bitmap source </param>
-        /// <returns> Bitmap image </returns>
-        public static BitmapImage Bitmap2Image(BitmapSource bitmapSource)
-        {
-            // before encoding/decoding, check if bitmapSource is already a BitmapImage
-
-            if (!(bitmapSource is BitmapImage bitmapImage))
-            {
-                bitmapImage = new BitmapImage();
-
-                BmpBitmapEncoder encoder = new BmpBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
-
-                using (MemoryStream memoryStream = new MemoryStream())
-                {
-                    encoder.Save(memoryStream);
-                    memoryStream.Position = 0;
-
-                    bitmapImage.BeginInit();
-                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapImage.StreamSource = memoryStream;
-                    bitmapImage.EndInit();
-                }
-            }
-
-            return bitmapImage;
-        }
-
-        /// <summary>
-        /// Generate triangle faces
-        /// </summary>
-        /// <param name="frame"> Captured mesh frame </param>
-        /// <param name="threshold"> Filtering threshold </param>
-        public static void GenerateFaces(RealS.MeshFrame frame, float threshold)
-        {
-            threshold *= threshold;
-
-            Array.Copy(frame.Faces, frame.TempFaces, frame.Faces.Length);
-
-            Stopwatch w = new();
-            for (int i = 0; i < frame.TempFaces.Length; i += 3)
-            {
-                Vector3 v0 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 0] * 3, 3));
-                Vector3 v1 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 1] * 3, 3));
-                Vector3 v2 = new(new ReadOnlySpan<float>(frame.Vertices, frame.TempFaces[i + 2] * 3, 3));
-
-                if ((v0 - v1).LengthSquared() > threshold
-                    || (v1 - v2).LengthSquared() > threshold
-                    || (v2 - v0).LengthSquared() > threshold)
-                {
-                    frame.TempFaces[i + 0] = 0;
-                    frame.TempFaces[i + 1] = 0;
-                    frame.TempFaces[i + 2] = 0;
-                }
-            }
-
-            Console.WriteLine("generating faces took " + w.ElapsedMilliseconds);
-        }
-
-        /// <summary>
         /// Build new objects to display from Mesh frame
         /// - create a mesh
         /// - create a point cloud
@@ -600,52 +529,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private void BuildMesh(RealS.MeshFrame frame)
         {
             _meshBuffer = frame;
-            GenerateFaces(frame, (float)ThresholdSlider);
+            MeshProcessor.GenerateFaces(frame, (float)ThresholdSlider);
 
             Stopwatch watch = new Stopwatch();
-            MeshGeometry3D d = new MeshGeometry3D();
 
-            d.Positions = new Point3DCollection(frame.Vertices.Length / 3);
-
-            {
-                // sanity check before unsafe
-                if (frame.Vertices.Length / 3 != frame.UVs.Length / 2)
-                    throw new Exception("wrong array dimensions");
-
-                d.TextureCoordinates = new PointCollection(frame.UVs.Length / 2);
-
-                unsafe
-                {
-                    fixed (float* vertex = &frame.Vertices[0], uv = &frame.UVs[0])
-                    {
-                        float* vert = vertex;
-                        float* tex = uv;
-
-                        while (vert != vertex + frame.Vertices.Length)
-                        {
-                            Point3D p = new(
-                                *vert++,
-                                *vert++,
-                                *vert++);
-
-                            Point u = new Point(
-                                *tex++,
-                                *tex++);
-
-                            d.Positions.Add(p);
-                            d.TextureCoordinates.Add(u);
-                        }
-                    }
-                }
-            }
-          
-            d.TriangleIndices = new Int32Collection(frame.TempFaces);
+            watch.Start();
+            MeshGeometry3D d = MeshProcessor.CreateMeshFromFrame(frame);
+            watch.Stop();
 
             Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
 
             Material mat;
-            var m = BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
-            mat = MaterialHelper.CreateImageMaterial(Bitmap2Image(m), 1);
+            var m = BitmapProcessor.BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
+            mat = MaterialHelper.CreateImageMaterial(BitmapProcessor.Bitmap2Image(m), 1);
 
             SetModel(d, mat);
         }
@@ -655,37 +551,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private void BuildMeshDefault()
         {
-            // Create a mesh builder and add a box to it
-            var meshBuilder = new MeshBuilder(false, false);
-            meshBuilder.AddBox(new Point3D(0, 0, 1), 1, 2, 0.5);
-            meshBuilder.AddBox(new Rect3D(0, 0, 1.2, 0.5, 1, 0.4));
-            // Create a mesh from the builder (and freeze it)
-            var mesh = meshBuilder.ToMesh(true);
-
+            var mesh = MeshProcessor.CreateDefaultMesh();
             SetModel(mesh, MaterialHelper.CreateMaterial(Colors.Green));
-        }
-
-        /// <summary>
-        /// Build bitmap from byte array
-        /// </summary>
-        /// <param name="data"> Data </param>
-        /// <param name="w"> Width </param>
-        /// <param name="h"> Height </param>
-        /// <param name="ch"> Pixel format - 1 = Gray8, 3 = RGB24, 4 = BGR+alpha </param>
-        /// <returns></returns>
-        public static BitmapSource BuildBitmap(byte[] data, int w, int h, int ch)
-        {
-            PixelFormat format = PixelFormats.Default;
-
-            if (ch == 1) format = PixelFormats.Gray8; //grey scale image 0-255
-            if (ch == 3) format = PixelFormats.Rgb24; //RGB
-            if (ch == 4) format = PixelFormats.Bgr32; //BGR + alpha
-
-
-            WriteableBitmap wbm = new WriteableBitmap(w, h, 96, 96, format, null);
-            wbm.WritePixels(new Int32Rect(0, 0, w, h), data, ch * w, 0);
-
-            return wbm;
         }
 
         /// <summary>
@@ -764,78 +631,73 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private async void OnConnect()
         {
             // Currently connecting
-            if (_inConnectProcess)
+            if (connection._inConnectProcess)
                 return;
 
-            _inConnectProcess = true;
+            connection._inConnectProcess = true;
             if (!ServerUrl.EndsWith("/"))
                 ServerUrl += "/";
-            
+
             // Not yet connected
-            if (!this._connected)
+            if (!connection._connected)
             {
-                try
+                Message = "Connecting";
+                bool res = await connection.Connect(ServerUrl, SessionClient_Disconnected);
+                if (res)
                 {
-                    Message = "Connecting";
-
-                    var restClient = new RestDataClient(ServerUrl);
-                    this._dataConnection = new ServerDataAdapter(restClient);
-
-                    var signalrClient = new SignalRSession(ServerUrl, "virtualWorldHub");
-                    signalrClient.Disconnected += SessionClient_Disconnected;
-                    this._sessionClient = signalrClient;
-
-                    this._sessionConnection = new ServerSessionAdapter(signalrClient);
-
-                    if (_sessionClient is { State: SessionState.Connected })
-                        await _sessionClient.StopSessionAsync();
-
-                    await this._sessionClient.StartSessionAsync();
                     this.Message = "Connected to server: " + ServerUrl;
                     this.ConnectBtnLbl = "Disconnect";
                 }
-                catch (Exception e)
+                else
                 {
                     this.ConnectBtnLbl = "Connect";
-                    this.Message = "Cannot connect to a server: " + e.Message;
-                    Console.WriteLine(e.Message);
+                    this.Message = "Cannot connect to a server: " + connection.ErrorMessage;
                 }
+
             }
             else
             {
                 _autoEnable = false;
                 UpdateAutoLabel(0);
-                try
+
+                bool res = await connection.DisConnect();
+                if (res)
                 {
-                    await this._sessionClient.StopSessionAsync();
                     this.ConnectBtnLbl = "Connect";
                     Message = "Disconnected";
                 }
-                catch (Exception e)
+                else
                 {
-                    this.Message = "Cannot disconnect to a server: " + e.Message;
-                    Console.WriteLine(e.Message);
+                    this.Message = "Cannot disconnect to a server: " + connection.ErrorMessage;
                 }
+
             }
 
+            // TODO does this do anything??
+            /*
             if (_sessionClient == null)
             {
-                _inConnectProcess = false;
+                connection._inConnectProcess = false;
                 return;
             }
+            */
 
             // Update menu items
-            if ((!this._connected && this._sessionClient.State == SessionState.Connected)
-                || (this._connected && this._sessionClient.State == SessionState.Closed)
-               )
+            UpdateMenuItems();
+            connection._inConnectProcess = false;
+        }
+
+        private void UpdateMenuItems()
+        {
+            // Update menu items
+            if (connection.IsClientDisconnected())
             {
-                this._connected = !this._connected;
+                connection._connected = !connection._connected;
 
-                this.ConnectBtnLbl = this._connected ? "Disconnect" : "Connect";
-                EnabledButtons = this._connected;
+                this.ConnectBtnLbl = connection._connected ? "Disconnect" : "Connect";
+                EnabledButtons = connection._connected;
             }
-
-            _inConnectProcess = false;
+           
         }
 
         /// <summary>
@@ -846,16 +708,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private void SessionClient_Disconnected(object sender, Exception e)
         {
             // If disconnected automatically - change buttons
-            if ((!this._connected && this._sessionClient.State == SessionState.Connected)
-                || (this._connected && this._sessionClient.State == SessionState.Closed)
-               )
-            {
-                this._connected = !this._connected;
-
-                this.ConnectBtnLbl = this._connected ? "Disconnect" : "Connect";
-                EnabledButtons = this._connected;
-            }
-
+            UpdateMenuItems();
             Message = "Disconnected from server";
         }
 
@@ -864,29 +717,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private async void OnMeshDownloaded()
         {
-            if (_sessionClient.State != SessionState.Connected)
+            if (connection.GetSessionState() != SessionState.Connected)
                 return;
 
-            WorldObjectDto wo;
-            WorldObjectDto tex;
-            try
-            {
-                wo = await _dataConnection.GetWorldObjectAsync(MESH_NAME);
-                tex = await _dataConnection.GetWorldObjectAsync(MESH_TEXTURE_NAME);
-            }
-            catch
+            WorldObjectDto wo = await connection.GetWorldObject(MESH_NAME);
+            WorldObjectDto tex = await connection.GetWorldObject(MESH_TEXTURE_NAME);
+
+            if (wo == null || tex == null)
             {
                 Message = "Mesh with texture not found on server";
                 return;
             }
 
-            var mesh = new RealS.MeshFrame();
-            mesh.Faces = new RawMeshSerializer().IndicesSerializer.Deserialize(wo.Properties);
-            mesh.TempFaces = new int[mesh.Faces.Length];
-            mesh.Vertices = new RawMeshSerializer().VerticesSerializer.Deserialize(wo.Properties);
-            mesh.UVs = new RawMeshSerializer().UvSerializer.Deserialize(wo.Properties);
-            mesh.Colors = new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
-            mesh.Width = new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
+            var mesh = MeshProcessor.CreateMeshFraneFromWO(wo, tex);
             BuildMesh(mesh);
         }
 
@@ -905,6 +748,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             var frame = _meshBuffer.Value;
             BuildMesh(frame);
+            bool resT, resM, resP = false;
+
 
             //send ply
             if(frame.Ply!=null){
@@ -925,21 +770,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.Y = 0;
                 w.Position.Z = 0;
 
-                try
-                {
-                    //if object already on server wanna update instead
-                    await _dataConnection.AddWorldObjectAsync(w);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    await _dataConnection.UpdateWorldObjectAsync(w);
-                }
+                resP = await connection.SendWorldObject(w);
             }
 
             //send mesh
             {
-                GenerateFaces(frame, (float)_thresholdSlider);
+                MeshProcessor.GenerateFaces(frame, (float)_thresholdSlider);
 
                 var properties =
                     new RawMeshSerializer().Serialize(frame.Vertices,frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
@@ -956,15 +792,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.Y = 0;
                 w.Position.Z = 0;
 
-                try
-                {
-                    //if object already on server wanna update instead
-                    await _dataConnection.AddWorldObjectAsync(w);
-                }
-                catch
-                {
-                    await _dataConnection.UpdateWorldObjectAsync(w);
-                }
+                resM = await connection.SendWorldObject(w);
             }
 
             //send texture
@@ -985,17 +813,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.Y = 0;
                 w.Position.Z = 0;
 
-                try
-                {
-                    //if object already on server wanna update instead
-                    await _dataConnection.AddWorldObjectAsync(w);
-                }
-                catch
-                {
-                    await _dataConnection.UpdateWorldObjectAsync(w);
-                }
+                resT = await connection.SendWorldObject(w);
             }
-            Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME+", "+MESH_TEXTURE_NAME;
+
+            if (resM && resP && resT)
+                Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME+", "+ MESH_TEXTURE_NAME;
+            else
+                Message = "Mesh & Ply File Updated on server";
+
         }
 
         /// <summary>
@@ -1003,17 +828,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private async void OnRemoveImage()
         {
-            try
-            {
-                await this._dataConnection.RemoveWorldObjectAsync(MESH_NAME);
-                await this._dataConnection.RemoveWorldObjectAsync(PLY_NAME);
-                await this._dataConnection.RemoveWorldObjectAsync(MESH_TEXTURE_NAME);
+            bool mRes = await connection.RemoveWorldObject(MESH_NAME);
+            bool pRes = await connection.RemoveWorldObject(PLY_NAME);
+            bool tMes = await connection.RemoveWorldObject(MESH_TEXTURE_NAME);
+
+            if (mRes && pRes && tMes)
                 this.Message = "Ply & Mesh removed from server";
-            }
-            catch (Exception ex)
-            {
+            else
                 this.Message = "No Ply & Mesh found on server";
-            }
         }
 
         /// <summary>
