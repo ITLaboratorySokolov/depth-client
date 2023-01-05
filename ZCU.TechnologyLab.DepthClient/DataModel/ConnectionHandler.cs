@@ -131,7 +131,16 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             }
             catch (Exception ex)
             {
-                await _dataConnection.UpdateWorldObjectAsync(wo);
+                var w = new WorldObjectUpdateDto
+                {
+                    Type = "PlyFile",
+                    Properties = wo.Properties,
+                    Position = wo.Position,
+                    Scale = wo.Scale,
+                    Rotation = wo.Rotation
+                };
+
+                await _dataConnection.UpdateWorldObjectAsync(wo.Name, w);
                 return false;
             }
 
