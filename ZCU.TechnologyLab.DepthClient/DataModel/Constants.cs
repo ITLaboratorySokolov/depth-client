@@ -22,7 +22,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
 
         // labels
         public string _connectBtnLbl = "Connect";
-        public string _message;
+        public string _message = "";
 
         // object names
         public const string MESH_NAME = "DepthMesh";

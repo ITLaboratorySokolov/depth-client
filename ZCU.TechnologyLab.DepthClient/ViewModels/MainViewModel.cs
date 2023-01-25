@@ -16,6 +16,7 @@ using ZCU.TechnologyLab.Common.Connections.Client.Session;
 using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.DataModel;
+using System.Threading.Tasks;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -32,6 +33,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private const string MESSAGE_PROPERTY = "Message";
         private const string CNTCBTLB_PROPERTY = "ConnectBtnLbl";
         private const string EN_BTN_PROPERTY = "EnabledButtons";
+        private const string EN_APPLY_PROPERTY = "EnabledApply";
         private const string AUTO_PROPERTY = "AutoEnabledLbl";
         private const string SAVE_PLY_BTN_PROPERTY = "SavePlyBtnEnable";
         public const string MODEL_PROPERTY = "Model";
@@ -52,6 +54,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         // signifiers
         private bool _savePlyBtnEnable;
         private bool _enabledButtons;
+        private bool _enabledApply;
 
         // filters
         private readonly bool[] _filters = Enumerable.Repeat(true, 5).ToArray();
@@ -74,7 +77,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private Point3DCollection _points;
 
         // user code
+        private UserCodeProcessor ucp;
         private string _userCode;
+        private string _pythonPath;
 
         // networking
         ConnectionHandler connection;
@@ -257,6 +262,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        public bool EnabledApply
+        {
+            get => this._enabledApply;
+            set
+            {
+                this._enabledApply = value;
+                RaisePropertyChanged(EN_APPLY_PROPERTY);
+            }
+        }
+
+        public string PythonPath { get => _pythonPath; set => _pythonPath = value; }
+
+
         public ICommand Connect { get; private set; }
         public ICommand SendMesh { get; private set; }
         public ICommand RemoveMesh { get; private set; }
@@ -266,7 +284,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand SavePly { get; private set; }
         public ICommand ReloadMesh { get; private set; }
         public ICommand EditPointcloud { get; private set; }
-
+        public ICommand SetPythonPath { get; private set; }
 
 
         #endregion
@@ -275,6 +293,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public MainViewModel()
         {
             connection = new ConnectionHandler();
+
+            // TODO jinak - přes config!!
+            LoadConfig();
+            ucp = new UserCodeProcessor(_pythonPath);
+            EnabledApply = true;
 
             // Create reactions
             this.Connect = new Command(this.OnConnect);
@@ -286,6 +309,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.SavePly = new Command(this.OnSavePly);
             this.ReloadMesh = new Command(this.OnSnapshot);
             this.EditPointcloud = new Command(this.OnApplyClicked);
+            this.SetPythonPath = new Command(this.OnSetPythonPath);
 
             // Set up default view
             OnConnectCamera();
@@ -295,6 +319,36 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
             this.timer.Tick += Timer_Tick;
             this.timer.Start();
+        }
+
+        private void LoadConfig()
+        {
+            string cfpth = "./config.txt";
+            if (File.Exists(cfpth))
+            {
+                var lines = File.ReadAllLines(cfpth);
+                _pythonPath = lines[0];
+            }
+        }
+
+        /// <summary>
+        /// Set path to python dll
+        /// Create new User code processor
+        /// </summary>
+        private void OnSetPythonPath()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
+            dialog.FilterIndex = 1;
+            dialog.InitialDirectory = "";
+            dialog.Title = "Select python.dll file";
+
+            var success = dialog.ShowDialog();
+            if (success.HasValue && success.Value)
+            {
+                Message = "Python dll path set";
+                ucp = new UserCodeProcessor(dialog.FileName);
+            }
         }
 
         /// <summary>
@@ -310,36 +364,17 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
-            string code = UserCode;
-            var frm = Frame;
-
-            Message = "Processing...";
-            int prev = Frame.Vertices.Length;
-
             // Test of editing
             {
                 // sanity check before unsafe
                 if (Frame.Vertices.Length / 3 != Frame.UVs.Length / 2)
-                    throw new Exception("wrong array dimensions");
+                    throw new Exception("Wrong array dimensions");
 
                 unsafe
                 {
-                    Thread t = new Thread(() =>
-                    {
-                        for (int i = 0; i < Frame.Vertices.Length; i += 3)
-                        {
-                            Frame.Vertices[i] = Frame.Vertices[i] + 0.5f;
-                            Frame.Vertices[i + 1] = Frame.Vertices[i + 1] + 0.5f;
-                            Frame.Vertices[i + 2] = Frame.Vertices[i + 2] + 0.5f;
-                        }
-
-                        DeletePoint(Frame.Vertices.Length / 3 - 1);
-                        Message = "Code executed";
-                    });
-
-                    // TODO didnt help myself here did i
-                    t.Start();
-                    t.Join();
+                    Message = "Processing...";
+                    EnabledApply = false;
+                    RunUserCode();
                 }
             }
 
@@ -349,71 +384,39 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             // reset mesh according to the pointcloud change
             //      - create a new mesh with same texture but different points
 
-            // TODO mesh on init - do i want to save it and potentialy edit it too?
-            // TODO how is it sent to server?
-
             // rebuild mesh
             BuildMesh(Frame);
         }
 
-
-        private void DeletePoint(int index)
+        async void RunUserCode()
         {
-            RealS.MeshFrame frame = Frame;
-
-            // copy of vertices array but without the point
-            // copy of UVs array but without the point
-            float[] newUV = new float[frame.UVs.Length - 2];
-            float[] newVerts = new float[frame.Vertices.Length - 3];
-
-            int newi = 0;
-            for (int i = 0; i < frame.Vertices.Length / 3; i++)
+            await Task.Run(() =>
             {
-                if (i == index)
-                    continue;
+                Dictionary<string, object> vars = new Dictionary<string, object>();
+                vars.Add("points", Frame.Vertices);
+                vars.Add("uvs", Frame.UVs);
 
-                newUV[newi * 2] = frame.UVs[i * 2];
-                newUV[newi * 2 + 1] = frame.UVs[i * 2 + 1];
+                PointCloud res = ucp.ExecuteUserCode(UserCode, vars);
+                if (res == null)
+                    Message = ucp.ERROR_MSG;
+                else
+                {
+                    RealS.MeshFrame frame = Frame;
 
-                newVerts[newi * 3] = frame.Vertices[i * 3];
-                newVerts[newi * 3 + 1] = frame.Vertices[i * 3 + 1];
-                newVerts[newi * 3 + 2] = frame.Vertices[i * 3 + 2];
-                newi++;
-            }
+                    // TODO here should reset faces - now if any is deleted it will go fucky.
+                    frame.Vertices = res.points;
+                    frame.UVs = res.uvs;
 
-            // faces that contain that point have to be removed
-            List<int> newFaces = new List<int>();
-            List<int> newTempFaces = new List<int>();
+                    Frame = frame;
+                    Message = "Code executed";
+                }
 
-            for (int i = 0; i < frame.TempFaces.Length; i += 3)
-            {
-                if (frame.TempFaces[i] == index || frame.TempFaces[i + 1] == index || frame.TempFaces[i + 2] == index)
-                    continue;
+                // TODO now it doesnt refresh the pointcloud view
+                EnabledApply = true;
 
-                int newV0 = frame.TempFaces[i] > index ? (frame.TempFaces[i] - 1) : frame.TempFaces[i];
-                int newV1 = (frame.TempFaces[i + 1] > index) ? (frame.TempFaces[i + 1] - 1) : frame.TempFaces[i + 1];
-                int newV2 = (frame.TempFaces[i + 2] > index) ? (frame.TempFaces[i + 2] - 1) : frame.TempFaces[i + 2];
-
-                newTempFaces.Add(newV0);
-                newTempFaces.Add(newV1);
-                newTempFaces.Add(newV2);
-
-                newV0 = (frame.Faces[i] > index) ? (frame.Faces[i] - 1) : frame.Faces[i];
-                newV1 = (frame.Faces[i + 1] > index) ? (frame.Faces[i + 1] - 1) : frame.Faces[i + 1];
-                newV2 = (frame.Faces[i + 2] > index) ? (frame.Faces[i + 2] - 1) : frame.Faces[i + 2];
-                
-                newFaces.Add(newV0);
-                newFaces.Add(newV1);
-                newFaces.Add(newV2);
-            }
-
-            frame.TempFaces = newTempFaces.ToArray();
-            frame.Faces = newFaces.ToArray();
-            frame.Vertices = newVerts;
-            frame.UVs = newUV;
-
-            // apply changes
-            Frame = frame;
+            });
+            
+            BuildMesh(Frame);
         }
 
         /// <summary>
