@@ -133,7 +133,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 var w = new WorldObjectUpdateDto
                 {
-                    Type = "PlyFile",
+                    Type = wo.Type,
                     Properties = wo.Properties,
                     Position = wo.Position,
                     Scale = wo.Scale,

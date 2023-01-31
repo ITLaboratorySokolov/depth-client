@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using PythonExecutionLibrary;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
@@ -25,22 +26,27 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <param name="code"> Python function code </param>
         /// <param name="varValues"> Variables and their values </param>
         /// <returns> Edited point cloud </returns>
-        public PointCloud ExecuteUserCode(string code, Dictionary<string, object> varValues)
+        public async Task<PointCloud> ExecuteUserCode(string code, Dictionary<string, object> varValues)
         {
-            PointCloud cloud = new PointCloud();
-            List<string> paramNames = new List<string>(varValues.Keys);
-
-            string pycode = pythonExecutor.CreateCode("userFunc", paramNames, varValues, code);
-            bool res = pythonExecutor.RunCode(pycode, varValues, cloud);
-
-            // if code execution failed
-            if (!res)
+            PointCloud pc = await Task<PointCloud>.Run(() =>
             {
-                ERROR_MSG = pythonExecutor.ERROR_MSG;
-                return null;
-            }
+                PointCloud cloud = new PointCloud();
+                List<string> paramNames = new List<string>(varValues.Keys);
 
-            return cloud;
+                string pycode = pythonExecutor.CreateCode("userFunc", paramNames, varValues, code);
+                bool res = pythonExecutor.RunCode(pycode, varValues, cloud);
+
+                // if code execution failed
+                if (!res)
+                {
+                    ERROR_MSG = pythonExecutor.ERROR_MSG;
+                    return null;
+                }
+
+                return cloud;
+            });
+
+            return pc;
         }
 
     }

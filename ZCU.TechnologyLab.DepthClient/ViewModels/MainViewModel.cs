@@ -17,6 +17,8 @@ using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.DataModel;
 using System.Threading.Tasks;
+using ObjParser;
+using ZCU.TechnologyLab.Common.Serialization.Properties;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -89,7 +91,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         #region PublicProperties
 
-        public static string ServerUrl { get; set; } = "https://localhost:49153/";
+        public static string ServerUrl { get; set; } = "https://localhost:57370/";
 
         public Point3DCollection Points
         {
@@ -313,7 +315,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             // Set up default view
             OnConnectCamera();
-            BuildMeshDefault();
+            // BuildMeshDefault();
 
             // Set up timer
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
@@ -357,66 +359,49 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// <exception cref="Exception"></exception>
         private void OnApplyClicked()
         {
-            // no captured frame
             if (Frame.Vertices == null)
             {
-                Message = "No pointcloud available";
+                Message = "No pointcloud availible";
                 return;
-            }
+            }    
 
             // Test of editing
+            unsafe
             {
-                // sanity check before unsafe
-                if (Frame.Vertices.Length / 3 != Frame.UVs.Length / 2)
-                    throw new Exception("Wrong array dimensions");
-
-                unsafe
-                {
                     Message = "Processing...";
                     EnabledApply = false;
                     RunUserCode();
-                }
             }
-
-            // edit pointcloud according to code
-            //      - need to change vertices, UV coords and faces
-            //      - data from realsense is taken as meshframe
-            // reset mesh according to the pointcloud change
-            //      - create a new mesh with same texture but different points
-
-            // rebuild mesh
-            BuildMesh(Frame);
         }
 
         async void RunUserCode()
         {
-            await Task.Run(() =>
-            {
-                Dictionary<string, object> vars = new Dictionary<string, object>();
-                vars.Add("points", Frame.Vertices);
-                vars.Add("uvs", Frame.UVs);
-
-                PointCloud res = ucp.ExecuteUserCode(UserCode, vars);
-                if (res == null)
-                    Message = ucp.ERROR_MSG;
-                else
-                {
-                    RealS.MeshFrame frame = Frame;
-
-                    // TODO here should reset faces - now if any is deleted it will go fucky.
-                    frame.Vertices = res.points;
-                    frame.UVs = res.uvs;
-
-                    Frame = frame;
-                    Message = "Code executed";
-                }
-
-                // TODO now it doesnt refresh the pointcloud view
-                EnabledApply = true;
-
-            });
+            Dictionary<string, object> vars = new Dictionary<string, object>();
             
-            BuildMesh(Frame);
+            vars.Add("points", Frame.Vertices);
+            vars.Add("uvs", Frame.UVs);
+            vars.Add("faces", Frame.TempFaces);
+
+            PointCloud res = await ucp.ExecuteUserCode(UserCode, vars);
+            if (res == null)
+                Message = ucp.ERROR_MSG;
+            else
+            {
+                var frame = Frame;
+
+                frame.Vertices = res.points;
+                frame.UVs = res.uvs;
+                frame.TempFaces = res.faces;
+                frame.Faces = new int[res.faces.Length];
+                Array.Copy(res.faces, frame.Faces, frame.Faces.Length);
+
+                Frame = frame;
+                Message = "Code executed";
+
+                BuildMesh(Frame);
+            }
+
+            EnabledApply = true;
         }
 
         /// <summary>
@@ -480,7 +465,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             _frame = frames.Value;
-            BuildMesh(frames.Value);
+            BuildMesh(_frame); // frames.Value
+
+            Message = "New mesh with " + (_frame.Vertices.Length/3) + " v and " + (_frame.Faces.Length / 3) + " triangles";
+
         }
 
         private int nextAuto = 0;
@@ -543,6 +531,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             SetModel(d, mat);
         }
+
+
 
         /// <summary>
         /// Build default mesh
@@ -745,12 +735,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             var frame = _meshBuffer.Value;
-            BuildMesh(frame);
-            bool resT, resM, resP = false;
-
+            // BuildMesh(frame);
+            bool resT, resM = false, resP = false;
 
             //send ply
-            if(frame.Ply!=null){
+            if (frame.Ply!=null){
                 var p = new Dictionary<string, byte[]>
                 {
                     ["Data"] = frame.Ply
@@ -768,15 +757,32 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.Y = 0;
                 w.Position.Z = 0;
 
-                resP = await connection.SendWorldObject(w);
+                try
+                {
+                    resP = await connection.SendWorldObject(w);
+                }
+                catch (Exception ex)
+                {
+                    Message = "Server currently unavailible";
+                    UpdateMenuItems();
+                    return;
+                }
             }
 
             //send mesh
             {
-                MeshProcessor.GenerateFaces(frame, (float)_thresholdSlider);
+                // var fc = MeshProcessor.GenerateFaces(frame, (float)_thresholdSlider);
+                // Obj o = new Obj(frame.Vertices, frame.TempFaces, new float[] { });
+                // o.WriteObjFile("D:/moje/test.obj", null);
 
-                var properties =
-                    new RawMeshSerializer().Serialize(frame.Vertices,frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
+                byte[] texFormat = new StringSerializer("TextureFormat", null).Serialize("RGB");
+                byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int), null).Serialize(new int[] { frame.Width, frame.Height });
+
+                var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
+                properties.Add("TextureFormat", texFormat);
+                properties.Add("TextureSize", texSize);
+                properties.Add("Texture", frame.Colors);
+
                 var w = new WorldObjectDto
                 {
                     Name = MESH_NAME,
@@ -790,9 +796,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 w.Position.Y = 0;
                 w.Position.Z = 0;
 
-                resM = await connection.SendWorldObject(w);
+                try
+                {
+                    resM = await connection.SendWorldObject(w);
+                }
+                catch (Exception ex)
+                {
+                    Message = "Server currently unavailible";
+                    UpdateMenuItems();
+                    return;
+                }
             }
 
+            /*
             //send texture
             {
                 var properties =
@@ -813,8 +829,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 resT = await connection.SendWorldObject(w);
             }
+            */
 
-            if (resM && resP && resT)
+            if (resM && resP)
                 Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME+", "+ MESH_TEXTURE_NAME;
             else
                 Message = "Mesh & Ply File Updated on server";

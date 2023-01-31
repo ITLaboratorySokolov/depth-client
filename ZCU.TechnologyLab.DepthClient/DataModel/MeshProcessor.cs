@@ -1,5 +1,6 @@
 ﻿using HelixToolkit.Wpf;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Windows;
@@ -19,12 +20,13 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// </summary>
         /// <param name="frame"> Captured mesh frame </param>
         /// <param name="threshold"> Filtering threshold </param>
-        public static void GenerateFaces(RealS.MeshFrame frame, float threshold)
+        public static int[] GenerateFaces(RealS.MeshFrame frame, float threshold)
         {
             threshold *= threshold;
 
             Array.Copy(frame.Faces, frame.TempFaces, frame.Faces.Length);
 
+            List<int> newFacesList = new List<int>();
             Stopwatch w = new();
             for (int i = 0; i < frame.TempFaces.Length; i += 3)
             {
@@ -40,9 +42,19 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                     frame.TempFaces[i + 1] = 0;
                     frame.TempFaces[i + 2] = 0;
                 }
+                else 
+                {
+                    {
+                        newFacesList.Add(frame.TempFaces[i + 0] + 1);
+                        newFacesList.Add(frame.TempFaces[i + 1] + 1);
+                        newFacesList.Add(frame.TempFaces[i + 2] + 1);
+                    }
+                }
             }
 
             Console.WriteLine("generating faces took " + w.ElapsedMilliseconds);
+
+            return newFacesList.ToArray();
         }
 
         /// <summary>
@@ -76,6 +88,9 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                 // sanity check before unsafe
                 if (frame.Vertices.Length / 3 != frame.UVs.Length / 2)
                     throw new Exception("Wrong array dimensions");
+
+                if (frame.Vertices.Length == 0)
+                    return d;
 
                 d.TextureCoordinates = new PointCollection(frame.UVs.Length / 2);
 

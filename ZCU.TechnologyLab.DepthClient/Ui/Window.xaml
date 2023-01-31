@@ -417,7 +417,7 @@
                             <HelixToolkit:DefaultLights></HelixToolkit:DefaultLights>
                             <!--  The content of this visual is defined in MainViewModel.cs  -->
                             <HelixToolkit:PointsVisual3D Points="{Binding Points}" Size="1" Color="Red" Transform="{Binding ModelTF}" />
-                            <ModelVisual3D Content="{Binding Model}"  />
+                            <ModelVisual3D Content="{Binding Model}" />
                             <!-- <HelixToolkit:LinesVisual3D Content="{Binding Lines}" /> -->
 
                             <!--  You can also add elements here in the xaml  -->
@@ -444,7 +444,7 @@
                     </Grid>
                 </DockPanel>
                 <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}"/>
-                <TextBlock HorizontalAlignment="Left" Margin="10,5,0,0" Grid.Row="2" TextWrapping="Wrap" Text="def Edit_poitcloud(points, uvs):" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                <TextBlock HorizontalAlignment="Left" Margin="10,5,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2" Text="def Edit_poitcloud(points, uvs, faces):"/>
                 <RichTextBox x:Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35" TextChanged="CodeBlock_TextChanged" VerticalScrollBarVisibility="Visible">
                     <RichTextBox.Resources>
                         <Style TargetType="{x:Type Paragraph}">
@@ -453,7 +453,7 @@
                     </RichTextBox.Resources>
                     <FlowDocument>
                         <Paragraph>
-                            <Run Text="for i in range(0, len(points)):&#x0a; points[i] = points[i] + 1&#x0a;return [points, uvs]"/>
+                            <Run Text="for i in range(0, len(points)):&#x0a; points[i] = points[i] + 1&#x0a;return [points, uvs, faces]"/>
                         </Paragraph>
                     </FlowDocument>
                 </RichTextBox>
