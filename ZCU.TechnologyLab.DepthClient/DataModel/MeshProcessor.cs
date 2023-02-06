@@ -9,6 +9,7 @@ using System.Windows.Media.Media3D;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
+using ZCU.TechnologyLab.Common.Serialization.Properties;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
@@ -52,7 +53,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                 }
             }
 
-            Console.WriteLine("generating faces took " + w.ElapsedMilliseconds);
+            // Console.WriteLine("generating faces took " + w.ElapsedMilliseconds);
 
             return newFacesList.ToArray();
         }
@@ -130,15 +131,19 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <param name="wo"> World object with mesh data </param>
         /// <param name="tex"> World object with texture data </param>
         /// <returns> Mesh frame </returns>
-        internal static RealS.MeshFrame CreateMeshFraneFromWO(WorldObjectDto wo, WorldObjectDto tex)
+        internal static RealS.MeshFrame CreateMeshFrameFromWO(WorldObjectDto wo)
         {
             RealS.MeshFrame meshFr = new RealS.MeshFrame();
             meshFr.Faces = new RawMeshSerializer().IndicesSerializer.Deserialize(wo.Properties);
             meshFr.TempFaces = new int[meshFr.Faces.Length];
             meshFr.Vertices = new RawMeshSerializer().VerticesSerializer.Deserialize(wo.Properties);
             meshFr.UVs = new RawMeshSerializer().UvSerializer.Deserialize(wo.Properties);
-            meshFr.Colors = new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
-            meshFr.Width = new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
+
+            ArraySerializer<int> arrser = new ArraySerializer<int>("TextureSize", sizeof(int));
+            var wah = arrser.Deserialize(wo.Properties);
+
+            meshFr.Width = wah[0]; // new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
+            meshFr.Colors = wo.Properties["Texture"]; // new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
 
             return meshFr;
         }

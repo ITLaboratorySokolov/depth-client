@@ -42,6 +42,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string FRAME_PROPERTY = "Frame";
         public const string USER_CODE = "UserCode";
 
+
         // labels
         private string _connectBtnLbl = "Connect";
         private string _message;
@@ -88,6 +89,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
 
+
+        LanguageController langContr;
 
         #region PublicProperties
 
@@ -287,6 +290,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand ReloadMesh { get; private set; }
         public ICommand EditPointcloud { get; private set; }
         public ICommand SetPythonPath { get; private set; }
+        public LanguageController LangContr { get => langContr; set => langContr = value; }
 
 
         #endregion
@@ -294,6 +298,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         public MainViewModel()
         {
+            this.langContr = new LanguageController();
             connection = new ConnectionHandler();
 
             // TODO jinak - přes config!!
@@ -343,12 +348,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             dialog.Filter = "dll files (*.dll)|*.dll|All files (*.*)|*.*";
             dialog.FilterIndex = 1;
             dialog.InitialDirectory = "";
-            dialog.Title = "Select python.dll file";
+            dialog.Title = langContr.PyDialogTitle;
 
             var success = dialog.ShowDialog();
             if (success.HasValue && success.Value)
             {
-                Message = "Python dll path set";
+                Message = langContr.PySuccess;
                 ucp = new UserCodeProcessor(dialog.FileName);
             }
         }
@@ -361,16 +366,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             if (Frame.Vertices == null)
             {
-                Message = "No pointcloud availible";
+                Message = langContr.NoPointcloud;
                 return;
             }    
 
             // Test of editing
             unsafe
             {
-                    Message = "Processing...";
-                    EnabledApply = false;
-                    RunUserCode();
+                Message = langContr.Processing;
+                EnabledApply = false;
+                RunUserCode();
             }
         }
 
@@ -396,7 +401,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 Array.Copy(res.faces, frame.Faces, frame.Faces.Length);
 
                 Frame = frame;
-                Message = "Code executed";
+                Message = langContr.CodeExec;
 
                 BuildMesh(Frame);
             }
@@ -423,7 +428,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             if ((!RealS.Started|| !connection._connected)&&!_autoEnable)
             {
-                Message = "No Camera or Server connected";
+                Message = langContr.NoCamOrSer;
                 return;
             }
 
@@ -453,21 +458,20 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             if (!RealS.Started)
             {
-                Message = "No camera connected";
+                Message = langContr.NoCam;
                 return;
             }
 
             var frames = RealS.MeshFrame.Obtain();
             if (!frames.HasValue)
             {
-                Message = "No mesh available";
+                Message = langContr.NoMesh;
                 return;
             }
 
             _frame = frames.Value;
             BuildMesh(_frame); // frames.Value
-
-            Message = "New mesh with " + (_frame.Vertices.Length/3) + " v and " + (_frame.Faces.Length / 3) + " triangles";
+            // Message = "New mesh with " + (_frame.Vertices.Length/3) + " v and " + (_frame.Faces.Length / 3) + " triangles";
 
         }
 
@@ -498,7 +502,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             else
             {
                 nextAuto = AutoInterval;
-                Console.WriteLine("Sending mesh");
+                // Console.WriteLine("Sending mesh");
                 OnSnapshot();
                 OnSendMesh();
             }
@@ -523,7 +527,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             MeshGeometry3D d = MeshProcessor.CreateMeshFromFrame(frame);
             watch.Stop();
 
-            Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
+            // Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
 
             Material mat;
             var m = BitmapProcessor.BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
@@ -607,7 +611,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private void OnFilterChange()
         {
-            Console.WriteLine("Updating filters");
+            // Console.WriteLine("Updating filters");
             RealS.updateFilters(_filters);
         }
 
@@ -629,17 +633,17 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             // Not yet connected
             if (!connection._connected)
             {
-                Message = "Connecting";
+                Message = langContr.Connecting;
                 bool res = await connection.Connect(ServerUrl, SessionClient_Disconnected);
                 if (res)
                 {
-                    this.Message = "Connected to server: " + ServerUrl;
-                    this.ConnectBtnLbl = "Disconnect";
+                    this.Message = langContr.ConnectedToSer + ServerUrl;
+                    this.ConnectBtnLbl = langContr.Disconnect;
                 }
                 else
                 {
-                    this.ConnectBtnLbl = "Connect";
-                    this.Message = "Cannot connect to a server: " + connection.ErrorMessage;
+                    this.ConnectBtnLbl = langContr.Connect;
+                    this.Message = langContr.CantConnect + connection.ErrorMessage;
                 }
 
             }
@@ -651,12 +655,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 bool res = await connection.DisConnect();
                 if (res)
                 {
-                    this.ConnectBtnLbl = "Connect";
-                    Message = "Disconnected";
+                    this.ConnectBtnLbl = langContr.Connect;
+                    Message = langContr.Disconnected;
                 }
                 else
                 {
-                    this.Message = "Cannot disconnect to a server: " + connection.ErrorMessage;
+                    this.Message = langContr.CantConnect + connection.ErrorMessage;
                 }
 
             }
@@ -682,7 +686,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 connection._connected = !connection._connected;
 
-                this.ConnectBtnLbl = connection._connected ? "Disconnect" : "Connect";
+                this.ConnectBtnLbl = connection._connected ? langContr.Disconnect : langContr.Connect;
                 EnabledButtons = connection._connected;
             }
            
@@ -697,7 +701,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             // If disconnected automatically - change buttons
             UpdateMenuItems();
-            Message = "Disconnected from server";
+            Message = langContr.Disconnected;
         }
 
         /// <summary>
@@ -709,15 +713,15 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
 
             WorldObjectDto wo = await connection.GetWorldObject(MESH_NAME);
-            WorldObjectDto tex = await connection.GetWorldObject(MESH_TEXTURE_NAME);
+            // WorldObjectDto tex = await connection.GetWorldObject(MESH_TEXTURE_NAME);
 
-            if (wo == null || tex == null)
+            if (wo == null) // || tex == null)
             {
-                Message = "Mesh with texture not found on server";
+                Message = langContr.MeshNotOnSer;
                 return;
             }
 
-            var mesh = MeshProcessor.CreateMeshFraneFromWO(wo, tex);
+            var mesh = MeshProcessor.CreateMeshFrameFromWO(wo);
             BuildMesh(mesh);
         }
 
@@ -726,11 +730,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private async void OnSendMesh()
         {
-            Console.WriteLine("Parsing mesh");
-
             if (!_meshBuffer.HasValue)
             {
-                Message = "No mesh available";
+                Message = langContr.NoMesh;
                 return;
             }
 
@@ -763,7 +765,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Message = "Server currently unavailible";
+                    Message = langContr.SerUnavail;
                     UpdateMenuItems();
                     return;
                 }
@@ -775,8 +777,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 // Obj o = new Obj(frame.Vertices, frame.TempFaces, new float[] { });
                 // o.WriteObjFile("D:/moje/test.obj", null);
 
-                byte[] texFormat = new StringSerializer("TextureFormat", null).Serialize("RGB");
-                byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int), null).Serialize(new int[] { frame.Width, frame.Height });
+                byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
+                byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int)).Serialize(new int[] { frame.Width, frame.Height });
 
                 var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
                 properties.Add("TextureFormat", texFormat);
@@ -832,9 +834,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             */
 
             if (resM && resP)
-                Message = "Mesh & Ply File Sent to server as " + MESH_NAME + "," + PLY_NAME+", "+ MESH_TEXTURE_NAME;
+                Message = langContr.MeshSent + MESH_NAME + "," + PLY_NAME + ", " + MESH_TEXTURE_NAME;
             else
-                Message = "Mesh & Ply File Updated on server";
+                Message = langContr.MeshNotSent;
 
         }
 
@@ -845,12 +847,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             bool mRes = await connection.RemoveWorldObject(MESH_NAME);
             bool pRes = await connection.RemoveWorldObject(PLY_NAME);
-            bool tMes = await connection.RemoveWorldObject(MESH_TEXTURE_NAME);
+            // bool tMes = await connection.RemoveWorldObject(MESH_TEXTURE_NAME);
 
-            if (mRes && pRes && tMes)
-                this.Message = "Ply & Mesh removed from server";
+            if (mRes && pRes) // && tMes)
+                this.Message = langContr.MeshRemoved;
             else
-                this.Message = "No Ply & Mesh found on server";
+                this.Message = langContr.MeshAndPlyNotFound;
         }
 
         /// <summary>
@@ -876,8 +878,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     var success = RealS.Init(openDialog.FileName);
                     Message = success
-                        ? "Opened RealSense file"
-                        : "Could not open file";
+                        ? langContr.OpenedRSFile
+                        : langContr.CouldNotOpen;
 
                     SavePlyBtnEnable = success;
 
@@ -897,7 +899,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             var t = new Thread(() =>
             {
                 var success = RealS.Init("");
-                Message = success ? "Camera connected" : "Camera not found";
+                Message = success ? langContr.CamConn : langContr.CamNotFound;
                 SavePlyBtnEnable = success;
             });
             t.Start();
@@ -913,7 +915,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             if (!_meshBuffer.HasValue)
             {
-                Message = "No snapshot taken yet";
+                Message = langContr.NoSnap;
                 return;
             }
             var frame = _meshBuffer.Value;
@@ -934,8 +936,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 myStream.Write(frame.Ply);
             }
 
-            Message = "Ply file saved";
-            Console.WriteLine("Saved ply file to " + saveDialog.FileName);
+            Message = langContr.PlySaved;
+            // Console.WriteLine("Saved ply file to " + saveDialog.FileName);
 
             ProcessingWindow.FreezeBuffer(false);
             saveDialog.Reset();

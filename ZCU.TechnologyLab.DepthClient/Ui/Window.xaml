@@ -5,9 +5,9 @@
         xmlns:HelixToolkit="http://helix-toolkit.org/wpf"
         xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         Closing="control_Closing"
-        Title="Depth Data Client" Height="655" Width="916">
+        Title="Depth Data Client" Height="666" Width="954" ResizeMode="CanMinimize">
     <Window.DataContext>
-        <viewModels:MainViewModel />
+        <viewModels:MainViewModel/>
     </Window.DataContext>
 
     <DockPanel>
@@ -26,24 +26,25 @@
                     </ItemsPanelTemplate>
                 </Menu.ItemsPanel>
 
-                <MenuItem Header="_File">
-                    <MenuItem Header="_Open BAG" Command="{Binding OpenRealSenseFile}" />
-                    <MenuItem Header="_Open Camera" Command="{Binding ConnectCamera}" />
-                    <MenuItem Header="_Save PLY" Command="{Binding SavePly}" IsEnabled="{Binding SavePlyBtnEnable}" />
+                <MenuItem Name="FileMN" Header="_File">
+                    <MenuItem Name="BagMNI" Header="_Open BAG" Command="{Binding OpenRealSenseFile}" />
+                    <MenuItem Name="CameraMNI" Header="_Open Camera" Command="{Binding ConnectCamera}" />
+                    <MenuItem Name="PlyMNI" Header="_Save PLY" Command="{Binding SavePly}" IsEnabled="{Binding SavePlyBtnEnable}" />
                 </MenuItem>
-                <MenuItem Header="_Server">
-                    <MenuItem Header="{Binding ConnectBtnLbl}" Command="{Binding Connect}" />
-                    <MenuItem Header="_Send Mesh" Command="{Binding SendMesh}" IsEnabled="{Binding EnabledButtons}" />
-                    <MenuItem Header="_Remove Mesh" Command="{Binding RemoveMesh}" IsEnabled="{Binding EnabledButtons}" />
-                    <MenuItem Header="_DownloadMesh" Command="{Binding DownloadMesh}"
+                <MenuItem Name="ServerMN" Header="_Server">
+                    <MenuItem Name="ConnectMNI" Header="{Binding ConnectBtnLbl}" Command="{Binding Connect}" />
+                    <MenuItem Name="SendMeshMNI" Header="_Send Mesh" Command="{Binding SendMesh}" IsEnabled="{Binding EnabledButtons}" />
+                    <MenuItem Name="DeleteMeshMNI" Header="_Delete Mesh" Command="{Binding RemoveMesh}" IsEnabled="{Binding EnabledButtons}" />
+                    <MenuItem Name="DwnldMeshMNI" Header="_Download Mesh" Command="{Binding DownloadMesh}"
                               IsEnabled="{Binding EnabledButtons}" />
                 </MenuItem>
-                <MenuItem Header="_Python">
-                    <MenuItem Header="_Set path to python" Command="{Binding SetPythonPath}" />
+                <MenuItem Name="PythonMN" Header="_Python">
+                    <MenuItem Name="PythonPathMNI" Header="_Set path to python" Command="{Binding SetPythonPath}" />
+                </MenuItem>
+                <MenuItem Name="SettingsMN" Header="_Settings">
+                    <MenuItem Name="LanguageMNI" Header="Set to _CZ" Click="LanguageSwap_Click"/>
                 </MenuItem>
                 <TextBox TextChanged="TextBoxBase_OnTextChanged" Text="{Binding ServerUrl }" />
-                <Label Focusable="False" DockPanel.Dock="Bottom" Name="messageLbl" IsEnabled="False"
-                       Content="{Binding Message}" />
 
             </Menu>
             <Menu Grid.Column="1">
@@ -52,7 +53,7 @@
                         <DockPanel HorizontalAlignment="Right" />
                     </ItemsPanelTemplate>
                 </Menu.ItemsPanel>
-                <WindowsFormsHost>
+                <WindowsFormsHost Width="40">
                     <forms:NumericUpDown Value="1" ValueChanged="NumericUpDown_OnValueChanged" Minimum="1" />
                 </WindowsFormsHost>
                 <MenuItem Name="AutoMenu" Header="{Binding AutoEnabledLbl}"
@@ -320,17 +321,17 @@
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="77*" />
-                    <ColumnDefinition Width="151*"/>
-                    <ColumnDefinition Width="5" />
-                    <ColumnDefinition Width="683*" />
+                    <ColumnDefinition Width="115*" />
+                    <ColumnDefinition Width="143*"/>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="693*" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="5*" />
                     <RowDefinition Height="5" />
                     <RowDefinition Height="2*" />
                 </Grid.RowDefinitions>
-                <Grid Grid.ColumnSpan="3" Margin="0,0,5,5" Grid.RowSpan="2">
+                <Grid Grid.ColumnSpan="2" Margin="0,0,5,5" Grid.RowSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="5" />
@@ -341,7 +342,7 @@
                     </DockPanel>
 
                     <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" />
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="1" Margin="0,1,-14,11" Grid.RowSpan="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -353,52 +354,58 @@
 
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="100" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <CheckBox Grid.Row="0" Grid.Column="1" x:Name="Filter0" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter0}" Grid.ColumnSpan="2" Height="21"
                                   Grid.RowSpan="2" />
-                        <Label Grid.Row="0" Grid.Column="0" Content="Decimate" />
+                        <Label Name="DecimateLBL" Grid.Row="0" Grid.Column="0" Content="Decimate" />
+
                         <CheckBox Grid.Row="1" Grid.Column="1" x:Name="Filter1" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter1}" />
-                        <Label Grid.Row="1" Grid.Column="0" Content="Threshold" />
+                        <Label Name="ThresholdLBL" Grid.Row="1" Grid.Column="0" Content="Threshold" />
 
                         <CheckBox Grid.Row="2" Grid.Column="1" x:Name="Filter2" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter2}" />
-                        <Label Grid.Row="2" Grid.Column="0" Content="Disparity" />
+                        <Label Name="DisparityLBL" Grid.Row="2" Grid.Column="0" Content="Disparity" />
 
                         <CheckBox Grid.Row="3" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter3}" />
-                        <Label Grid.Row="3" Grid.Column="0" Content="Spatial" />
+                        <Label Name="SpatialLBL" Grid.Row="3" Grid.Column="0" Content="Spatial" />
 
                         <CheckBox Grid.Row="4" Grid.Column="1" x:Name="Filter4" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter4}" />
-                        <Label Grid.Row="4" Grid.Column="0" Content="Temporal" />
+                        <Label Name="TemporalLBL" Grid.Row="4" Grid.Column="0" Content="Temporal" />
 
 
-                        <Slider Grid.Row="5" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="0,5,5,0"
-                                Name="triangleSlider" Minimum="0.02" Maximum="2" />
-                        <Label Grid.Row="5" Grid.Column="0" Content="{Binding ElementName=triangleSlider, Path=Value}"
-                               ContentStringFormat="{}Triangle Thres:{0:#,0.00}" />
+                        <Slider Grid.Row="5" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="0,5,45,26"
+                                Name="triangleSlider" Minimum="0.02" Maximum="2" Grid.RowSpan="2" />
+                        <Label Name="TriangleThLBL" Grid.Row="5" Grid.Column="0" Content="Triangle thres.:"/>
+                        <!--"{}Triangle Thres:{0:#,0.00}"-->
 
                         <CheckBox Grid.Row="6" Grid.Column="1" x:Name="PointFilter" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding PointFilter}" />
-                        <Label Grid.Row="6" Grid.Column="0" Content="Visible points" />
-
-
+                        <Label Name="VerticesLBL" Grid.Row="6" Grid.Column="0" Content="Visible vertices" />
+                        <Label x:Name="TriangleThLBL_Copy" Grid.Row="5" Grid.Column="1" Content="{Binding Value, ElementName=triangleSlider}"
+                            ContentStringFormat="{}{0:#,0.00}" Margin="115,0,10,26" Grid.RowSpan="2"/>
                     </Grid>
 
                 </Grid>
-                <GridSplitter Grid.Column="2" Width="5" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" Margin="0,0,683,5" Grid.RowSpan="2" />
+                <GridSplitter Grid.Column="3" HorizontalAlignment="Stretch" Margin="0,0,693,5" Grid.RowSpan="2" />
                 <DockPanel Grid.Column="3" Margin="0,0,0,5" Grid.RowSpan="2">
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="188*"/>
+                            <RowDefinition Height="61*"/>
+                            <RowDefinition Height="197*"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="184*" />
                             <ColumnDefinition Width="499*" />
@@ -409,7 +416,7 @@
                                                       RotateAroundMouseDownPoint="True"
                                                       IsTopBottomViewOrientedToFrontBack="True"
                                                       IsViewCubeEdgeClicksEnabled="True" Name="Hell"
-                                                      Grid.ColumnSpan="2" ChangeFieldOfViewCursor="ScrollNS" PanCursor="Hand" RotateCursor="SizeAll" ZoomCursor="SizeNS" ZoomRectangleCursor="ScrollSE">
+                                                      Grid.ColumnSpan="2" ChangeFieldOfViewCursor="ScrollNS" PanCursor="Hand" RotateCursor="SizeAll" ZoomCursor="SizeNS" ZoomRectangleCursor="ScrollSE" Grid.RowSpan="3" Margin="10,0,0,0">
 
 
                             <HelixToolkit:SunLight />
@@ -431,20 +438,20 @@
 
                         </HelixToolkit:HelixViewport3D>
 
-                        <Canvas Grid.ColumnSpan="2">
+                        <Canvas Grid.ColumnSpan="2" Margin="29,0,0,0" Grid.RowSpan="3">
 
-                            <Button Content="Snapshot" VerticalAlignment="Center"
+                            <Button Name="SnapshotBT" Content="Snapshot" VerticalAlignment="Center"
                                     HorizontalAlignment="Left" Width="76" Command="{Binding ReloadMesh}"
                                     Canvas.Right="90" Canvas.Top="10"/>
-                            <Button Content="Reset View" VerticalAlignment="Center"
+                            <Button Name="ResetBT" Content="Reset View" VerticalAlignment="Center"
                                     HorizontalAlignment="Left" Width="76" Click="Button_Click" Canvas.Right="10"
                                     Canvas.Top="10" />
 
                         </Canvas>
                     </Grid>
                 </DockPanel>
-                <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}"/>
-                <TextBlock HorizontalAlignment="Left" Margin="10,5,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="2" Text="def Edit_poitcloud(points, uvs, faces):"/>
+                <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}" Height="20"/>
+                <TextBlock HorizontalAlignment="Right" Margin="0,5,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Text="def Edit_poitcloud(points, uvs, faces):" Height="32" Width="248" Grid.ColumnSpan="2"/>
                 <RichTextBox x:Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35" TextChanged="CodeBlock_TextChanged" VerticalScrollBarVisibility="Visible">
                     <RichTextBox.Resources>
                         <Style TargetType="{x:Type Paragraph}">
@@ -457,6 +464,8 @@
                         </Paragraph>
                     </FlowDocument>
                 </RichTextBox>
+                <Label Focusable="False" x:Name="messageLbl" IsEnabled="False"
+                       Content="{Binding Message}" Grid.ColumnSpan="4" Margin="2,145,101,3" Grid.Row="2" />
             </Grid>
 
         </DockPanel>

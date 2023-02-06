@@ -230,5 +230,47 @@ namespace Intel.RealSense
             var dc = DataContext as MainViewModel;
             dc.UserCode = textRange.Text;
         }
+
+        private void LanguageSwap_Click(object sender, RoutedEventArgs e)
+        {
+            var dc = DataContext as MainViewModel;
+            var langCont = dc.LangContr;
+            langCont.SwapLanguage();
+
+            FileMN.Header = langCont.FileHeader;
+            BagMNI.Header = langCont.OpenBAG;
+            CameraMNI.Header = langCont.OpenCamera;
+            PlyMNI.Header = langCont.SavePLY;
+
+            // ConnectMNI.Header = langCont.ConnectMNI;
+            SendMeshMNI.Header = langCont.SendMeshMNI;
+            DeleteMeshMNI.Header = langCont.DeleteMeshMNI;
+            DwnldMeshMNI.Header = langCont.DwnldMeshMNI;
+
+            PythonPathMNI.Header = langCont.PythonPathMNI;
+
+            SettingsMN.Header = langCont.SettingsMN;
+            LanguageMNI.Header = langCont.LanguageMNI;
+
+
+            // langCont.ConnectMNI;
+
+            ServerMN.Header = langCont.ServerMN;
+
+            SettingsMN.Header = langCont.SettingsMN;
+
+            ApplyCodeBT.Content = langCont.ApplyCodeBT;
+            SnapshotBT.Content = langCont.SnapshotBT;
+            ResetBT.Content = langCont.ResetBT;
+
+            DecimateLBL.Content = langCont.DecimateLBL;
+            ThresholdLBL.Content = langCont.ThresholdLBL;
+            DisparityLBL.Content = langCont.DisparityLBL;
+            SpatialLBL.Content = langCont.SpatialLBL;
+            TemporalLBL.Content = langCont.TemporalLBL;
+            VerticesLBL.Content = langCont.VerticesLBL;
+
+            TriangleThLBL.Content = langCont.TriangleThLBL;
+        }
     }
 }
