@@ -42,6 +42,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string FRAME_PROPERTY = "Frame";
         public const string USER_CODE = "UserCode";
 
+        private string clientName = "DepthClient1";
 
         // labels
         private string _connectBtnLbl = "Connect";
@@ -291,6 +292,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand EditPointcloud { get; private set; }
         public ICommand SetPythonPath { get; private set; }
         public LanguageController LangContr { get => langContr; set => langContr = value; }
+        public string ClientName { get => clientName; set => clientName = value; }
 
 
         #endregion
@@ -335,6 +337,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 var lines = File.ReadAllLines(cfpth);
                 _pythonPath = lines[0];
+                if (lines.Length > 1)
+                    clientName = lines[1].Trim();
+                else
+                    clientName = "DefaultClient";
             }
         }
 
@@ -748,7 +754,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 };
                 var w = new WorldObjectDto
                 {
-                    Name = PLY_NAME,
+                    Name = PLY_NAME + "_" + clientName,
                     Type = "PlyFile",
                     Properties = p,
                     Position = new RemoteVectorDto(),
@@ -787,7 +793,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 var w = new WorldObjectDto
                 {
-                    Name = MESH_NAME,
+                    Name = MESH_NAME + "_" + clientName,
                     Type = "Mesh",
                     Position = new RemoteVectorDto(),
                     Properties = properties,
@@ -818,7 +824,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 var w = new WorldObjectDto
                 {
-                    Name = MESH_TEXTURE_NAME,
+                    Name = MESH_TEXTURE_NAME + "_" + clientName,
                     Type = "Bitmap",
                     Properties = properties,
                     Position = new RemoteVectorDto(),
@@ -845,8 +851,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private async void OnRemoveImage()
         {
-            bool mRes = await connection.RemoveWorldObject(MESH_NAME);
-            bool pRes = await connection.RemoveWorldObject(PLY_NAME);
+            bool mRes = await connection.RemoveWorldObject(MESH_NAME + "_" + clientName);
+            bool pRes = await connection.RemoveWorldObject(PLY_NAME + "_" + clientName);
             // bool tMes = await connection.RemoveWorldObject(MESH_TEXTURE_NAME);
 
             if (mRes && pRes) // && tMes)

@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using ZCU.TechnologyLab.DepthClient.Ui;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -229,6 +230,19 @@ namespace Intel.RealSense
 
             var dc = DataContext as MainViewModel;
             dc.UserCode = textRange.Text;
+        }
+
+        private void SetName_Click(object sender, RoutedEventArgs e)
+        {
+            var dc = DataContext as MainViewModel;
+            var langCont = dc.LangContr;
+
+            NameDialog inputDialog = new NameDialog(langCont.NameQuestion, dc.ClientName);
+            if (inputDialog.ShowDialog() == true)
+            {
+                dc.ClientName = inputDialog.Answer;
+                dc.Message = langCont.NameChange + dc.ClientName;
+            }
         }
 
         private void LanguageSwap_Click(object sender, RoutedEventArgs e)

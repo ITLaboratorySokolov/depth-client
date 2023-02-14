@@ -29,6 +29,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string _settingsMN = "_Settings";
         string _languageMNI = "Set to _CZ";
+        string _setNameMNI = "Client _name";
 
         string _autoMenu = "Auto send: OFF"; // TODO OFF/ON + secs
 
@@ -38,10 +39,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string _decimateLBL = "Decimate";
         string _thresholdLBL = "Threshold";
+
+        string _smoothing = "Smoothing";
         string _disparityLBL = "Disparity";
         string _spatialLBL = "Spatial";
         string _temporalLBL = "Temporal";
-        string _triangleThLBL = "Triangle thres.:";
+        
+        string _triangleThLBL = "Triangle threshold:";
         string _verticesLBL = "Visible vertices";
 
         //
@@ -73,6 +77,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string noSnap = "No snapshot taken yet";
         string plySaved = "Ply file saved";
+
+        string nameQuestion = "Input client name:";
+        string nameChange = "Client name changed to: ";
 
         //
 
@@ -128,6 +135,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string NoSnap { get => noSnap; set => noSnap = value; }
         public string PlySaved { get => plySaved; set => plySaved = value; }
         public string TriangleThLBL { get => _triangleThLBL; set => _triangleThLBL = value; }
+        public string SetNameMNI { get => _setNameMNI; set => _setNameMNI = value; }
+        public string NameQuestion { get => nameQuestion; set => nameQuestion = value; }
+        public string NameChange { get => NameChange1; set => NameChange1 = value; }
+        public string NameChange1 { get => nameChange; set => nameChange = value; }
+        public string Smoothing { get => _smoothing; set => _smoothing = value; }
 
         public LanguageController()
         {
@@ -161,17 +173,21 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 SettingsMN = "_Nastavení";
                 LanguageMNI = "Přepnout do _EN";
+                SetNameMNI = "Jméno klienta";
 
                 SnapshotBT = "Snímek";
                 ResetBT = "Reset náhl.";
                 ApplyCodeBT = "Provést";
 
-                DecimateLBL = "Decimovat";
-                ThresholdLBL = "Prahovat";
-                DisparityLBL = "Nesourodost";
-                SpatialLBL = "Prostorové"; // TODO ???
-                TemporalLBL = "Dočasné"; // TODO ???
-                TriangleThLBL = "Prahování trojúh.:"; // TODO
+                DecimateLBL = "Decimovat trojúh.";
+                ThresholdLBL = "Oříznout";
+
+                Smoothing = "Vyhlazování";
+                DisparityLBL = "V disparity doméně";
+                SpatialLBL = "Prostorové";
+                TemporalLBL = "Časové";
+
+                TriangleThLBL = "Prahování trojúh.:";
                 VerticesLBL = "Viditelné vrcholy";
 
                 py_dialog_Title = "Vyberte python.dll soubor";
@@ -202,6 +218,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 noSnap = "Dosud nebyl vytvořen žádný snímek";
                 plySaved = "Ply soubor uložen";
+
+                NameQuestion = "Zadejte jméno klienta:";
+                NameChange = "Jméni kienta změněno na: ";
+
             }
             else if (lang == "EN")
             {
@@ -223,17 +243,21 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 SettingsMN = "_Settings";
                 LanguageMNI = "Set to _CZ";
+                SetNameMNI = "Client name";
 
                 SnapshotBT = "Snapshot";
                 ResetBT = "Reset view";
                 ApplyCodeBT = "Apply";
 
-                DecimateLBL = "Decimate";
+                DecimateLBL = "Decimate triang.";
                 ThresholdLBL = "Threshold";
-                DisparityLBL = "Disparity";
+                
+                Smoothing = "Smoothing";
+                DisparityLBL = "In disparity domain";
                 SpatialLBL = "Spatial";
                 TemporalLBL = "Temporal";
-                TriangleThLBL= "Triangle thres.:";
+                
+                TriangleThLBL= "Triangle threshold:";
                 VerticesLBL = "Visible vertices";
 
                 py_dialog_Title = "Select python.dll file";
@@ -264,6 +288,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 noSnap = "No snapshot taken yet";
                 plySaved = "Ply file saved";
+
+                nameQuestion = "Input client name:";
+                NameChange = "Client name changed to: ";
             }
         }
     }

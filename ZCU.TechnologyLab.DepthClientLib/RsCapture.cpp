@@ -157,6 +157,12 @@ void UpdateFilters(bool* filterss)
 {
 	for (int i = 0; i < filters.size(); ++i)
 		filters[i].is_enabled = filterss[i];
+
+	/*
+	// TODO ? mùžu nastavit custom filtry?
+	rs2::threshold_filter thrf = rs2::threshold_filter(0.15, 2);
+	filters[1].filter = thrf;
+	*/
 }
 rs2::align align_to_depth(RS2_STREAM_DEPTH);
 
