@@ -158,6 +158,29 @@ void UpdateFilters(bool* filterss)
 	for (int i = 0; i < filters.size(); ++i)
 		filters[i].is_enabled = filterss[i];
 
+	// Decimation
+	// magnitude - Discrete steps in [2-8] range
+
+	// Threshold
+	// near & far for threshold filter
+
+	// Spatial
+	// magnitude 1-5 (int) steps
+	// alpha - [0.25-1]
+	// delta - [1-50] integer
+	// hole filling - [0-5] range mapped to [none,2,4,8,16,unlimited] pixels
+
+	// Temporal
+	// alpha - [0-1]
+	// delta - Discrete [1-100]
+	// 
+
+	// Hole filling filter
+	// [0-2] enumerated:
+
+	rs2::threshold_filter thrf = rs2::threshold_filter(0.15, 0.45);
+	filters[1].filter = thrf;
+
 	/*
 	// TODO ? mùžu nastavit custom filtry?
 	rs2::threshold_filter thrf = rs2::threshold_filter(0.15, 2);

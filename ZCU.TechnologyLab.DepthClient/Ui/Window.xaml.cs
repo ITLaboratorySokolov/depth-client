@@ -286,5 +286,18 @@ namespace Intel.RealSense
 
             TriangleThLBL.Content = langCont.TriangleThLBL;
         }
+
+        private void FilterSettingsBT_Click(object sender, RoutedEventArgs e)
+        {
+            var dc = DataContext as MainViewModel;
+            var langCont = dc.LangContr;
+
+            FilterConfigurationWindow confWindow = new FilterConfigurationWindow(dc);
+            if (confWindow.ShowDialog() == true)
+            {
+                // dc.ClientName = inputDialog.Answer;
+                // dc.Message = langCont.NameChange + dc.ClientName;
+            }
+        }
     }
 }
