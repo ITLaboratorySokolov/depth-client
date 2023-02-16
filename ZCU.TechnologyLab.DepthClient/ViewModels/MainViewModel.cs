@@ -61,10 +61,23 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private bool _enabledApply;
 
         // filters
-        private readonly bool[] _filters = Enumerable.Repeat(true, 5).ToArray();
+        private readonly bool[] _filters = Enumerable.Repeat(true, 6).ToArray();
         private bool _pointFilter = true;
-        private double _thresholdSlider = 0.2;
         
+        private double _thresholdSlider = 0.2;
+
+        private int _linScaleFac = 2;
+        private float _minValueTh = 0.15f;
+        private float _maxValueTh = 2f;
+        private int _iterationsSpat = 2;
+        private float _alphaSpat = 0.5f;
+        private int _deltaSpat = 20;
+        private int _holeSpat = 0;
+        private float _alphaTemp = 0.4f;
+        private int _deltaTemp = 20;
+        private int _persIndex = 3;
+        private int _holeMethod = 1;
+
         private DispatcherTimer timer;
 
         // mesh
@@ -258,6 +271,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        public bool Filter5
+        {
+            get => _filters[5];
+            set
+            {
+                this._filters[5] = value;
+                OnFilterChange();
+            }
+        }
+
         public bool PointFilter
         {
             get => _pointFilter;
@@ -293,6 +316,95 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand SetPythonPath { get; private set; }
         public LanguageController LangContr { get => langContr; set => langContr = value; }
         public string ClientName { get => clientName; set => clientName = value; }
+        
+        
+        public float MinValueТh { get => _minValueTh;
+            set
+            { 
+                _minValueTh = value;
+                OnFilterChange();
+            }
+        }
+
+        public float MaxValueTh { get => _maxValueTh;
+            set
+            {
+                _maxValueTh = value;
+                OnFilterChange();
+            }
+        }
+
+        public float AlphaSpat { get => _alphaSpat; 
+            set
+            {
+                _alphaSpat = value;
+                OnFilterChange();
+            }
+        }
+
+        public int DeltaSpat { get => _deltaSpat; 
+            set
+            {
+                _deltaSpat = value;
+                OnFilterChange();
+            }
+        }
+
+        public float AlphaTemp { get => _alphaTemp; 
+            set
+            {
+                _alphaTemp = value;
+                OnFilterChange();
+            }
+        }
+
+        public int DeltaTemp { get => _deltaTemp; 
+            set
+            {
+                _deltaTemp = value;
+                OnFilterChange();
+            }
+        }
+
+        public int LinScaleFac { get => _linScaleFac;
+            set
+            {
+                _linScaleFac = value;
+                OnFilterChange();
+            }
+        }
+
+        public int IterationsSpat { get => _iterationsSpat;
+            set
+            {
+                _iterationsSpat = value; 
+                OnFilterChange();
+            }
+        }
+
+        public int HoleSpat { get => _holeSpat;
+            set 
+            { 
+                _holeSpat = value;
+                OnFilterChange();
+            }
+        }
+
+        public int PersIndex { get => _persIndex; 
+            set 
+            { 
+                _persIndex = value; 
+                OnFilterChange();
+            } }
+
+        public int HoleMethod { get => _holeMethod;
+            set 
+            {
+                _holeMethod = value; 
+                OnFilterChange();
+            }
+        }
+
 
 
         #endregion
@@ -451,6 +563,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             if (!_meshBuffer.HasValue) return;
 
             MeshProcessor.GenerateFaces(_meshBuffer.Value, (float)ThresholdSlider);
+
             _meshGeo.TriangleIndices = new Int32Collection(_meshBuffer.Value.TempFaces);
             RaisePropertyChanged(MODEL_PROPERTY);
         }
@@ -618,10 +731,31 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private void OnFilterChange()
         {
             // Console.WriteLine("Updating filters");
-            RealS.updateFilters(_filters);
-        }
+            float[] filterData = new float[] {
+                // Decimation filter
+                _linScaleFac,
+                
+                // Threshold filter
+                _minValueTh,
+                _maxValueTh,
+                
+                // Spatial smoothing
+                _iterationsSpat,
+                _alphaSpat,
+                _deltaSpat,
+                _holeSpat,
+                
+                // Temporal smoothing
+                _alphaTemp,
+                _deltaTemp,
+                _persIndex,
 
-        // TODO Connection to different class
+                // Hole filling
+                _holeMethod
+            };
+
+            RealS.updateFilters(_filters, filterData);
+        }
 
         /// <summary>
         /// Set up connection to a server.

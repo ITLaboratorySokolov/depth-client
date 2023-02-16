@@ -63,7 +63,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public static extern unsafe void DropFrame(float* items, int* faces, byte* ply);
 
             [DllImport(DLL_PATH, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
-            public static extern unsafe void UpdateFilters(bool* filterEnables);
+            public static extern unsafe void UpdateFilters(bool* filterss, float* filter_data);
         }
 
         // Initializes depth stream from file or camera
@@ -109,13 +109,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
-        public static void updateFilters(bool[] enables)
+        public static void updateFilters(bool[] enables, float[] filterData)
         {
             unsafe
             {
                 fixed (bool* FirstResult = &enables[0])
                 {
-                    RealSenseWrapper.UpdateFilters(FirstResult);
+                    fixed (float* Data = &filterData[0])
+                    {
+                        RealSenseWrapper.UpdateFilters(FirstResult, Data);
+                    }
                 }
             }
         }

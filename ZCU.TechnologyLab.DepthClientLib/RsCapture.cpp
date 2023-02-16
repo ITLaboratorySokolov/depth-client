@@ -13,6 +13,7 @@
 #include <librealsense2/rs.hpp>
 #include <librealsense2/hpp/rs_internal.hpp>
 #include <librealsense2/hpp/rs_export.hpp>
+#include <mutex>
 
 int main(const char** args)
 {
@@ -139,6 +140,8 @@ std::atomic_bool stopped(false);
 std::thread processing_thread;
 rs2::frame_queue filteredQueue;
 std::vector<filter_options> filters;
+std::mutex m_mutex;
+
 
 rs2::pipeline* pipe;
 
@@ -147,45 +150,50 @@ rs2::decimation_filter dec_filter(2); // Decimation - reduces depth frame densit
 rs2::threshold_filter thr_filter; // Threshold  - removes values outside recommended range
 rs2::spatial_filter spat_filter; // Spatial    - edge-preserving spatial smoothing
 rs2::temporal_filter temp_filter; // Temporal   - reduces temporal noise
+rs2::hole_filling_filter hole_filter; // Hole filling
 
 // Declare disparity transform from depth to disparity and vice versa
 std::string disparity_filter_name = "Disparity";
 rs2::disparity_transform depth_to_disparity(true);
 rs2::disparity_transform disparity_to_depth(false);
 
-void UpdateFilters(bool* filterss)
+void UpdateFilters(bool* filterss, float* filter_data)
 {
-	for (int i = 0; i < filters.size(); ++i)
-		filters[i].is_enabled = filterss[i];
+	std::thread updating_thread(([filterss, filter_data]
+		{
+			m_mutex.lock();
 
-	// Decimation
-	// magnitude - Discrete steps in [2-8] range
+			for (int i = 0; i < filters.size(); ++i)
+				filters[i].is_enabled = filterss[i];
 
-	// Threshold
-	// near & far for threshold filter
+			// Decimation
+			rs2::decimation_filter dec_f(filter_data[0]);
+			filters[0].filter = dec_f;
 
-	// Spatial
-	// magnitude 1-5 (int) steps
-	// alpha - [0.25-1]
-	// delta - [1-50] integer
-	// hole filling - [0-5] range mapped to [none,2,4,8,16,unlimited] pixels
+			// Threshold
+			rs2::threshold_filter thr_f(filter_data[1], filter_data[2]);
+			filters[1].filter = thr_f;
 
-	// Temporal
-	// alpha - [0-1]
-	// delta - Discrete [1-100]
-	// 
+			// Disparity
 
-	// Hole filling filter
-	// [0-2] enumerated:
+			// Spatial
+			rs2::spatial_filter spat_f(filter_data[4], filter_data[5], filter_data[3], filter_data[6]); 
+			filters[3].filter = spat_f;
 
-	rs2::threshold_filter thrf = rs2::threshold_filter(0.15, 0.45);
-	filters[1].filter = thrf;
+			// Temporal
+			rs2::temporal_filter temp_f(filter_data[7], filter_data[8], filter_data[9]);
+			filters[4].filter = temp_f;
 
-	/*
-	// TODO ? mùžu nastavit custom filtry?
-	rs2::threshold_filter thrf = rs2::threshold_filter(0.15, 2);
-	filters[1].filter = thrf;
-	*/
+			// Hole filling filter
+			// [0-2] enumerated:
+			rs2::hole_filling_filter hole_f(filter_data[10]);
+			filters[5].filter = hole_f;
+
+			m_mutex.unlock();
+		}));
+
+	updating_thread.join();
+
 }
 rs2::align align_to_depth(RS2_STREAM_DEPTH);
 
@@ -228,6 +236,7 @@ bool Start(const char* filePath) try
 	filters.emplace_back(disparity_filter_name, depth_to_disparity);
 	filters.emplace_back("Spatial", spat_filter);
 	filters.emplace_back("Temporal", temp_filter);
+	filters.emplace_back("Hole", hole_filter);
 
 	for (auto& filter_options : filters)
 	{
@@ -266,9 +275,13 @@ bool Start(const char* filePath) try
 			6. revert the results back (if step Disparity filter was applied
 			to depth domain (each post processing block is optional and can be applied independantly).
 			*/
+
+			m_mutex.lock();
+
 			bool revert_disparity = false;
-			for (auto&& filter : filters)
+			for (int i = 0; i < filters.size() - 1; i++) // (auto&& filter : filters)
 			{
+				auto&& filter = filters[i];
 				if (filter.is_enabled)
 				{
 					filtered = filter.filter.process(filtered);
@@ -276,6 +289,12 @@ bool Start(const char* filePath) try
 				}
 			}
 			if (revert_disparity) { filtered = disparity_to_depth.process(filtered); }
+			
+			if(filters[5].is_enabled)
+			{
+				filtered = filters[5].filter.process(filtered);
+			}
+
 
 			// Push filtered & original data to their respective queues
 			// Note, pushing to two different queues might cause the application to display
@@ -304,15 +323,12 @@ bool Start(const char* filePath) try
 
 			bundler.invoke(d2.get_color_frame());
 			bundler.invoke(filtered);
+
+			m_mutex.unlock();
 		}
 	});
+
 	return true;
-
-
-	// Signal the processing thread to stop, and join
-	// (Not the safest way to join a thread, please wrap your threads in some RAII manner)
-	//stopped = true;
-	//processing_thread.join();
 }
 catch
 (

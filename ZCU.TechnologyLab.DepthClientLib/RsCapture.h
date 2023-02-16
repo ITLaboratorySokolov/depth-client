@@ -15,7 +15,8 @@ extern "C" {
 #  define MODULE_API
 #endif
 MODULE_API bool Start(const char* filePath);
-MODULE_API void UpdateFilters(bool* filters);
+MODULE_API void UpdateFilters(bool* filterss, float* filter_data);
+// MODULE_API void UpdateFilters(bool* filters);
 
 MODULE_API void Exit();
 MODULE_API bool GetFrame(

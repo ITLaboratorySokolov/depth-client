@@ -38,7 +38,7 @@ namespace Intel.RealSense
 
         static volatile bool freezeDepth = false;
         public static ProcessingWindow InstanceWindow;
-
+        private bool settingsOpened;
 
         private void ResizeImageSrc(int width, int height)
         {
@@ -279,7 +279,7 @@ namespace Intel.RealSense
 
             DecimateLBL.Content = langCont.DecimateLBL;
             ThresholdLBL.Content = langCont.ThresholdLBL;
-            DisparityLBL.Content = langCont.DisparityLBL;
+            // DisparityLBL.Content = langCont.DisparityLBL;
             SpatialLBL.Content = langCont.SpatialLBL;
             TemporalLBL.Content = langCont.TemporalLBL;
             VerticesLBL.Content = langCont.VerticesLBL;
@@ -289,15 +289,21 @@ namespace Intel.RealSense
 
         private void FilterSettingsBT_Click(object sender, RoutedEventArgs e)
         {
+            if (settingsOpened)
+                return;
+
+            settingsOpened = true;
             var dc = DataContext as MainViewModel;
             var langCont = dc.LangContr;
 
             FilterConfigurationWindow confWindow = new FilterConfigurationWindow(dc);
-            if (confWindow.ShowDialog() == true)
-            {
-                // dc.ClientName = inputDialog.Answer;
-                // dc.Message = langCont.NameChange + dc.ClientName;
-            }
+            confWindow.Show();
+            confWindow.Closing += ClosingSettings;
+        }
+
+        public void ClosingSettings(object sender, CancelEventArgs e)
+        {
+            settingsOpened = false;
         }
     }
 }

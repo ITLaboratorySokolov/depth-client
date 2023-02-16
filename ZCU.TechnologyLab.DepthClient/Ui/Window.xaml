@@ -347,7 +347,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="20" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -373,12 +373,12 @@
                                   VerticalAlignment="Top" IsChecked="{Binding Filter1}" />
                         <Label Name="ThresholdLBL" Grid.Row="1" Grid.Column="0" Content="Threshold" />
 
-                        <Label Name="SmoothingLBL" Grid.Row="3" Grid.Column="0" Content="Smooting" />
-
-                        <CheckBox Grid.Row="4" Grid.Column="1" x:Name="Filter2" HorizontalAlignment="Left"
+                        <CheckBox Grid.Row="2" Grid.Column="1" x:Name="Filter5" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter2}" />
-                        <Label Name="DisparityLBL" Margin="5,0,0,0" Grid.Row="4" Grid.Column="0" Content="In disparity domain" />
+                                  VerticalAlignment="Top" IsChecked="{Binding Filter5}" />
+                        <Label Name="HoleLBL" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
+                        
+                        <Label Name="SmoothingLBL" Grid.Row="3" Grid.Column="0" Content="Smooting" />
 
                         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
@@ -403,7 +403,7 @@
                                   VerticalAlignment="Top" IsChecked="{Binding PointFilter}" />
                         <Label Name="VerticesLBL" Grid.Row="9" Grid.Column="0" Content="Visible vertices" />
 
-                        <Button Name="FilterSettingsBT" Grid.Row="10" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="5" Content="Configure filters" Click="FilterSettingsBT_Click"/>
+                        <Button Name="FilterSettingsBT" Grid.Row="10" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="5" Content="Advanced settings" Click="FilterSettingsBT_Click"/>
                     </Grid>
 
                 </Grid>

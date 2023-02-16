@@ -5,11 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZCU.TechnologyLab.DepthClient.Ui" xmlns:extToolkit="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:viewModels="clr-namespace:ZCU.TechnologyLab.DepthClient.ViewModels"
         mc:Ignorable="d"
-        Title="Filter configuration" Height="525" Width="342">
+        Title="Filter configuration" Height="507" Width="342">
     <Window.DataContext>
         <viewModels:MainViewModel/>
     </Window.DataContext>
-    <Grid Height="483" VerticalAlignment="Top">
+    <Grid Height="477" VerticalAlignment="Center">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -37,58 +37,63 @@
 
         <Label Name="DecimateLBL" Grid.Row="0" Grid.Column="0" Content="Decimation filter parameters" />
         <Label Name="DecLinScaleLBL" Grid.Row="1" Grid.Column="0" Margin="20, 0, 0, 0" Content="Linear scale factor" />
-        <Slider Grid.Row="1" Grid.Column="1" Margin="5,5,30,5"
-                                Name="DecMagSlider" Minimum="2" Maximum="8" />
+        <Slider Grid.Row="1" Grid.Column="1" Margin="5,5,30,5" Value="{Binding LinScaleFac}"
+                             IsSnapToTickEnabled="True" TickFrequency="1" Name="DecMagSlider" Minimum="2" Maximum="8" />
         <Label Grid.Row="1" Grid.Column="1" Content="{Binding Value, ElementName=DecMagSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
         <Label Name="ThreshLBL" Grid.Row="2" Grid.Column="0" Content="Depth thresholding parameters" />
         <Label Name="ThMinLBL" Grid.Row="3" Grid.Column="0" Margin="20, 0, 0, 0" Content="Minimum" />
-        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
+        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding MinValueТh}" Margin="5,5,30,5"
                                 Name="ThMinSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="3" Grid.Column="1" Content="{Binding Value, ElementName=ThMinSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="ThMaxLBL" Grid.Row="4" Grid.Column="0" Margin="20, 0, 0, 0" Content="Maximum" />
-        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
+        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding MaxValueTh}" Margin="5,5,30,5"
                                 Name="ThMaxSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="4" Grid.Column="1" Content="{Binding Value, ElementName=ThMaxSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
-        <Label Name="SpatialLBL" Grid.Row="5" Grid.Column="0" Content="Spatial smoothing parameters" />
-        <Label Name="SpIterLBL" Grid.Row="6" Grid.Column="0" Margin="20, 0, 0, 0" Content="Iterations" />
-        <Slider Grid.Row="6" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
-                                Name="SpMagSlider" Minimum="1" Maximum="5" />
-        <Label Grid.Row="6" Grid.Column="1" Content="{Binding Value, ElementName=SpMagSlider}"
+        <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter2" HorizontalAlignment="Left"
+                                  Margin="0,5,0,0"
+                                  VerticalAlignment="Top" IsChecked="{Binding Filter2}" />
+        <Label Name="DisparityLBL" Margin="0,0,0,0" Grid.Row="5" Grid.Column="0" Content="Smoothing in disparity domain" />
+
+        <Label Name="SpatialLBL" Grid.Row="6" Grid.Column="0" Content="Spatial smoothing parameters" />
+        <Label Name="SpIterLBL" Grid.Row="7" Grid.Column="0" Margin="20, 0, 0, 0" Content="Iterations" />
+        <Slider Grid.Row="7" Grid.Column="1" Value="{Binding IterationsSpat}" Margin="5,5,30,5"
+                                IsSnapToTickEnabled="True" TickFrequency="1" Name="SpMagSlider" Minimum="1" Maximum="5" />
+        <Label Grid.Row="7" Grid.Column="1" Content="{Binding Value, ElementName=SpMagSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="SpAlphaLBL" Grid.Row="7" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="7" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
+        <Label Name="SpAlphaLBL" Grid.Row="8" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
+        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding AlphaSpat}" Margin="5,5,30,5"
                                 Name="SpAlphaSlider" Minimum="0.25" Maximum="1" />
-        <Label Grid.Row="7" Grid.Column="1" Content="{Binding Value, ElementName=SpAlphaSlider}"
+        <Label Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=SpAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="SpDeltaLBL" Grid.Row="8" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
-        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
-                                Name="SpDeltaSlider" Minimum="1" Maximum="50" />
-        <Label Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=SpDeltaSlider}"
+        <Label Name="SpDeltaLBL" Grid.Row="9" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
+        <Slider Grid.Row="9" Grid.Column="1" Value="{Binding DeltaSpat}" Margin="5,5,30,5"
+                                IsSnapToTickEnabled="True" TickFrequency="1" Name="SpDeltaSlider" Minimum="1" Maximum="50" />
+        <Label Grid.Row="9" Grid.Column="1" Content="{Binding Value, ElementName=SpDeltaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="SpHoleLBL" Grid.Row="9" Grid.Column="0" Margin="20, 0, 0, 0" Content="Hole filling" />
-        <Slider Grid.Row="9" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
-                                Name="SpHoleSlider" Minimum="0" Maximum="5" />
-        <Label Grid.Row="9" Grid.Column="1" Content="{Binding Value, ElementName=SpHoleSlider}"
+        <Label Name="SpHoleLBL" Grid.Row="10" Grid.Column="0" Margin="20, 0, 0, 0" Content="Hole filling" />
+        <Slider Grid.Row="10" Grid.Column="1" Value="{Binding HoleSpat}" Margin="5,5,30,5"
+                                IsSnapToTickEnabled="True" TickFrequency="1" Name="SpHoleSlider" Minimum="0" Maximum="5" />
+        <Label Grid.Row="10" Grid.Column="1" Content="{Binding Value, ElementName=SpHoleSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
-        <Label Name="TemporalLBL" Grid.Row="10" Grid.Column="0" Content="Temporal smoothing paramteres" />
-        <Label Name="TempAlphaLBL" Grid.Row="11" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="11" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
-                                Name="TemAlphaSlider" Minimum="0.02" Maximum="2" />
-        <Label Grid.Row="11" Grid.Column="1" Content="{Binding Value, ElementName=TemAlphaSlider}"
+        <Label Name="TemporalLBL" Grid.Row="11" Grid.Column="0" Content="Temporal smoothing paramteres" />
+        <Label Name="TempAlphaLBL" Grid.Row="12" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
+        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding AlphaTemp}" Margin="5,5,30,5"
+                                Name="TemAlphaSlider" Minimum="0" Maximum="1" />
+        <Label Grid.Row="12" Grid.Column="1" Content="{Binding Value, ElementName=TemAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="TempDeltaLBL" Grid.Row="12" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
-        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="5,5,30,5"
-                                Name="TempDelptaSlider" Minimum="0.02" Maximum="2" />
-        <Label Grid.Row="12" Grid.Column="1" Content="{Binding Value, ElementName=TempDelptaSlider}"
+        <Label Name="TempDeltaLBL" Grid.Row="13" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
+        <Slider Grid.Row="13" Grid.Column="1" Value="{Binding DeltaTemp}" Margin="5,5,30,5"
+                                IsSnapToTickEnabled="True" TickFrequency="1" Name="TempDelptaSlider" Minimum="1" Maximum="100" />
+        <Label Grid.Row="13" Grid.Column="1" Content="{Binding Value, ElementName=TempDelptaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="TempPersLBL" Grid.Row="13" Grid.Column="0" Margin="20, 0, 0, 0" Content="Persistency index" />
-        <extToolkit:DropDownButton Grid.Row="13" Grid.Column="1" Content="Select" Background="White" >
+        <Label Name="TempPersLBL" Grid.Row="14" Grid.Column="0" Margin="20, 0, 0, 0" Content="Persistency index" />
+        <extToolkit:DropDownButton Name="PersistencyDropdown" Grid.Row="14" Grid.Column="1" Content="Valid in 2/last 4" Background="White" >
             <extToolkit:DropDownButton.DropDownContent>
                 <Grid>
                     <Grid.RowDefinitions>
@@ -102,25 +107,25 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <Button Grid.Row="0" Content="Disabled" Background="White"/>
-                    <Button Grid.Row="1" Content="Valid in 8/8" Background="White"/>
-                    <Button Grid.Row="2" Content="Valid in 2/last 3" Background="White"/>
-                    <Button Grid.Row="3" Content="Valid in 2/last 4" Background="White"/>
-                    <Button Grid.Row="4" Content="Valid in 2/8" Background="White"/>
-                    <Button Grid.Row="5" Content="Valid in 1/last 2" Background="White"/>
-                    <Button Grid.Row="6" Content="Valid in 1/last 5" Background="White"/>
-                    <Button Grid.Row="7" Content="Valid in 1/last 8" Background="White"/>
-                    <Button Grid.Row="8" Content="Persist Indefinitely" Background="White"/>
+                    <Button Grid.Row="0" Content="Disabled" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="1" Content="Valid in 8/8" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="2" Content="Valid in 2/last 3" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="3" Content="Valid in 2/last 4" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="4" Content="Valid in 2/8" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="5" Content="Valid in 1/last 2" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="6" Content="Valid in 1/last 5" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="7" Content="Valid in 1/last 8" Background="White" Click="PersistencyIndexBT_Click"/>
+                    <Button Grid.Row="8" Content="Persist Indefinitely" Background="White" Click="PersistencyIndexBT_Click"/>
                 </Grid>
             </extToolkit:DropDownButton.DropDownContent>
         </extToolkit:DropDownButton>
-        
+
         <!--Slider Grid.Row="13" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="26,5,26,5"
                                 Name="TempPersSlider" Minimum="0.02" Maximum="2" /-->
-        
-        <Label Name="HoleLBL" Grid.Row="14" Grid.Column="0" Content="Hole filling parameters" />
-        <Label Name="HoleTypeLBL" Grid.Row="15" Grid.Column="0" Margin="20, 0, 0, 0" Content="Method" />
-        <extToolkit:DropDownButton Grid.Row="15" Grid.Column="1" Content="Select" Background="White" >
+
+        <Label Name="HoleLBL" Grid.Row="15" Grid.Column="0" Content="Hole filling parameters" />
+        <Label Name="HoleTypeLBL" Grid.Row="16" Grid.Column="0" Margin="20, 0, 0, 0" Content="Method" />
+        <extToolkit:DropDownButton Name="HoleDropdown" Grid.Row="16" Grid.Column="1" Content="farest__from__around" Background="White" >
             <extToolkit:DropDownButton.DropDownContent>
                 <Grid>
                     <Grid.RowDefinitions>
@@ -128,16 +133,14 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <Button Grid.Row="0" Content="fill_from_left" Background="White"/>
-                    <Button Grid.Row="1" Content="farest_from_around " Background="White"/>
-                    <Button Grid.Row="2" Content="nearest_from_around" Background="White"/>
+                    <Button Grid.Row="0" Content="fill__from__left" Background="White" Click="HoleFilterBT_Click"/>
+                    <Button Grid.Row="1" Content="farest__from__around" Background="White" Click="HoleFilterBT_Click"/>
+                    <Button Grid.Row="2" Content="nearest__from__around" Background="White" Click="HoleFilterBT_Click"/>
                 </Grid>
             </extToolkit:DropDownButton.DropDownContent>
         </extToolkit:DropDownButton>
         <!--Slider Grid.Row="15" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="26,5,26,5"
                                 Name="holeSlider" Minimum="0.02" Maximum="2" /-->
-
-        <Button Name="SetFiltersBT" Grid.Row="16" HorizontalAlignment="Center" Content="Set" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Width="76" Margin="15"/>
 
     </Grid>
 </Window>
