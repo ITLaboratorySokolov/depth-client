@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ZCU.TechnologyLab.DepthClient.Ui" xmlns:extToolkit="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:viewModels="clr-namespace:ZCU.TechnologyLab.DepthClient.ViewModels"
         mc:Ignorable="d"
-        Title="Filter configuration" Height="507" Width="342">
+        Title="Advanced settings" Height="507" Width="370">
     <Window.DataContext>
         <viewModels:MainViewModel/>
     </Window.DataContext>

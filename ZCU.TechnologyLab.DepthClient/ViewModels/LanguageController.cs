@@ -31,22 +31,24 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         string _languageMNI = "Set to _CZ";
         string _setNameMNI = "Client _name";
 
-        string _autoMenu = "Auto send: OFF"; // TODO OFF/ON + secs
+        string _autoMenu = "Auto send: OFF"; 
 
         string _snapshotBT = "Snapshot";
         string _resetBT = "Reset view";
         private string _applyCodeBT = "Apply";
 
         string _decimateLBL = "Decimate";
-        string _thresholdLBL = "Threshold";
+        string _thresholdLBL = "Thresholding";
+        string _holeLBL = "Hole filling";
 
         string _smoothing = "Smoothing";
-        string _disparityLBL = "Disparity";
         string _spatialLBL = "Spatial";
         string _temporalLBL = "Temporal";
         
         string _triangleThLBL = "Triangle threshold:";
         string _verticesLBL = "Visible vertices";
+
+        string _filterSettingsBT = "Advanced settings";
 
         //
         string py_dialog_Title = "Select python.dll file";
@@ -80,6 +82,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string nameQuestion = "Input client name:";
         string nameChange = "Client name changed to: ";
+
+        // FILTER CONFIGURATION WINDOW
+        string decFilt = "Decimation filter parameters";
+        string linSc = "Linear scale factor";
+
+        string deptFilt = "Depth thresholding parameters";
+        string min = "Minimum";
+        string max = "Maximum";
+        string _disparityLBL = "Smoothig in disparity domain";
+
+        string spatFilt = "Spatial smoothing parameters";
+        string it = "Number of iterations";
+        string alphaSp = "Alpha";
+        string deltaSp = "Delta";
+        string holeSp = "Hole filling";
+
+        string tempFilt = "Temporal smoothing parameters";
+        string alphaTemp = "Alpha";
+        string deltaTemp = "Delta";
+        string pers = "Persistency index";
+
+        string holeFilt = "Hole filling parameters";
+        string method = "Method";
+
 
         //
 
@@ -140,6 +166,24 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string NameChange { get => NameChange1; set => NameChange1 = value; }
         public string NameChange1 { get => nameChange; set => nameChange = value; }
         public string Smoothing { get => _smoothing; set => _smoothing = value; }
+        public string HoleLBL { get => _holeLBL; set => _holeLBL = value; }
+        public string DecFilt { get => decFilt; set => decFilt = value; }
+        public string LinSc { get => linSc; set => linSc = value; }
+        public string DeptFilt { get => deptFilt; set => deptFilt = value; }
+        public string Min { get => min; set => min = value; }
+        public string Max { get => max; set => max = value; }
+        public string SpatFilt { get => spatFilt; set => spatFilt = value; }
+        public string It { get => it; set => it = value; }
+        public string AlphaSp { get => alphaSp; set => alphaSp = value; }
+        public string DeltaSp { get => deltaSp; set => deltaSp = value; }
+        public string HoleSp { get => holeSp; set => holeSp = value; }
+        public string TempFilt { get => tempFilt; set => tempFilt = value; }
+        public string AlphaTemp { get => alphaTemp; set => alphaTemp = value; }
+        public string DeltaTemp { get => deltaTemp; set => deltaTemp = value; }
+        public string Pers { get => pers; set => pers = value; }
+        public string HoleFilt { get => holeFilt; set => holeFilt = value; }
+        public string Method { get => method; set => method = value; }
+        public string FilterSettingsBT { get => _filterSettingsBT; set => _filterSettingsBT = value; }
 
         public LanguageController()
         {
@@ -181,14 +225,18 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 DecimateLBL = "Decimovat trojúh.";
                 ThresholdLBL = "Oříznout";
+                HoleLBL = "Záplatování děr";
 
                 Smoothing = "Vyhlazování";
-                DisparityLBL = "V disparity doméně";
                 SpatialLBL = "Prostorové";
                 TemporalLBL = "Časové";
 
                 TriangleThLBL = "Prahování trojúh.:";
                 VerticesLBL = "Viditelné vrcholy";
+
+                FilterSettingsBT = "Pokročilé nastavení";
+
+                //
 
                 py_dialog_Title = "Vyberte python.dll soubor";
                 py_success = "Python dll path nastavena";
@@ -222,6 +270,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 NameQuestion = "Zadejte jméno klienta:";
                 NameChange = "Jméni kienta změněno na: ";
 
+                //
+                DecFilt = "Parametry decimace trojúhelníků";
+                LinSc = "Linear scale factor";
+
+                DeptFilt = "Parametry oříznutí";
+                Min = "Minimum";
+                Max = "Maximum";
+
+                DisparityLBL = "Vyhlazování v disparity doméně";
+
+                SpatFilt = "Parametry prostorového vyhlazování";
+                It = "Počet iterací";
+                AlphaSp = "Alfa";
+                DeltaSp = "Delta";
+                HoleSp = "Záplatování děr";
+
+                TempFilt = "Parametry časového vyhlazování";
+                AlphaTemp = "Alfa";
+                DeltaTemp = "Delta";
+                Pers = "Persistency index";
+
+                HoleFilt = "Parametry záplatování děr";
+                Method = "Metoda";
+
             }
             else if (lang == "EN")
             {
@@ -250,15 +322,20 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 ApplyCodeBT = "Apply";
 
                 DecimateLBL = "Decimate triang.";
-                ThresholdLBL = "Threshold";
-                
+                ThresholdLBL = "Thresholding";
+                HoleLBL = "Hole filling";
+
+
                 Smoothing = "Smoothing";
-                DisparityLBL = "In disparity domain";
                 SpatialLBL = "Spatial";
                 TemporalLBL = "Temporal";
                 
                 TriangleThLBL= "Triangle threshold:";
                 VerticesLBL = "Visible vertices";
+
+                FilterSettingsBT = "Advanced settings";
+
+                //
 
                 py_dialog_Title = "Select python.dll file";
                 py_success = "Python dll path set";
@@ -291,6 +368,29 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 nameQuestion = "Input client name:";
                 NameChange = "Client name changed to: ";
+
+                // 
+                DecFilt = "Decimation filter parameters";
+                LinSc = "Linear scale factor";
+
+                DeptFilt = "Depth thresholding parameters";
+                Min = "Minimum";
+                Max = "Maximum";
+                _disparityLBL = "Smoothig in disparity domain";
+
+                SpatFilt = "Spatial smoothing parameters";
+                It = "Number of iterations";
+                AlphaSp = "Alpha";
+                DeltaSp = "Delta";
+                HoleSp = "Hole filling";
+
+                TempFilt = "Temporal smoothing parameters";
+                AlphaTemp = "Alpha";
+                DeltaTemp = "Delta";
+                Pers = "Persistency index";
+
+                HoleFilt = "Hole filling parameters";
+                Method = "Method";
             }
         }
     }

@@ -24,6 +24,41 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
         {
             InitializeComponent();
             DataContext = dc;
+            SwapLabels();
+
+        }
+
+        public void SwapLabels()
+        {
+            LanguageController lc = (DataContext as MainViewModel).LangContr;
+
+            // assign text to labels
+            DisparityLBL.Content = lc.DisparityLBL;
+
+            DecimateLBL.Content = lc.DecFilt;
+            DecLinScaleLBL.Content = lc.LinSc;
+
+            ThreshLBL.Content = lc.DeptFilt;
+            ThMinLBL.Content = lc.Min;
+            ThMaxLBL.Content = lc.Max;
+
+            DisparityLBL.Content = lc.DisparityLBL;
+
+            SpatialLBL.Content = lc.SpatFilt;
+            SpIterLBL.Content = lc.It;
+            SpAlphaLBL.Content = lc.AlphaSp;
+            SpDeltaLBL.Content = lc.DeltaSp;
+            SpHoleLBL.Content = lc.HoleSp;
+
+            TemporalLBL.Content = lc.TempFilt;
+            TempAlphaLBL.Content = lc.AlphaTemp;
+            TempDeltaLBL.Content = lc.DeltaTemp;
+
+            TempPersLBL.Content = lc.Pers;
+
+            HoleLBL.Content = lc.HoleFilt;
+            HoleTypeLBL.Content = lc.Method;
+
         }
 
         private void HoleFilterBT_Click(object sender, RoutedEventArgs e)

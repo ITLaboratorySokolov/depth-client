@@ -39,6 +39,7 @@ namespace Intel.RealSense
         static volatile bool freezeDepth = false;
         public static ProcessingWindow InstanceWindow;
         private bool settingsOpened;
+        private FilterConfigurationWindow confWindow;
 
         private void ResizeImageSrc(int width, int height)
         {
@@ -256,7 +257,6 @@ namespace Intel.RealSense
             CameraMNI.Header = langCont.OpenCamera;
             PlyMNI.Header = langCont.SavePLY;
 
-            // ConnectMNI.Header = langCont.ConnectMNI;
             SendMeshMNI.Header = langCont.SendMeshMNI;
             DeleteMeshMNI.Header = langCont.DeleteMeshMNI;
             DwnldMeshMNI.Header = langCont.DwnldMeshMNI;
@@ -265,9 +265,6 @@ namespace Intel.RealSense
 
             SettingsMN.Header = langCont.SettingsMN;
             LanguageMNI.Header = langCont.LanguageMNI;
-
-
-            // langCont.ConnectMNI;
 
             ServerMN.Header = langCont.ServerMN;
 
@@ -279,12 +276,18 @@ namespace Intel.RealSense
 
             DecimateLBL.Content = langCont.DecimateLBL;
             ThresholdLBL.Content = langCont.ThresholdLBL;
-            // DisparityLBL.Content = langCont.DisparityLBL;
+            
+            SmoothingLBL.Content = langCont.Smoothing;
             SpatialLBL.Content = langCont.SpatialLBL;
             TemporalLBL.Content = langCont.TemporalLBL;
             VerticesLBL.Content = langCont.VerticesLBL;
 
             TriangleThLBL.Content = langCont.TriangleThLBL;
+            FilterSettingsBT.Content = langCont.FilterSettingsBT;
+            HoleLBL.Content = langCont.HoleLBL;
+
+            if (confWindow != null)
+                confWindow.SwapLabels();
         }
 
         private void FilterSettingsBT_Click(object sender, RoutedEventArgs e)
@@ -296,7 +299,7 @@ namespace Intel.RealSense
             var dc = DataContext as MainViewModel;
             var langCont = dc.LangContr;
 
-            FilterConfigurationWindow confWindow = new FilterConfigurationWindow(dc);
+            confWindow = new FilterConfigurationWindow(dc);
             confWindow.Show();
             confWindow.Closing += ClosingSettings;
         }
@@ -304,6 +307,7 @@ namespace Intel.RealSense
         public void ClosingSettings(object sender, CancelEventArgs e)
         {
             settingsOpened = false;
+            confWindow = null;
         }
     }
 }

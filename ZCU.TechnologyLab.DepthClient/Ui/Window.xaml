@@ -348,7 +348,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="20" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -371,14 +371,14 @@
                         <CheckBox Grid.Row="1" Grid.Column="1" x:Name="Filter1" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter1}" />
-                        <Label Name="ThresholdLBL" Grid.Row="1" Grid.Column="0" Content="Threshold" />
+                        <Label Name="ThresholdLBL" Grid.Row="1" Grid.Column="0" Content="Thresholding" />
 
                         <CheckBox Grid.Row="2" Grid.Column="1" x:Name="Filter5" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter5}" />
                         <Label Name="HoleLBL" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
                         
-                        <Label Name="SmoothingLBL" Grid.Row="3" Grid.Column="0" Content="Smooting" />
+                        <Label Name="SmoothingLBL" Grid.Row="4" Grid.Column="0" Content="Smooting" />
 
                         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
