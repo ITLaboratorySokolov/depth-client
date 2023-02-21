@@ -9,7 +9,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
     public class LanguageController : NotifyingClass
     {
-
+        // MAIN WINDOW UI
         string _fileHeader = "_File";
         string _openBAG = "_Open BAG";
         string _openCamera = "_Open Camera";
@@ -50,7 +50,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string _filterSettingsBT = "Advanced settings";
 
-        //
+        // MESSAGES
         string py_dialog_Title = "Select python.dll file";
         string py_success = "Python dll path set";
         string py_unsucc = "Python dll path not set";
@@ -83,7 +83,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         string nameQuestion = "Input client name:";
         string nameChange = "Client name changed to: ";
 
-        // FILTER CONFIGURATION WINDOW
+        // FILTER CONFIGURATION WINDOW UI
         string decFilt = "Decimation filter parameters";
         string linSc = "Linear scale factor";
 
@@ -106,6 +106,35 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         string holeFilt = "Hole filling parameters";
         string method = "Method";
 
+        // TOOLTIPS
+        // Main window
+        string _decimateLBLTooltip = "Decreases the size of the created mesh";
+        string _thresholdLBLTooltip = "Cuts off objects too close/far";
+        string _holeLBLTooltip = "Fills in holes in scanned data";
+        string _spatialLBLToolTip = "Edge preserving smoothing using 1D filters";
+        string _temporalLBLToolTip = "Smoothing using past frames";
+        string _triangleThLBLToolTip = "Filtering out triangles with edges that are too long";
+
+        // Filter configuration
+        string _decLinScaleLBLToolTip = "How much is the created mesh scaled down";
+        string _disparityLBLToolTip = "Smoothing in domain that represents the difference between projections of left and right cameras";
+        string _spAlphaLBLToolTip = "Strength of filter";
+        string _spDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
+        string _tempAlphaLBLToolTip = "Strength of filter";
+        string _tempDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
+        string _tempPersLBLToolTip = "Used to decide when the missing pixel value should be corrected with previous data";
+        string _persIndex0ToolTip = "No hole filling occurs";
+        string _persIndex1ToolTip = "Corrected if the pixel was valid in 8 out of the last 8 frames";
+        string _persIndex2ToolTip = "Corrected if the pixel was valid in 2 out of the last 3 frames";
+        string _persIndex3ToolTip = "Corrected if the pixel was valid in 2 out of the last 4 frames";
+        string _persIndex4ToolTip = "Corrected if the pixel was valid in 2 out of the last 8 frames";
+        string _persIndex5ToolTip = "Corrected if the pixel was valid in 1 of the last 2 frames";
+        string _persIndex6ToolTip = "Corrected if the pixel was valid in 1 out of the last 5 frames";
+        string _persIndex7ToolTip = "Corrected if the pixel was valid in 1 out of the last 8 frames";
+        string _persIndex8ToolTip = "Always corrected";
+        string _holeMethod0ToolTip = "Use the value from the left neighbor pixel to fill the hole";
+        string _holeMethod1ToolTip = "Use the value from the neighboring pixel furthest away from the sensor";
+        string _holeMethod2ToolTip = "Use the value from the neighboring pixel closest to the sensor";
 
         //
 
@@ -184,6 +213,31 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string HoleFilt { get => holeFilt; set => holeFilt = value; }
         public string Method { get => method; set => method = value; }
         public string FilterSettingsBT { get => _filterSettingsBT; set => _filterSettingsBT = value; }
+        public string DecimateLBLTooltip { get => _decimateLBLTooltip; set => _decimateLBLTooltip = value; }
+        public string ThresholdLBLTooltip { get => _thresholdLBLTooltip; set => _thresholdLBLTooltip = value; }
+        public string HoleLBLTooltip { get => _holeLBLTooltip; set => _holeLBLTooltip = value; }
+        public string SpatialLBLToolTip { get => _spatialLBLToolTip; set => _spatialLBLToolTip = value; }
+        public string TemporalLBLToolTip { get => _temporalLBLToolTip; set => _temporalLBLToolTip = value; }
+        public string TriangleThLBLToolTip { get => _triangleThLBLToolTip; set => _triangleThLBLToolTip = value; }
+        public string DecLinScaleLBLToolTip { get => _decLinScaleLBLToolTip; set => _decLinScaleLBLToolTip = value; }
+        public string DisparityLBLToolTip { get => _disparityLBLToolTip; set => _disparityLBLToolTip = value; }
+        public string SpAlphaLBLToolTip { get => _spAlphaLBLToolTip; set => _spAlphaLBLToolTip = value; }
+        public string SpDeltaLBLToolTip { get => _spDeltaLBLToolTip; set => _spDeltaLBLToolTip = value; }
+        public string TempAlphaLBLToolTip { get => _tempAlphaLBLToolTip; set => _tempAlphaLBLToolTip = value; }
+        public string TempDeltaLBLToolTip { get => _tempDeltaLBLToolTip; set => _tempDeltaLBLToolTip = value; }
+        public string TempPersLBLToolTip { get => _tempPersLBLToolTip; set => _tempPersLBLToolTip = value; }
+        public string PersIndex0ToolTip { get => _persIndex0ToolTip; set => _persIndex0ToolTip = value; }
+        public string PersIndex1ToolTip { get => _persIndex1ToolTip; set => _persIndex1ToolTip = value; }
+        public string PersIndex2ToolTip { get => _persIndex2ToolTip; set => _persIndex2ToolTip = value; }
+        public string PersIndex3ToolTip { get => _persIndex3ToolTip; set => _persIndex3ToolTip = value; }
+        public string PersIndex4ToolTip { get => _persIndex4ToolTip; set => _persIndex4ToolTip = value; }
+        public string PersIndex5ToolTip { get => _persIndex5ToolTip; set => _persIndex5ToolTip = value; }
+        public string PersIndex6ToolTip { get => _persIndex6ToolTip; set => _persIndex6ToolTip = value; }
+        public string PersIndex7ToolTip { get => _persIndex7ToolTip; set => _persIndex7ToolTip = value; }
+        public string PersIndex8ToolTip { get => _persIndex8ToolTip; set => _persIndex8ToolTip = value; }
+        public string HoleMethod0ToolTip { get => _holeMethod0ToolTip; set => _holeMethod0ToolTip = value; }
+        public string HoleMethod1ToolTip { get => _holeMethod1ToolTip; set => _holeMethod1ToolTip = value; }
+        public string HoleMethod2ToolTip { get => _holeMethod2ToolTip; set => _holeMethod2ToolTip = value; }
 
         public LanguageController()
         {
@@ -272,13 +326,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 //
                 DecFilt = "Parametry decimace trojúhelníků";
-                LinSc = "Linear scale factor";
+                LinSc = "Faktor zmenšení";
 
                 DeptFilt = "Parametry oříznutí";
                 Min = "Minimum";
                 Max = "Maximum";
 
-                DisparityLBL = "Vyhlazování v disparity doméně";
+                DisparityLBL = "Vyhlazování v rozdílové doméně";
 
                 SpatFilt = "Parametry prostorového vyhlazování";
                 It = "Počet iterací";
@@ -289,10 +343,38 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 TempFilt = "Parametry časového vyhlazování";
                 AlphaTemp = "Alfa";
                 DeltaTemp = "Delta";
-                Pers = "Persistency index";
+                Pers = "Metoda persistence";
 
                 HoleFilt = "Parametry záplatování děr";
                 Method = "Metoda";
+
+                //
+                DecimateLBLTooltip = "Zmenšuje velikost vytvořené meshe";
+                ThresholdLBLTooltip = "Odstraní objekty moc blízko/daleko";
+                HoleLBLTooltip = "Záplatuje díry v naskenovaných datech";
+                SpatialLBLToolTip = "Vyhlazování zachovávající hrany, používá 1D filtry";
+                TemporalLBLToolTip = "Vyhlazování používající předchozí snímky";
+                TriangleThLBLToolTip = "Odfiltruje trojúhelníky s příliš dlouhými hranami";
+
+                DecLinScaleLBLToolTip = "Kolikrát je vytvořená mesh zmenšena";
+                DisparityLBLToolTip = "Vyhlazování v doméně reprezentující rozdíl mezi projekcemi levé a pravé kamery";
+                SpAlphaLBLToolTip = "Síla filtru";
+                SpDeltaLBLToolTip = "Stanoví práh použitý k zachování hran";
+                TempAlphaLBLToolTip = "Síla filtru";
+                TempDeltaLBLToolTip = "Stanoví práh použitý k zachování hran";
+                TempPersLBLToolTip = "V jakém případě má být chybějící pixel opraven na předchozí hodnotu";
+                PersIndex0ToolTip = "Žádné opravování hodnot";
+                PersIndex1ToolTip = "Opravit pokud byl pixel validní v 8 z posledních 8 snímků";
+                PersIndex2ToolTip = "Opravit pokud byl pixel validní v 2 z posledních 3 snímků";
+                PersIndex3ToolTip = "Opravit pokud byl pixel validní v 2 z posledních 4 snímků";
+                PersIndex4ToolTip = "Opravit pokud byl pixel validní v 2 z posledních 8 snímků";
+                PersIndex5ToolTip = "Opravit pokud byl pixel validní v 1 z posledních 2 snímků";
+                PersIndex6ToolTip = "Opravit pokud byl pixel validní v 1 z posledních 5 snímků";
+                PersIndex7ToolTip = "Opravit pokud byl pixel validní v 1 z posledních 8 snímků";
+                PersIndex8ToolTip = "Vždy opravit";
+                HoleMethod0ToolTip = "Použít hodnotu z levého sousedního pixelu Use the value from the left neighbor pixel to fill the hole";
+                HoleMethod1ToolTip = "Použít hodnotu ze sousedního pixelu nejdále od senzoru";
+                HoleMethod2ToolTip = "Použít hodnotu ze sousedního pixelu nejblíže k senzoru";
 
             }
             else if (lang == "EN")
@@ -391,6 +473,34 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 HoleFilt = "Hole filling parameters";
                 Method = "Method";
+
+                //
+                DecimateLBLTooltip = "Decreases the size of the created mesh";
+                ThresholdLBLTooltip = "Cuts off objects too close/far";
+                HoleLBLTooltip = "Fills in holes in scanned data";
+                SpatialLBLToolTip = "Edge preserving smoothing using 1D filters";
+                TemporalLBLToolTip = "Smoothing using past frames";
+                TriangleThLBLToolTip = "Filtering out triangles with edges that are too long";
+
+                DecLinScaleLBLToolTip = "How much is the created mesh scaled down";
+                DisparityLBLToolTip = "Smoothing in domain that represents the difference between projections of left and right cameras";
+                SpAlphaLBLToolTip = "Strength of filter";
+                SpDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
+                TempAlphaLBLToolTip = "Strength of filter";
+                TempDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
+                TempPersLBLToolTip = "Used to decide when the missing pixel value should be corrected with previous data";
+                PersIndex0ToolTip = "No hole filling occurs";
+                PersIndex1ToolTip = "Corrected if the pixel was valid in 8 out of the last 8 frames";
+                PersIndex2ToolTip = "Corrected if the pixel was valid in 2 out of the last 3 frames";
+                PersIndex3ToolTip = "Corrected if the pixel was valid in 2 out of the last 4 frames";
+                PersIndex4ToolTip = "Corrected if the pixel was valid in 2 out of the last 8 frames";
+                PersIndex5ToolTip = "Corrected if the pixel was valid in 1 of the last 2 frames";
+                PersIndex6ToolTip = "Corrected if the pixel was valid in 1 out of the last 5 frames";
+                PersIndex7ToolTip = "Corrected if the pixel was valid in 1 out of the last 8 frames";
+                PersIndex8ToolTip = "Always corrected";
+                HoleMethod0ToolTip = "Use the value from the left neighbor pixel to fill the hole";
+                HoleMethod1ToolTip = "Use the value from the neighboring pixel furthest away from the sensor";
+                HoleMethod2ToolTip = "Use the value from the neighboring pixel closest to the sensor";
             }
         }
     }

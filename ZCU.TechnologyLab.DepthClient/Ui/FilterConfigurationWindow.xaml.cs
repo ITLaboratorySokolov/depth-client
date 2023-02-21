@@ -59,6 +59,26 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
             HoleLBL.Content = lc.HoleFilt;
             HoleTypeLBL.Content = lc.Method;
 
+            DecLinScaleLBL.ToolTip = lc.DecLinScaleLBLToolTip;
+            DisparityLBL.ToolTip = lc.DisparityLBLToolTip;
+            SpAlphaLBL.ToolTip = lc.SpAlphaLBLToolTip;
+            SpDeltaLBL.ToolTip = lc.SpDeltaLBLToolTip;
+            TempAlphaLBL.ToolTip = lc.TempAlphaLBLToolTip;
+            TempDeltaLBL.ToolTip = lc.TempDeltaLBLToolTip;
+            TempPersLBL.ToolTip = lc.TempPersLBLToolTip;
+            PersIndex0.ToolTip = lc.PersIndex0ToolTip;
+            PersIndex1.ToolTip = lc.PersIndex1ToolTip;
+            PersIndex2.ToolTip = lc.PersIndex2ToolTip;
+            PersIndex3.ToolTip = lc.PersIndex3ToolTip;
+            PersIndex4.ToolTip = lc.PersIndex4ToolTip;
+            PersIndex5.ToolTip = lc.PersIndex5ToolTip;
+            PersIndex6.ToolTip = lc.PersIndex6ToolTip;
+            PersIndex7.ToolTip = lc.PersIndex7ToolTip;
+            PersIndex8.ToolTip = lc.PersIndex8ToolTip;
+            HoleMethod0.ToolTip = lc.HoleMethod0ToolTip;
+            HoleMethod1.ToolTip = lc.HoleMethod1ToolTip;
+            HoleMethod2.ToolTip = lc.HoleMethod2ToolTip;
+
         }
 
         private void HoleFilterBT_Click(object sender, RoutedEventArgs e)

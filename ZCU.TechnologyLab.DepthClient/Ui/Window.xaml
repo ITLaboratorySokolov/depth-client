@@ -366,34 +366,34 @@
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter0}" Grid.ColumnSpan="2" Height="21"
                                   Grid.RowSpan="2" />
-                        <Label Name="DecimateLBL" Grid.Row="0" Grid.Column="0" Content="Decimate triang." />
+                        <Label Name="DecimateLBL" ToolTip="Decreases the size of the created mesh" Grid.Row="0" Grid.Column="0" Content="Decimate triang." />
 
                         <CheckBox Grid.Row="1" Grid.Column="1" x:Name="Filter1" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter1}" />
-                        <Label Name="ThresholdLBL" Grid.Row="1" Grid.Column="0" Content="Thresholding" />
+                        <Label Name="ThresholdLBL" ToolTip="Cuts off objects too close/far" Grid.Row="1" Grid.Column="0" Content="Thresholding" />
 
                         <CheckBox Grid.Row="2" Grid.Column="1" x:Name="Filter5" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter5}" />
-                        <Label Name="HoleLBL" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
+                        <Label Name="HoleLBL" ToolTip="Fills in holes in scanned data" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
                         
                         <Label Name="SmoothingLBL" Grid.Row="4" Grid.Column="0" Content="Smooting" />
 
                         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter3}" />
-                        <Label Name="SpatialLBL" Margin="5,0,0,0" Grid.Row="5" Grid.Column="0" Content="Spatial" />
+                        <Label Name="SpatialLBL" ToolTip="Edge preserving smoothing using 1D filters" Margin="5,0,0,0" Grid.Row="5" Grid.Column="0" Content="Spatial" />
 
                         <CheckBox Grid.Row="6" Grid.Column="1" x:Name="Filter4" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding Filter4}" />
-                        <Label Name="TemporalLBL" Margin="5,0,0,0" Grid.Row="6" Grid.Column="0" Content="Temporal" />
+                        <Label Name="TemporalLBL" ToolTip="Smoothing using past frames" Margin="5,0,0,0" Grid.Row="6" Grid.Column="0" Content="Temporal" />
 
 
                         <Slider Grid.Row="8" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="0,5,45,26"
                                 Name="triangleSlider" Minimum="0.02" Maximum="2" Grid.RowSpan="2" />
-                        <Label Name="TriangleThLBL" Grid.Row="8" Grid.Column="0" Content="Triangle threshold:"/>
+                        <Label Name="TriangleThLBL" ToolTip="Filtering out triangles with &#x0a;edges that are too long" Grid.Row="8" Grid.Column="0" Content="Triangle threshold:"/>
                         <!--"{}Triangle Thres:{0:#,0.00}"-->
                         <Label x:Name="TriangleThLBL_Copy" Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=triangleSlider}"
                             ContentStringFormat="{}{0:#,0.00}" Margin="100,0,5,26" Grid.RowSpan="2"/>

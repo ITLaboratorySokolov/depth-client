@@ -286,6 +286,13 @@ namespace Intel.RealSense
             FilterSettingsBT.Content = langCont.FilterSettingsBT;
             HoleLBL.Content = langCont.HoleLBL;
 
+            DecimateLBL.ToolTip = langCont.DecimateLBLTooltip;
+            ThresholdLBL.ToolTip = langCont.ThresholdLBLTooltip;
+            HoleLBL.ToolTip = langCont.HoleLBLTooltip;
+            SpatialLBL.ToolTip = langCont.SpatialLBLToolTip;
+            TemporalLBL.ToolTip = langCont.TemporalLBLToolTip;
+            TriangleThLBL.ToolTip = langCont.TriangleThLBLToolTip;
+
             if (confWindow != null)
                 confWindow.SwapLabels();
         }

@@ -13,11 +13,8 @@ using Intel.RealSense;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections.Client.Session;
-using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.DataModel;
-using System.Threading.Tasks;
-using ObjParser;
 using ZCU.TechnologyLab.Common.Serialization.Properties;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
@@ -70,10 +67,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private float _minValueTh = 0.15f;
         private float _maxValueTh = 2f;
         private int _iterationsSpat = 2;
-        private float _alphaSpat = 0.5f;
+        private float _alphaSpat = 0.5f; // 1-0.5
         private int _deltaSpat = 20;
         private int _holeSpat = 0;
-        private float _alphaTemp = 0.4f;
+        private float _alphaTemp = 0.6f; // 1-0.4
         private int _deltaTemp = 20;
         private int _persIndex = 3;
         private int _holeMethod = 1;
@@ -730,6 +727,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         private void OnFilterChange()
         {
+            if (!RealS.Started)
+            {
+                Message = langContr.NoCam;
+                return;
+            }
+
             // Console.WriteLine("Updating filters");
             float[] filterData = new float[] {
                 // Decimation filter
@@ -741,12 +744,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 
                 // Spatial smoothing
                 _iterationsSpat,
-                _alphaSpat,
+                1-_alphaSpat,
                 _deltaSpat,
                 _holeSpat,
                 
                 // Temporal smoothing
-                _alphaTemp,
+                1-_alphaTemp,
                 _deltaTemp,
                 _persIndex,
 
@@ -1041,8 +1044,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 var success = RealS.Init("");
                 Message = success ? langContr.CamConn : langContr.CamNotFound;
                 SavePlyBtnEnable = success;
+                OnFilterChange();
             });
             t.Start();
+
         }
 
         /// <summary>
