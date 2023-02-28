@@ -75,7 +75,7 @@
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="SpDeltaSlider" Minimum="1" Maximum="50" />
         <Label Grid.Row="9" Grid.Column="1" Content="{Binding Value, ElementName=SpDeltaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
-        <Label Name="SpHoleLBL" Grid.Row="10" Grid.Column="0" Margin="20, 0, 0, 0" Content="Hole filling" />
+        <Label Name="SpHoleLBL" ToolTip="Horizontal hole-filling mode" Grid.Row="10" Grid.Column="0" Margin="20, 0, 0, 0" Content="Hole filling" />
         <Slider Grid.Row="10" Grid.Column="1" Value="{Binding HoleSpat}" Margin="5,5,30,5"
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="SpHoleSlider" Minimum="0" Maximum="5" />
         <Label Grid.Row="10" Grid.Column="1" Content="{Binding Value, ElementName=SpHoleSlider}"

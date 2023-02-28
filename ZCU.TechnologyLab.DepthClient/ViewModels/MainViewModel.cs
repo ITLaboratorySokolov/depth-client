@@ -16,6 +16,7 @@ using ZCU.TechnologyLab.Common.Connections.Client.Session;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.DataModel;
 using ZCU.TechnologyLab.Common.Serialization.Properties;
+using System.Text.RegularExpressions;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -504,7 +505,18 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             PointCloud res = await ucp.ExecuteUserCode(UserCode, vars);
             if (res == null)
-                Message = ucp.ERROR_MSG;
+            {
+                string erMsg = ucp.ERROR_MSG;
+
+                MatchCollection strs = Regex.Matches(erMsg, @"line \d+");
+                foreach (Match l in strs)
+                {
+                    string resultString = Regex.Match(l.Value, @"\d+").Value;
+                    int val = Int32.Parse(resultString) - 1;
+                    erMsg = Regex.Replace(erMsg, l.Value, "line " + val);
+                }
+                Message = erMsg;
+            }
             else
             {
                 var frame = Frame;

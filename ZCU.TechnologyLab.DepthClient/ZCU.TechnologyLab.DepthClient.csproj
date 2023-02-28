@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="3DTools" Version="1.0.0" />
+    <PackageReference Include="AvalonEdit" Version="6.2.0.78" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.4.0" />
     <PackageReference Include="HelixToolkit" Version="2.20.2" />
     <PackageReference Include="HelixToolkit.Core.Wpf" Version="2.20.2" />

@@ -120,6 +120,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         string _disparityLBLToolTip = "Smoothing in domain that represents the difference between projections of left and right cameras";
         string _spAlphaLBLToolTip = "Strength of filter";
         string _spDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
+        string _spHoleLBLToolTip = "Horizontal hole-filling mode";
         string _tempAlphaLBLToolTip = "Strength of filter";
         string _tempDeltaLBLToolTip = "Establishes the threshold used to preserve edges";
         string _tempPersLBLToolTip = "Used to decide when the missing pixel value should be corrected with previous data";
@@ -238,6 +239,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string HoleMethod0ToolTip { get => _holeMethod0ToolTip; set => _holeMethod0ToolTip = value; }
         public string HoleMethod1ToolTip { get => _holeMethod1ToolTip; set => _holeMethod1ToolTip = value; }
         public string HoleMethod2ToolTip { get => _holeMethod2ToolTip; set => _holeMethod2ToolTip = value; }
+        public string SpHoleLBLToolTip { get => _spHoleLBLToolTip; set => _spHoleLBLToolTip = value; }
 
         public LanguageController()
         {
@@ -360,6 +362,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 DisparityLBLToolTip = "Vyhlazování v doméně reprezentující rozdíl mezi projekcemi levé a pravé kamery";
                 SpAlphaLBLToolTip = "Síla filtru";
                 SpDeltaLBLToolTip = "Stanoví práh použitý k zachování hran";
+                SpHoleLBLToolTip = "Metoda horizontálního záplatování děr";
                 TempAlphaLBLToolTip = "Síla filtru";
                 TempDeltaLBLToolTip = "Stanoví práh použitý k zachování hran";
                 TempPersLBLToolTip = "V jakém případě má být chybějící pixel opraven na předchozí hodnotu";
@@ -479,6 +482,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 ThresholdLBLTooltip = "Cuts off objects too close/far";
                 HoleLBLTooltip = "Fills in holes in scanned data";
                 SpatialLBLToolTip = "Edge preserving smoothing using 1D filters";
+                SpHoleLBLToolTip = "Horizontal hole-filling mode";
                 TemporalLBLToolTip = "Smoothing using past frames";
                 TriangleThLBLToolTip = "Filtering out triangles with edges that are too long";
 

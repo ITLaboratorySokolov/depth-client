@@ -63,6 +63,7 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
             DisparityLBL.ToolTip = lc.DisparityLBLToolTip;
             SpAlphaLBL.ToolTip = lc.SpAlphaLBLToolTip;
             SpDeltaLBL.ToolTip = lc.SpDeltaLBLToolTip;
+            SpHoleLBL.ToolTip = lc.SpHoleLBLToolTip;
             TempAlphaLBL.ToolTip = lc.TempAlphaLBLToolTip;
             TempDeltaLBL.ToolTip = lc.TempDeltaLBLToolTip;
             TempPersLBL.ToolTip = lc.TempPersLBLToolTip;

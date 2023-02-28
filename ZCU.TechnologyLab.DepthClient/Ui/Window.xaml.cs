@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using ICSharpCode.AvalonEdit;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.DepthClient.Ui;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
@@ -225,12 +226,12 @@ namespace Intel.RealSense
             dc.AutoInterval = (int)s.Value;
         }
 
-        private void CodeBlock_TextChanged(object sender, TextChangedEventArgs e)
+        private void CodeBlock_TextChanged(object sender, EventArgs e)
         {
-            TextRange textRange = new TextRange( CodeBlock.Document.ContentStart, CodeBlock.Document.ContentEnd);
+            // TextRange textRange = new TextRange( CodeBlock.Document.ContentStart, CodeBlock.Document.ContentEnd);
 
             var dc = DataContext as MainViewModel;
-            dc.UserCode = textRange.Text;
+            dc.UserCode = CodeBlock.Text; // textRange.Text;
         }
 
         private void SetName_Click(object sender, RoutedEventArgs e)

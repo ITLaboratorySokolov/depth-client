@@ -4,6 +4,7 @@
         xmlns:viewModels="clr-namespace:ZCU.TechnologyLab.DepthClient.ViewModels"
         xmlns:HelixToolkit="http://helix-toolkit.org/wpf"
         xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+        xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
         Closing="control_Closing"
         Title="Depth Data Client" Height="666" Width="954" ResizeMode="CanMinimize">
     <Window.DataContext>
@@ -461,7 +462,13 @@
                 </DockPanel>
                 <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}" Height="20"/>
                 <TextBlock HorizontalAlignment="Right" Margin="0,5,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Text="def Edit_poitcloud(points, uvs, faces):" Height="32" Width="248" Grid.ColumnSpan="2"/>
-                <RichTextBox x:Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35" TextChanged="CodeBlock_TextChanged" VerticalScrollBarVisibility="Visible">
+
+                <avalon:TextEditor Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35"
+                                   SyntaxHighlighting="Python"
+                                   Text="for i in range(0, len(points)):&#x0a;&#9;points[i] = points[i] + 1&#x0a;return [points, uvs, faces]"
+                                   TextChanged="CodeBlock_TextChanged" ShowLineNumbers="True" />
+
+                <!--RichTextBox x:Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35" TextChanged="CodeBlock_TextChanged" VerticalScrollBarVisibility="Visible">
                     <RichTextBox.Resources>
                         <Style TargetType="{x:Type Paragraph}">
                             <Setter Property="Margin" Value="0" />
@@ -472,7 +479,7 @@
                             <Run Text="for i in range(0, len(points)):&#x0a; points[i] = points[i] + 1&#x0a;return [points, uvs, faces]"/>
                         </Paragraph>
                     </FlowDocument>
-                </RichTextBox>
+                </RichTextBox-->
                 <Label Focusable="False" x:Name="messageLbl" IsEnabled="False"
                        Content="{Binding Message}" Grid.ColumnSpan="4" Margin="2,145,101,3" Grid.Row="2" />
             </Grid>
