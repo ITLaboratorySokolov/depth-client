@@ -142,7 +142,6 @@ rs2::frame_queue filteredQueue;
 std::vector<filter_options> filters;
 std::mutex m_mutex;
 
-
 rs2::pipeline* pipe;
 
 // Declare filters
@@ -159,35 +158,37 @@ rs2::disparity_transform disparity_to_depth(false);
 
 void UpdateFilters(bool* filterss, float* filter_data)
 {
+	for (int i = 0; i < filters.size(); ++i)
+		filters[i].is_enabled = filterss[i];
+
 	std::thread updating_thread(([filterss, filter_data]
 		{
 			m_mutex.lock();
 
-			for (int i = 0; i < filters.size(); ++i)
-				filters[i].is_enabled = filterss[i];
-
 			// Decimation
-			rs2::decimation_filter dec_f(filter_data[0]);
-			filters[0].filter = dec_f;
+			filters[0].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[0]);
 
 			// Threshold
-			rs2::threshold_filter thr_f(filter_data[1], filter_data[2]);
-			filters[1].filter = thr_f;
+			filters[1].filter.set_option(RS2_OPTION_MIN_DISTANCE, filter_data[1]);
+			filters[1].filter.set_option(RS2_OPTION_MAX_DISTANCE, filter_data[2]);
 
 			// Disparity
 
 			// Spatial
-			rs2::spatial_filter spat_f(filter_data[4], filter_data[5], filter_data[3], filter_data[6]); 
-			filters[3].filter = spat_f;
+			filters[3].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[3]);
+			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[4]);
+			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[5]);
+			filters[3].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[6]);
+
 
 			// Temporal
-			rs2::temporal_filter temp_f(filter_data[7], filter_data[8], filter_data[9]);
-			filters[4].filter = temp_f;
+			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[7]);
+			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[8]);
+			filters[4].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[9]);
+
 
 			// Hole filling filter
-			// [0-2] enumerated:
-			rs2::hole_filling_filter hole_f(filter_data[10]);
-			filters[5].filter = hole_f;
+			filters[5].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[10]);
 
 			m_mutex.unlock();
 		}));
@@ -227,7 +228,7 @@ bool Start(const char* filePath) try
 
 	pipe->start(cfg);
 
-
+	m_mutex.lock();
 	// Initialize a vector that holds filters and their options
 	filters.clear();
 	// The following order of emplacement will dictate the orders in which filters are applied
@@ -243,6 +244,8 @@ bool Start(const char* filePath) try
 		//if (filter_options.filter_name == "Decimate")
 		filter_options.is_enabled = true;
 	}
+	m_mutex.unlock();
+
 
 	// Declare depth colorizer for pretty visualization of depth data
 
@@ -255,13 +258,16 @@ bool Start(const char* filePath) try
 	{
 		while (!stopped) //While application is running
 		{
+			m_mutex.lock();
+
 			rs2::frameset data = pipe->wait_for_frames(); // Wait for next set of frames from the camera
 			auto d2 = align_to_depth.process(data);
 
 			rs2::frame depth_frame = d2.get_depth_frame(); //Take the depth frame from the frameset
-			if (!depth_frame) // Should not happen but if the pipeline is configured differently
+			if (depth_frame == NULL) { // Should not happen but if the pipeline is configured differently
+				m_mutex.unlock();
 				return; //  it might not provide depth and we don't want to crash
-
+			}
 
 			rs2::frame filtered = depth_frame; // Does not copy the frame, only adds a reference
 
@@ -275,8 +281,6 @@ bool Start(const char* filePath) try
 			6. revert the results back (if step Disparity filter was applied
 			to depth domain (each post processing block is optional and can be applied independantly).
 			*/
-
-			m_mutex.lock();
 
 			bool revert_disparity = false;
 			for (int i = 0; i < filters.size() - 1; i++) // (auto&& filter : filters)
@@ -337,6 +341,7 @@ catch
 {
 	std::cout << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.
 		what() << std::endl;
+	m_mutex.unlock();
 	return false;
 }
 catch
@@ -345,6 +350,7 @@ catch
 )
 {
 	std::cout << "Shit" << e.what() << std::endl;
+	m_mutex.unlock();
 	return false;
 }
 
@@ -394,7 +400,6 @@ bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height)t
 {
 	rs2::frameset f;
 
-
 	if (f = filteredQueue.wait_for_frame()) // Try to take the depth and points from the queue
 	{
 		rs2::depth_frame df = f.get_depth_frame();
@@ -417,13 +422,17 @@ bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height)t
 		memcpy(colorBuffer.data(), video.get_data(), video.get_data_size());
 		*depths = depthBuffer.data();
 		*colors = colorBuffer.data();
+		
 		return true;
 	}
+
 	return false;
 }
 catch (std::exception& e)
 {
 	std::cout << e.what();
+	m_mutex.unlock();
+
 	return false;
 }
 
@@ -833,6 +842,6 @@ bool GetFrame(
 
 
 	//writeToObj("C:/Users/minek/Desktop/killme.obj", *vertices, *faces, *vertexCount, *faceCount);
-
+	
 	return true;
 }

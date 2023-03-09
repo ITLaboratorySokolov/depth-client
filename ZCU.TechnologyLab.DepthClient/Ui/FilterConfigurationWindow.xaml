@@ -44,12 +44,12 @@
 
         <Label Name="ThreshLBL" Grid.Row="2" Grid.Column="0" Content="Depth thresholding parameters" />
         <Label Name="ThMinLBL" Grid.Row="3" Grid.Column="0" Margin="20, 0, 0, 0" Content="Minimum" />
-        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding MinValueТh}" Margin="5,5,30,5"
+        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding MinValueТh}" Margin="5,5,30,5" LargeChange="0.1" 
                                 Name="ThMinSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="3" Grid.Column="1" Content="{Binding Value, ElementName=ThMinSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="ThMaxLBL" Grid.Row="4" Grid.Column="0" Margin="20, 0, 0, 0" Content="Maximum" />
-        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding MaxValueTh}" Margin="5,5,30,5"
+        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding MaxValueTh}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="ThMaxSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="4" Grid.Column="1" Content="{Binding Value, ElementName=ThMaxSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
@@ -66,7 +66,7 @@
         <Label Grid.Row="7" Grid.Column="1" Content="{Binding Value, ElementName=SpMagSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="SpAlphaLBL" ToolTip="Strength of filter" Grid.Row="8" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding AlphaSpat}" Margin="5,5,30,5"
+        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding AlphaSpat}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="SpAlphaSlider" Minimum="0" Maximum="0.75" />
         <Label Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=SpAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
@@ -83,7 +83,7 @@
 
         <Label Name="TemporalLBL" Grid.Row="11" Grid.Column="0" Content="Temporal smoothing paramteres" />
         <Label Name="TempAlphaLBL" ToolTip="Strength of filter" Grid.Row="12" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding AlphaTemp}" Margin="5,5,30,5"
+        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding AlphaTemp}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="TemAlphaSlider" Minimum="0" Maximum="1" />
         <Label Grid.Row="12" Grid.Column="1" Content="{Binding Value, ElementName=TemAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />

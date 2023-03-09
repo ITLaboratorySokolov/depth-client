@@ -99,8 +99,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             lock (syncLock)
             {
                 NewFramesForbidden = true;
-                while (FramesAllocated > 0)
-                    Thread.Sleep(10);
+                //while (FramesAllocated > 0)
+                //    Thread.Sleep(10);
 
 
                 if (Started)
