@@ -100,7 +100,7 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
                     break;
             }
 
-            dc.HoleMethod = val;
+            dc.FiltData.HoleMethod = val;
 
             HoleDropdown.IsOpen = false;
             HoleDropdown.Content = content;
@@ -144,7 +144,7 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
                     break;
             }
 
-            dc.PersIndex = val;
+            dc.FiltData.PersIndex = val;
 
             PersistencyDropdown.IsOpen = false;
             PersistencyDropdown.Content = content;

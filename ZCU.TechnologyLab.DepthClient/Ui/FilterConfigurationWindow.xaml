@@ -37,58 +37,58 @@
 
         <Label Name="DecimateLBL" Grid.Row="0" Grid.Column="0" Content="Decimation filter parameters" />
         <Label Name="DecLinScaleLBL" ToolTip="How much is the created mesh scaled down" Grid.Row="1" Grid.Column="0" Margin="20, 0, 0, 0" Content="Linear scale factor" />
-        <Slider Grid.Row="1" Grid.Column="1" Margin="5,5,30,5" Value="{Binding LinScaleFac}"
+        <Slider Grid.Row="1" Grid.Column="1" Margin="5,5,30,5" Value="{Binding FiltData.LinScaleFac}"
                              IsSnapToTickEnabled="True" TickFrequency="1" Name="DecMagSlider" Minimum="2" Maximum="8" />
         <Label Grid.Row="1" Grid.Column="1" Content="{Binding Value, ElementName=DecMagSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
         <Label Name="ThreshLBL" Grid.Row="2" Grid.Column="0" Content="Depth thresholding parameters" />
         <Label Name="ThMinLBL" Grid.Row="3" Grid.Column="0" Margin="20, 0, 0, 0" Content="Minimum" />
-        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding MinValueТh}" Margin="5,5,30,5" LargeChange="0.1" 
+        <Slider Grid.Row="3" Grid.Column="1" Value="{Binding FiltData.MinValueТh}" Margin="5,5,30,5" LargeChange="0.1" 
                                 Name="ThMinSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="3" Grid.Column="1" Content="{Binding Value, ElementName=ThMinSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="ThMaxLBL" Grid.Row="4" Grid.Column="0" Margin="20, 0, 0, 0" Content="Maximum" />
-        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding MaxValueTh}" Margin="5,5,30,5" LargeChange="0.1"
+        <Slider Grid.Row="4" Grid.Column="1" Value="{Binding FiltData.MaxValueTh}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="ThMaxSlider" Minimum="0.0" Maximum="10" />
         <Label Grid.Row="4" Grid.Column="1" Content="{Binding Value, ElementName=ThMaxSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter2" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter2}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter2}" />
         <Label Name="DisparityLBL" ToolTip="Smoothing in domain that represents &#x0a;the difference between projections &#x0a;of left and right cameras" Margin="0,0,0,0" Grid.Row="5" Grid.Column="0" Content="Smoothing in disparity domain" />
 
         <Label Name="SpatialLBL" Grid.Row="6" Grid.Column="0" Content="Spatial smoothing parameters" />
         <Label Name="SpIterLBL" Grid.Row="7" Grid.Column="0" Margin="20, 0, 0, 0" Content="Iterations" />
-        <Slider Grid.Row="7" Grid.Column="1" Value="{Binding IterationsSpat}" Margin="5,5,30,5"
+        <Slider Grid.Row="7" Grid.Column="1" Value="{Binding FiltData.IterationsSpat}" Margin="5,5,30,5"
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="SpMagSlider" Minimum="1" Maximum="5" />
         <Label Grid.Row="7" Grid.Column="1" Content="{Binding Value, ElementName=SpMagSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="SpAlphaLBL" ToolTip="Strength of filter" Grid.Row="8" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding AlphaSpat}" Margin="5,5,30,5" LargeChange="0.1"
+        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding FiltData.AlphaSpat}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="SpAlphaSlider" Minimum="0" Maximum="0.75" />
         <Label Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=SpAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="SpDeltaLBL" ToolTip="Establishes the threshold used to preserve edges" Grid.Row="9" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
-        <Slider Grid.Row="9" Grid.Column="1" Value="{Binding DeltaSpat}" Margin="5,5,30,5"
+        <Slider Grid.Row="9" Grid.Column="1" Value="{Binding FiltData.DeltaSpat}" Margin="5,5,30,5"
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="SpDeltaSlider" Minimum="1" Maximum="50" />
         <Label Grid.Row="9" Grid.Column="1" Content="{Binding Value, ElementName=SpDeltaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="SpHoleLBL" ToolTip="Horizontal hole-filling mode" Grid.Row="10" Grid.Column="0" Margin="20, 0, 0, 0" Content="Hole filling" />
-        <Slider Grid.Row="10" Grid.Column="1" Value="{Binding HoleSpat}" Margin="5,5,30,5"
+        <Slider Grid.Row="10" Grid.Column="1" Value="{Binding FiltData.HoleSpat}" Margin="5,5,30,5"
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="SpHoleSlider" Minimum="0" Maximum="5" />
         <Label Grid.Row="10" Grid.Column="1" Content="{Binding Value, ElementName=SpHoleSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
 
         <Label Name="TemporalLBL" Grid.Row="11" Grid.Column="0" Content="Temporal smoothing paramteres" />
         <Label Name="TempAlphaLBL" ToolTip="Strength of filter" Grid.Row="12" Grid.Column="0" Margin="20, 0, 0, 0" Content="Alpha" />
-        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding AlphaTemp}" Margin="5,5,30,5" LargeChange="0.1"
+        <Slider Grid.Row="12" Grid.Column="1" Value="{Binding FiltData.AlphaTemp}" Margin="5,5,30,5" LargeChange="0.1"
                                 Name="TemAlphaSlider" Minimum="0" Maximum="1" />
         <Label Grid.Row="12" Grid.Column="1" Content="{Binding Value, ElementName=TemAlphaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />
         <Label Name="TempDeltaLBL" ToolTip="Establishes the threshold used to preserve edges" Grid.Row="13" Grid.Column="0" Margin="20, 0, 0, 0" Content="Delta" />
-        <Slider Grid.Row="13" Grid.Column="1" Value="{Binding DeltaTemp}" Margin="5,5,30,5"
+        <Slider Grid.Row="13" Grid.Column="1" Value="{Binding FiltData.DeltaTemp}" Margin="5,5,30,5"
                                 IsSnapToTickEnabled="True" TickFrequency="1" Name="TempDelptaSlider" Minimum="1" Maximum="100" />
         <Label Grid.Row="13" Grid.Column="1" Content="{Binding Value, ElementName=TempDelptaSlider}"
                             ContentStringFormat="{}{0:#,0.00}" HorizontalAlignment="Right" />

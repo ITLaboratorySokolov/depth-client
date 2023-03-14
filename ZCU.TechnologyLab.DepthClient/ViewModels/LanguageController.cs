@@ -84,6 +84,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         string nameQuestion = "Input client name:";
         string nameChange = "Client name changed to: ";
 
+        string noUserCode = "No code to execute";
+
         // FILTER CONFIGURATION WINDOW UI
         string decFilt = "Decimation filter parameters";
         string linSc = "Linear scale factor";
@@ -241,6 +243,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string HoleMethod2ToolTip { get => _holeMethod2ToolTip; set => _holeMethod2ToolTip = value; }
         public string SpHoleLBLToolTip { get => _spHoleLBLToolTip; set => _spHoleLBLToolTip = value; }
         public string DisconnectMNI { get => _disconnectMNI; set => _disconnectMNI = value; }
+        public string NoUserCode { get => noUserCode; set => noUserCode = value; }
 
         public LanguageController()
         {
@@ -345,7 +348,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 plySaved = "Ply soubor uložen";
 
                 NameQuestion = "Zadejte jméno klienta:";
-                NameChange = "Jméni kienta změněno na: ";
+                NameChange = "Jméno kienta změněno na: ";
+
+                NoUserCode = "Žádný uživatelský kód";
 
                 //
                 DecFilt = "Parametry decimace trojúhelníků";
@@ -474,6 +479,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 nameQuestion = "Input client name:";
                 NameChange = "Client name changed to: ";
+
+                NoUserCode = "No code to execute";
 
                 // 
                 DecFilt = "Decimation filter parameters";

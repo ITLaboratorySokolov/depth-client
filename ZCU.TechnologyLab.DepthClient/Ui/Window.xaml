@@ -6,7 +6,7 @@
         xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
         Closing="control_Closing"
-        Title="Depth Data Client" Height="666" Width="954" ResizeMode="CanMinimize">
+        Title="DepthMesh" Height="666" Width="954" ResizeMode="CanMinimize">
     <Window.DataContext>
         <viewModels:MainViewModel/>
     </Window.DataContext>
@@ -365,34 +365,34 @@
                         </Grid.ColumnDefinitions>
                         <CheckBox Grid.Row="0" Grid.Column="1" x:Name="Filter0" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter0}" Grid.ColumnSpan="2" Height="21"
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter0}" Grid.ColumnSpan="2" Height="21"
                                   Grid.RowSpan="2" />
                         <Label Name="DecimateLBL" ToolTip="Decreases the size of the created mesh" Grid.Row="0" Grid.Column="0" Content="Decimation filter" />
 
                         <CheckBox Grid.Row="1" Grid.Column="1" x:Name="Filter1" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter1}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter1}" />
                         <Label Name="ThresholdLBL" ToolTip="Cuts off objects too close/far" Grid.Row="1" Grid.Column="0" Content="Thresholding" />
 
                         <CheckBox Grid.Row="2" Grid.Column="1" x:Name="Filter5" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter5}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter5}" />
                         <Label Name="HoleLBL" ToolTip="Fills in holes in scanned data" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
                         
                         <Label Name="SmoothingLBL" Grid.Row="4" Grid.Column="0" Content="Smooting" />
 
                         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter3}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter3}" />
                         <Label Name="SpatialLBL" ToolTip="Edge preserving smoothing using 1D filters" Margin="5,0,0,0" Grid.Row="5" Grid.Column="0" Content="Spatial" />
 
                         <CheckBox Grid.Row="6" Grid.Column="1" x:Name="Filter4" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding Filter4}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter4}" />
                         <Label Name="TemporalLBL" ToolTip="Smoothing using past frames" Margin="5,0,0,0" Grid.Row="6" Grid.Column="0" Content="Temporal" />
 
 
-                        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="0,5,45,26"
+                        <Slider Grid.Row="8" Grid.Column="1" Value="{Binding FiltData.ThresholdSlider}" Margin="0,5,45,26"
                                 Name="triangleSlider" Minimum="0.02" Maximum="2" Grid.RowSpan="2" />
                         <Label Name="TriangleThLBL" ToolTip="Filtering out triangles with &#x0a;edges that are too long" Grid.Row="8" Grid.Column="0" Content="Triangle threshold:"/>
                         <!--"{}Triangle Thres:{0:#,0.00}"-->
@@ -401,7 +401,7 @@
                         
                         <CheckBox Grid.Row="9" Grid.Column="1" x:Name="PointFilter" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
-                                  VerticalAlignment="Top" IsChecked="{Binding PointFilter}" />
+                                  VerticalAlignment="Top" IsChecked="{Binding FiltData.PointFilter}" />
                         <Label Name="VerticesLBL" Grid.Row="9" Grid.Column="0" Content="Visible vertices" />
 
                         <Button Name="FilterSettingsBT" Grid.Row="10" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="5" Content="Advanced settings" Click="FilterSettingsBT_Click"/>

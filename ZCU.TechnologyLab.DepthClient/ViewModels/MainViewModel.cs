@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows.Input;
 using System.Threading;
 using System.Windows.Media;
@@ -13,9 +11,7 @@ using Intel.RealSense;
 using Microsoft.Win32;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections.Client.Session;
-using ZCU.TechnologyLab.Common.Serialization.Mesh;
 using ZCU.TechnologyLab.DepthClient.DataModel;
-using ZCU.TechnologyLab.Common.Serialization.Properties;
 using System.Text.RegularExpressions;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
@@ -59,24 +55,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private bool _enabledApply;
 
         // filters
-        private readonly bool[] _filters = Enumerable.Repeat(true, 6).ToArray();
-        private bool _pointFilter = true;
-        
-        private double _thresholdSlider = 0.2;
+        FilterData filtData;
 
-        private int _linScaleFac = 2;
-        private float _minValueTh = 0.15f;
-        private float _maxValueTh = 2f;
-        private int _iterationsSpat = 2;
-        private float _alphaSpat = 0.5f; // 1-0.5
-        private int _deltaSpat = 20;
-        private int _holeSpat = 0;
-        private float _alphaTemp = 0.6f; // 1-0.4
-        private int _deltaTemp = 20;
-        private int _persIndex = 3;
-        private int _holeMethod = 1;
-
+        // timer
         private DispatcherTimer timer;
+        private int nextAuto = 0;
 
         // mesh
         private Model3D _model;
@@ -101,7 +84,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
 
-
+        // language controller
         LanguageController langContr;
 
         #region PublicProperties
@@ -188,16 +171,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
-        public double ThresholdSlider
-        {
-            get => _thresholdSlider;
-            set
-            {
-                _thresholdSlider = value;
-                UpdateSliderModel();
-            }
-        }
-
         public string AutoEnabledLbl
         {
             get => this._autoLbl;
@@ -219,76 +192,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         public int AutoInterval { get; set; } = 10;
 
-        public bool Filter0
-        {
-            get => _filters[0];
-            set
-            {
-                this._filters[0] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter1
-        {
-            get => _filters[1];
-            set
-            {
-                this._filters[1] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter2
-        {
-            get => _filters[2];
-            set
-            {
-                this._filters[2] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter3
-        {
-            get => _filters[3];
-            set
-            {
-                this._filters[3] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter4
-        {
-            get => _filters[4];
-            set
-            {
-                this._filters[4] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool Filter5
-        {
-            get => _filters[5];
-            set
-            {
-                this._filters[5] = value;
-                OnFilterChange();
-            }
-        }
-
-        public bool PointFilter
-        {
-            get => _pointFilter;
-            set
-            {
-                this._pointFilter = value;
-                OnPointFilterChange();
-            }
-        }
-
         public bool EnabledApply
         {
             get => this._enabledApply;
@@ -300,7 +203,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         public string PythonPath { get => _pythonPath; set => _pythonPath = value; }
-
+        public string ClientName { get => clientName; set => clientName = value; }
+        public LanguageController LangContr { get => langContr; set => langContr = value; }
+        public FilterData FiltData { get => filtData; set => filtData = value; }
 
         public ICommand Connect { get; private set; }
         public ICommand SendMesh { get; private set; }
@@ -312,108 +217,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand ReloadMesh { get; private set; }
         public ICommand EditPointcloud { get; private set; }
         public ICommand SetPythonPath { get; private set; }
-        public LanguageController LangContr { get => langContr; set => langContr = value; }
-        public string ClientName { get => clientName; set => clientName = value; }
-        
-        
-        public float MinValueТh { get => _minValueTh;
-            set
-            { 
-                _minValueTh = value;
-                OnFilterChange();
-            }
-        }
-
-        public float MaxValueTh { get => _maxValueTh;
-            set
-            {
-                _maxValueTh = value;
-                OnFilterChange();
-            }
-        }
-
-        public float AlphaSpat { get => _alphaSpat; 
-            set
-            {
-                _alphaSpat = value;
-                OnFilterChange();
-            }
-        }
-
-        public int DeltaSpat { get => _deltaSpat; 
-            set
-            {
-                _deltaSpat = value;
-                OnFilterChange();
-            }
-        }
-
-        public float AlphaTemp { get => _alphaTemp; 
-            set
-            {
-                _alphaTemp = value;
-                OnFilterChange();
-            }
-        }
-
-        public int DeltaTemp { get => _deltaTemp; 
-            set
-            {
-                _deltaTemp = value;
-                OnFilterChange();
-            }
-        }
-
-        public int LinScaleFac { get => _linScaleFac;
-            set
-            {
-                _linScaleFac = value;
-                OnFilterChange();
-            }
-        }
-
-        public int IterationsSpat { get => _iterationsSpat;
-            set
-            {
-                _iterationsSpat = value; 
-                OnFilterChange();
-            }
-        }
-
-        public int HoleSpat { get => _holeSpat;
-            set 
-            { 
-                _holeSpat = value;
-                OnFilterChange();
-            }
-        }
-
-        public int PersIndex { get => _persIndex; 
-            set 
-            { 
-                _persIndex = value; 
-                OnFilterChange();
-            } }
-
-        public int HoleMethod { get => _holeMethod;
-            set 
-            {
-                _holeMethod = value; 
-                OnFilterChange();
-            }
-        }
-
-
 
         #endregion
 
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public MainViewModel()
         {
+            FiltData = new FilterData(this);
+
             this.langContr = new LanguageController();
             connection = new ConnectionHandler();
 
-            // TODO jinak - přes config!!
             LoadConfig();
             ucp = new UserCodeProcessor(_pythonPath);
             EnabledApply = true;
@@ -440,6 +256,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.timer.Start();
         }
 
+        /// <summary>
+        /// Load config file from default location
+        /// </summary>
         private void LoadConfig()
         {
             string cfpth = "./config.txt";
@@ -456,7 +275,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         /// <summary>
         /// Set path to python dll
-        /// Create new User code processor
+        /// Open file browser, load path and create new User code processor
         /// </summary>
         private void OnSetPythonPath()
         {
@@ -476,6 +295,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         /// <summary>
         /// Reaction to Apply button clicked
+        /// Decides whether run user code or not
         /// </summary>
         /// <exception cref="Exception"></exception>
         private void OnApplyClicked()
@@ -484,9 +304,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 Message = langContr.NoPointcloud;
                 return;
-            }    
+            }
+            
+            if (UserCode.Trim().Length == 0)
+            {
+                Message = langContr.NoUserCode;
+                return;
+            }
 
-            // Test of editing
             unsafe
             {
                 Message = langContr.Processing;
@@ -495,19 +320,29 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        /// <summary>
+        /// Run user code and display
+        /// - error if code failed
+        /// - new created mesh
+        /// </summary>
         async void RunUserCode()
         {
+            // parameter variables dictionary
             Dictionary<string, object> vars = new Dictionary<string, object>();
             
+            // add variables - parameters
             vars.Add("points", Frame.Vertices);
             vars.Add("uvs", Frame.UVs);
             vars.Add("faces", Frame.TempFaces);
 
+            // execute code
             PointCloud res = await ucp.ExecuteUserCode(UserCode, vars);
             if (res == null)
             {
+                // error occured
                 string erMsg = ucp.ERROR_MSG;
 
+                // edit error to match displayed line numbering
                 MatchCollection strs = Regex.Matches(erMsg, @"line \d+");
                 foreach (Match l in strs)
                 {
@@ -519,6 +354,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
             else
             {
+                // set recieved data
                 var frame = Frame;
 
                 frame.Vertices = res.points;
@@ -537,7 +373,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
-        ///  Update Update label
+        /// Update Auto send label
         /// </summary>
         /// <param name="remaining"> Time until auto update </param>
         private void UpdateAutoLabel(int remaining)
@@ -565,13 +401,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
-        /// Update model according to a new value of slider
+        /// Update model according to a new value of triangle thresholding slider
         /// </summary>
         public void UpdateSliderModel()
         {
             if (!_meshBuffer.HasValue) return;
 
-            MeshProcessor.GenerateFaces(_meshBuffer.Value, (float)ThresholdSlider);
+            MeshProcessor.GenerateFaces(_meshBuffer.Value, (float)FiltData.ThresholdSlider);
 
             _meshGeo.TriangleIndices = new Int32Collection(_meshBuffer.Value.TempFaces);
             RaisePropertyChanged(MODEL_PROPERTY);
@@ -598,21 +434,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             _frame = frames.Value;
-            BuildMesh(_frame); // frames.Value
-            // Message = "New mesh with " + (_frame.Vertices.Length/3) + " v and " + (_frame.Faces.Length / 3) + " triangles";
-
+            BuildMesh(_frame);
         }
-
-        private int nextAuto = 0;
 
         /// <summary>
         /// Timer tick
-        /// - update label
+        /// If time ran out
         /// - make a new snapshot
         /// - send mesh to server
+        /// Always
+        /// - update label
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender"> Event sender </param>
+        /// <param name="e"> Event arguments </param>
         private void Timer_Tick(object? sender, EventArgs e)
         {
             if (!_autoEnable)
@@ -630,41 +464,36 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             else
             {
                 nextAuto = AutoInterval;
-                // Console.WriteLine("Sending mesh");
                 OnSnapshot();
                 OnSendMesh();
             }
+
             UpdateAutoLabel(nextAuto);
         }
 
         /// <summary>
-        /// Build new objects to display from Mesh frame
+        /// Build new geometry to display from captured frame
         /// - create a mesh
         /// - create a point cloud
         /// </summary>
-        /// <param name="frame"> Mesh frame </param>
-        /// <exception cref="Exception"></exception>
+        /// <param name="frame"> Captured frame </param>
         private void BuildMesh(RealS.MeshFrame frame)
         {
             _meshBuffer = frame;
-            MeshProcessor.GenerateFaces(frame, (float)ThresholdSlider);
+            
+            // generate triangles from frame data
+            MeshProcessor.GenerateFaces(frame, (float)FiltData.ThresholdSlider);
 
-            Stopwatch watch = new Stopwatch();
-
-            watch.Start();
+            // create mesh from frame
             MeshGeometry3D d = MeshProcessor.CreateMeshFromFrame(frame);
-            watch.Stop();
 
-            // Console.WriteLine("Elapsed for mesh build " + watch.ElapsedMilliseconds);
-
+            // create material to display on mesh
             Material mat;
             var m = BitmapProcessor.BuildBitmap(frame.Colors, frame.Width, frame.Height, 3);
             mat = MaterialHelper.CreateImageMaterial(BitmapProcessor.Bitmap2Image(m), 1);
 
             SetModel(d, mat);
         }
-
-
 
         /// <summary>
         /// Build default mesh
@@ -677,6 +506,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         /// <summary>
         /// Set model to display
+        /// - model is rotated by -90 in y, and -90 in x and scaled 3x
         /// </summary>
         /// <param name="mesh"> Mesh </param>
         /// <param name="frontMaterial"> Material to use </param>
@@ -730,14 +560,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             this.Model = modelGroup;
             this._pointsStorage = pc;
-            if (PointFilter)
+            if (FiltData.PointFilter)
                 this.Points = pc;
         }
 
         /// <summary>
         /// Filters changed
+        /// - create new array with filter data
+        /// - send to realsense
         /// </summary>
-        private void OnFilterChange()
+        internal void OnFilterChange()
         {
             if (!RealS.Started)
             {
@@ -745,35 +577,36 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
-            // Console.WriteLine("Updating filters");
-            float[] filterData = new float[] {
+            float[] fD = new float[] {
                 // Decimation filter
-                _linScaleFac,
+                FiltData.LinScaleFac,
                 
                 // Threshold filter
-                _minValueTh,
-                _maxValueTh,
+                FiltData.MinValueТh,
+                FiltData.MaxValueTh,
                 
                 // Spatial smoothing
-                _iterationsSpat,
-                1-_alphaSpat,
-                _deltaSpat,
-                _holeSpat,
+                FiltData.IterationsSpat,
+                1-FiltData.AlphaSpat,
+                FiltData.DeltaSpat,
+                FiltData.HoleSpat,
                 
                 // Temporal smoothing
-                1-_alphaTemp,
-                _deltaTemp,
-                _persIndex,
+                1-FiltData.AlphaTemp,
+                FiltData.DeltaTemp,
+                FiltData.PersIndex,
 
                 // Hole filling
-                _holeMethod
+                FiltData.HoleMethod
             };
 
-            RealS.updateFilters(_filters, filterData);
+            RealS.updateFilters(FiltData.Filters, fD);
         }
 
         /// <summary>
-        /// Set up connection to a server.
+        /// Set up connection to a server
+        /// Or disconnect
+        /// Depends on whether client already is connected to a server or not
         /// </summary>
         private async void OnConnect()
         {
@@ -802,6 +635,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
 
             }
+
+            // Connected -> disconnecting
             else
             {
                 _autoEnable = false;
@@ -820,23 +655,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             }
 
-            // TODO does this do anything??
-            /*
-            if (_sessionClient == null)
-            {
-                connection._inConnectProcess = false;
-                return;
-            }
-            */
-
             // Update menu items
             UpdateMenuItems();
             connection._inConnectProcess = false;
         }
 
+        /// <summary>
+        /// Update connection related menu items
+        /// </summary>
         private void UpdateMenuItems()
         {
-            // Update menu items
             if (connection.IsClientDisconnected())
             {
                 connection._connected = !connection._connected;
@@ -850,11 +678,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// <summary>
         /// If client has disconnected / has been disconnected
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="e"> Exception </param>
         private void SessionClient_Disconnected(Exception e)
         {
-            // If disconnected automatically - change buttons
             UpdateMenuItems();
             Message = langContr.Disconnected;
         }
@@ -881,7 +707,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
-        /// Send mesh to server
+        /// Send mesh and ply to server
         /// </summary>
         private async void OnSendMesh()
         {
@@ -893,26 +719,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             var frame = _meshBuffer.Value;
             // BuildMesh(frame);
-            bool resT, resM = false, resP = false;
+            bool resM = false, resP = false;
 
             //send ply
             if (frame.Ply!=null){
-                var p = new Dictionary<string, byte[]>
-                {
-                    ["Data"] = frame.Ply
-                };
-                var w = new WorldObjectDto
-                {
-                    Name = PLY_NAME + "_" + clientName,
-                    Type = "PlyFile",
-                    Properties = p,
-                    Position = new RemoteVectorDto(),
-                    Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
-                    Rotation = new RemoteVectorDto()
-                };
-                w.Position.X = 0;
-                w.Position.Y = 0;
-                w.Position.Z = 0;
+                var w = WorldObjectProcessor.CreatePlyWO(frame.Ply, PLY_NAME + "_" + clientName);
 
                 try
                 {
@@ -928,30 +739,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             //send mesh
             {
-                // var fc = MeshProcessor.GenerateFaces(frame, (float)_thresholdSlider);
-                // Obj o = new Obj(frame.Vertices, frame.TempFaces, new float[] { });
-                // o.WriteObjFile("D:/moje/test.obj", null);
-
-                byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
-                byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int)).Serialize(new int[] { frame.Width, frame.Height });
-
-                var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", frame.UVs, frame.Width, frame.Height, "RGB", frame.Colors);
-                properties.Add("TextureFormat", texFormat);
-                properties.Add("TextureSize", texSize);
-                properties.Add("Texture", frame.Colors);
-
-                var w = new WorldObjectDto
-                {
-                    Name = MESH_NAME + "_" + clientName,
-                    Type = "Mesh",
-                    Position = new RemoteVectorDto(),
-                    Properties = properties,
-                    Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
-                    Rotation = new RemoteVectorDto()
-                };
-                w.Position.X = 0;
-                w.Position.Y = 0;
-                w.Position.Z = 0;
+                var w = WorldObjectProcessor.CreateMeshWO(frame, MESH_NAME + "_" + clientName);
 
                 try
                 {
@@ -965,34 +753,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
             }
 
-            /*
-            //send texture
-            {
-                var properties =
-                    new BitmapSerializerFactory().RawBitmapSerializer.Serialize(frame.Width, frame.Height, "RGB", frame.Colors);
-
-                var w = new WorldObjectDto
-                {
-                    Name = MESH_TEXTURE_NAME + "_" + clientName,
-                    Type = "Bitmap",
-                    Properties = properties,
-                    Position = new RemoteVectorDto(),
-                    Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
-                    Rotation = new RemoteVectorDto()
-                };
-                w.Position.X = 0;
-                w.Position.Y = 0;
-                w.Position.Z = 0;
-
-                resT = await connection.SendWorldObject(w);
-            }
-            */
-
             if (resM && resP)
                 Message = langContr.MeshSent + MESH_NAME + "," + PLY_NAME + ", " + MESH_TEXTURE_NAME;
             else
                 Message = langContr.MeshNotSent;
-
         }
 
         /// <summary>
@@ -1002,7 +766,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             bool mRes = await connection.RemoveWorldObject(MESH_NAME + "_" + clientName);
             bool pRes = await connection.RemoveWorldObject(PLY_NAME + "_" + clientName);
-            // bool tMes = await connection.RemoveWorldObject(MESH_TEXTURE_NAME);
 
             if (mRes && pRes) // && tMes)
                 this.Message = langContr.MeshRemoved;
@@ -1032,13 +795,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 var t = new Thread(() =>
                 {
                     var success = RealS.Init(openDialog.FileName);
-                    Message = success
-                        ? langContr.OpenedRSFile
-                        : langContr.CouldNotOpen;
+                    Message = success ? langContr.OpenedRSFile : langContr.CouldNotOpen;
 
                     SavePlyBtnEnable = success;
-
-                    Console.WriteLine(Message + ": " + openDialog.FileName);
                 });
                 t.Start();
             }
@@ -1047,7 +806,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
-        /// Camera connected
+        /// Connect camera
         /// </summary>
         private void OnConnectCamera()
         {
@@ -1059,7 +818,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 OnFilterChange();
             });
             t.Start();
-
         }
 
         /// <summary>
@@ -1085,7 +843,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             saveDialog.FilterIndex = 1;
             saveDialog.InitialDirectory = "";
 
-
             var success = saveDialog.ShowDialog();
             if (success.HasValue && success.Value)
             {
@@ -1094,27 +851,21 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             Message = langContr.PlySaved;
-            // Console.WriteLine("Saved ply file to " + saveDialog.FileName);
-
             ProcessingWindow.FreezeBuffer(false);
             saveDialog.Reset();
         }
 
         /// <summary>
-        /// Change point filters
+        /// Change point visibility
         /// </summary>
-        private void OnPointFilterChange()
+        internal void OnPointVisibilityChange()
         {
             // if true - set to points
-            if (_pointFilter)
-            {
+            if (FiltData.PointFilter)
                 this.Points = _pointsStorage;
-            }
             // if untrue - unset points
             else
-            {
                 this.Points = new Point3DCollection();
-            }
 
             RaisePropertyChanged(POINTS_PROPERTY);
         }

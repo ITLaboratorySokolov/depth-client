@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\vendor\common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common.csproj" />
+    <ProjectReference Include="..\vendor\server\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer.csproj" />
     <ProjectReference Include="..\ZCU.TechnologyLab.DepthClientLib\ZCU.TechnologyLab.DepthClientLib.vcxproj" />
   </ItemGroup>
 
