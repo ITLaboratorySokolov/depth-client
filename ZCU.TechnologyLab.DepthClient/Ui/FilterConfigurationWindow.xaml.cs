@@ -1,33 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 
 namespace ZCU.TechnologyLab.DepthClient.Ui
 {
     /// <summary>
-    /// Interakční logika pro FilterConfigurationWindow.xaml
+    /// Interaction logic for FilterConfigurationWindow.xaml
     /// </summary>
     public partial class FilterConfigurationWindow : Window
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="dc"> Main view model from main window </param>
         public FilterConfigurationWindow(MainViewModel dc)
         {
             InitializeComponent();
             DataContext = dc;
             SwapLabels();
 
+            dc.OnFilterChange();
         }
 
+        /// <summary>
+        /// Swap labels when changing language
+        /// </summary>
         public void SwapLabels()
         {
             LanguageController lc = (DataContext as MainViewModel).LangContr;
@@ -82,6 +79,11 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
 
         }
 
+        /// <summary>
+        /// Changed hole filter method
+        /// </summary>
+        /// <param name="sender"> Sender </param>
+        /// <param name="e"> Arguments </param>
         private void HoleFilterBT_Click(object sender, RoutedEventArgs e)
         {
             string content = (sender as Button).Content.ToString();
@@ -99,14 +101,17 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
                     val = 2;
                     break;
             }
-
             dc.FiltData.HoleMethod = val;
 
             HoleDropdown.IsOpen = false;
             HoleDropdown.Content = content;
         }
 
-
+        /// <summary>
+        /// Change persistency method
+        /// </summary>
+        /// <param name="sender"> Sender </param>
+        /// <param name="e"> Arguments </param>
         private void PersistencyIndexBT_Click(object sender, RoutedEventArgs e)
         {
             string content = (sender as Button).Content.ToString();
@@ -143,12 +148,10 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
                     val = 8;
                     break;
             }
-
             dc.FiltData.PersIndex = val;
 
             PersistencyDropdown.IsOpen = false;
             PersistencyDropdown.Content = content;
-
         }
     }
 

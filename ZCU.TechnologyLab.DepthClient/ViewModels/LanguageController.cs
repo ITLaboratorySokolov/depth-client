@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ZCU.TechnologyLab.DepthClient.ViewModels
+﻿namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
+    /// <summary>
+    /// Class holding CZ and EN strings used in application
+    /// </summary>
     public class LanguageController : NotifyingClass
     {
         // MAIN WINDOW UI
@@ -17,7 +13,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string _serverMN = "_Server";
 
-        bool _connected;
         string _connectMNI = "Connect";
         string _disconnectMNI = "Disconnect";
 
@@ -245,11 +240,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string DisconnectMNI { get => _disconnectMNI; set => _disconnectMNI = value; }
         public string NoUserCode { get => noUserCode; set => noUserCode = value; }
 
-        public LanguageController()
-        {
-
-        }
-
+        /// <summary>
+        /// Get translated connect/disconnect menu item text
+        /// </summary>
+        /// <param name="txt"> Current text </param>
+        /// <returns> Translated text </returns>
         internal string GetConnectText(string txt)
         {
             if (lang == "CZ")
@@ -269,6 +264,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         }
 
+        /// <summary>
+        /// Swap language
+        /// </summary>
         internal void SwapLanguage()
         {
             if (lang == "CZ")

@@ -6,9 +6,18 @@ using ZCU.TechnologyLab.DepthClient.ViewModels;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Helper class for creating world objects
+    /// </summary>
     public class WorldObjectProcessor
     {
 
+        /// <summary>
+        /// Create Ply world object
+        /// </summary>
+        /// <param name="plyData"> Ply data </param>
+        /// <param name="name"> Name of the world object </param>
+        /// <returns> Created world object </returns>
         public static WorldObjectDto CreatePlyWO(byte[] plyData, string name)
         {
             var p = new Dictionary<string, byte[]>
@@ -31,6 +40,12 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             return w;
         } 
 
+        /// <summary>
+        /// Create Mesh world object
+        /// </summary>
+        /// <param name="frame"> MeshFrame with data </param>
+        /// <param name="name"> Name of the world object </param>
+        /// <returns> Created world object </returns>
         public static WorldObjectDto CreateMeshWO(RealS.MeshFrame frame, string name)
         {
             byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
@@ -56,6 +71,5 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         
             return w;
         }
-
     }
 }

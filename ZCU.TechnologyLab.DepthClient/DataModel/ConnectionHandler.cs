@@ -7,17 +7,26 @@ using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Class handling the connection to a server
+    /// </summary>
     internal class ConnectionHandler
     {
         // signifiers
+        /// <summary> In connection process </summary>
         public bool _inConnectProcess;
+        /// <summary> Is connected  </summary>
         public bool _connected;
 
         // networking
+        /// <summary> Server data adapter </summary>
         private ServerDataAdapter _dataConnection;
+        /// <summary> SignalR session </summary>
         private SignalRSession _sessionClient;
+        /// <summary> Server session adapter </summary>
         private ServerSessionAdapter _sessionConnection;
 
+        /// <summary> Last error message </summary>
         private string errorMessage;
 
         /// <summary>

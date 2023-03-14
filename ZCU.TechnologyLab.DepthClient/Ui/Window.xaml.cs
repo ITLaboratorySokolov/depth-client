@@ -1,33 +1,22 @@
 ﻿using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-using ICSharpCode.AvalonEdit;
-using Microsoft.Win32;
 using ZCU.TechnologyLab.DepthClient.Ui;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using TextBox = System.Windows.Controls.TextBox;
 
-// This demo showcases some of the more advanced API concepts:
-// a. Post-processing and stream alignment
-// b. Using callbacks
-// c. Defining custom processing blocks
-// d. Using FramesReleaser to help manage frames lifetime
 namespace Intel.RealSense
 {
     /// <summary>
@@ -35,60 +24,87 @@ namespace Intel.RealSense
     /// </summary>
     public partial class ProcessingWindow : Window
     {
+        /// <summary> Token source </summary>
         private CancellationTokenSource tokenSource = new CancellationTokenSource();
-
+        /// <summary> Freeze depth frame </summary>
         static volatile bool freezeDepth = false;
+        /// <summary> Processing window </summary>
         public static ProcessingWindow InstanceWindow;
+        /// <summary> Is advanced setting opened </summary>
         private bool settingsOpened;
+        /// <summary> Filter configuration window </summary>
         private FilterConfigurationWindow confWindow;
+        /// <summary> Allow exiting app </summary>
+        private bool allowExit = false;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ProcessingWindow()
+        {
+            InstanceWindow = this;
+            // InitializeComponent();
+
+            try
+            {
+                //var updateDepth = UpdateImageDepth();
+                var updateColor = UpdateImageColor();
+
+                var token = tokenSource.Token;
+
+                // start a task
+                var t = Task.Factory.StartNew(() =>
+                {
+                    RealS.DepthFrameBuffer buffer = new();
+
+                    // main loop
+                    while (!token.IsCancellationRequested)
+                    {
+                        if (!RealS.Started)
+                            continue;
+                        
+                        // get depth frame
+                        using var frames = RealS.DepthFrame.Obtain(buffer);
+                        if (!frames.HasValue)
+                            continue;
+                        var frame = frames.Value;
+
+                        // render depth color
+                        Dispatcher.Invoke(DispatcherPriority.Render, (Action<int, int>)ResizeImageSrc, frame.Width, frame.Height);
+                        Dispatcher.Invoke(DispatcherPriority.Render, updateColor, frame);
+                    }
+
+                    // close window properly
+                    Action action = () => Close();
+                    Dispatcher.Invoke(DispatcherPriority.Input, action);
+                }, token);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                Application.Current.Shutdown();
+            }
+
+            InitializeComponent();
+            LanguageSwap_Click(null, null);
+        }
+
+        /// <summary>
+        /// Resize image
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         private void ResizeImageSrc(int width, int height)
         {
             if (imgColor1.Source != null && Math.Abs(imgColor1.Source.Width - width) < 0.01)
                 return;
             imgColor1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Rgb24, null);
-            // imgDepth1.Source = new WriteableBitmap(width, height, 96d, 96d, PixelFormats.Gray16, null);
         }
 
-        private static void MultiplyBitmap(WriteableBitmap wbmp)
-        {
-            var rect = new Int32Rect(0, 0, wbmp.PixelWidth, wbmp.PixelHeight);
-
-            unsafe
-            {
-                unchecked
-                {
-                    wbmp.Lock();
-
-                    ushort* ss = (ushort*)wbmp.BackBuffer;
-
-                    for (int i = 0; i < wbmp.PixelHeight * wbmp.PixelWidth; i++)
-                    {
-                        //*ss = (ushort)((*ss<<3));
-                        ss++;
-                    }
-                }
-
-                wbmp.AddDirtyRect(rect);
-                wbmp.Unlock();
-            }
-        }
-
-
-        Action<RealS.DepthFrame> UpdateImageDepth()
-        {
-            return frame =>
-            {
-                if (freezeDepth)
-                    return;
-
-                // var target = imgDepth1.Source as WriteableBitmap;
-                //  var rect = new Int32Rect(0, 0, frame.Width, frame.Height);
-                // target.WritePixels(rect, frame.Data, frame.Stride, 0);
-                //MultiplyBitmap(target);
-            };
-        }
-
+        /// <summary>
+        /// Update coloured depth image
+        /// </summary>
+        /// <returns></returns>
         Action<RealS.DepthFrame> UpdateImageColor()
         {
             return frame =>
@@ -107,62 +123,12 @@ namespace Intel.RealSense
             freezeDepth = b;
         }
 
-        public ProcessingWindow()
-        {
-            InstanceWindow = this;
-            // InitializeComponent();
-
-
-            try
-            {
-                var updateDepth = UpdateImageDepth();
-                var updateColor = UpdateImageColor();
-
-                var token = tokenSource.Token;
-
-                var t = Task.Factory.StartNew(() =>
-                {
-                    RealS.DepthFrameBuffer buffer = new();
-
-                    while (!token.IsCancellationRequested)
-                    {
-                        if (!RealS.Started)
-                            continue;
-                        using var frames = RealS.DepthFrame.Obtain(buffer);
-
-
-                        if (!frames.HasValue)
-                            continue;
-
-                        var frame = frames.Value;
-
-                        Dispatcher.Invoke(DispatcherPriority.Render, (Action<int, int>)ResizeImageSrc, frame.Width,
-                            frame.Height);
-
-                        // Invoke custom processing block
-                        Dispatcher.Invoke(DispatcherPriority.Render, updateDepth, frame);
-                        Dispatcher.Invoke(DispatcherPriority.Render, updateColor, frame);
-                    }
-
-                    //close window properly
-                    Action action = () => Close();
-                    Dispatcher.Invoke(DispatcherPriority.Input, action);
-                }, token);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                Application.Current.Shutdown();
-            }
-
-            InitializeComponent();
-            LanguageSwap_Click(null, null);
-        }
-
-        private bool allowExit = false;
-
-
-        private void control_Closing(object sender, CancelEventArgs e)
+        /// <summary>
+        /// Close window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Control_Closing(object sender, CancelEventArgs e)
         {
             if (allowExit)
                 return;
@@ -181,30 +147,43 @@ namespace Intel.RealSense
             {
                 //video feed has finished we can close connection and window
                 RealS.Exit();
-                Console.WriteLine("Exit");
                 allowExit = true;
 
                 Action action = () => Close();
-                ;
                 Dispatcher.Invoke(DispatcherPriority.Normal, action);
+                Console.WriteLine("Exit");
             });
             t.Start();
         }
 
-
-        private void TextBoxBase_OnTextChanged(object sender, TextChangedEventArgs e)
+        /// <summary>
+        /// Change server URL
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ServerURL_OnTextChanged(object sender, TextChangedEventArgs e)
         {
             var ee = sender as TextBox;
             MainViewModel.ServerUrl = ee.Text;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Reset view on 3D preview
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ResetView_Click(object sender, RoutedEventArgs e)
         {
             Console.WriteLine(Hell.Camera.Position);
             Console.WriteLine(Hell.Camera.LookDirection);
             Hell.SetView(new Point3D(18, -0.8, 0.8), new Vector3D(-1, 0, 0), new Vector3D(0, 0, 1), 1000);
         }
 
+        /// <summary>
+        /// Turn on/off auto send
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void AutoMenu_OnClick(object sender, RoutedEventArgs e)
         {
             var dc = DataContext as MainViewModel;
@@ -219,6 +198,11 @@ namespace Intel.RealSense
                 e.Handled = false;
         }
 
+        /// <summary>
+        /// Changing auto send interval
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void NumericUpDown_OnValueChanged(object? sender, EventArgs e)
         {
             var dc = DataContext as MainViewModel;
@@ -227,6 +211,11 @@ namespace Intel.RealSense
             dc.AutoInterval = (int)s.Value;
         }
 
+        /// <summary>
+        /// User code text changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CodeBlock_TextChanged(object sender, EventArgs e)
         {
             // TextRange textRange = new TextRange( CodeBlock.Document.ContentStart, CodeBlock.Document.ContentEnd);
@@ -235,6 +224,11 @@ namespace Intel.RealSense
             dc.UserCode = CodeBlock.Text; // textRange.Text;
         }
 
+        /// <summary>
+        /// Open setting client name dialog
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SetName_Click(object sender, RoutedEventArgs e)
         {
             var dc = DataContext as MainViewModel;
@@ -248,6 +242,11 @@ namespace Intel.RealSense
             }
         }
 
+        /// <summary>
+        /// Swap languages
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LanguageSwap_Click(object sender, RoutedEventArgs e)
         {
             var dc = DataContext as MainViewModel;
@@ -302,6 +301,11 @@ namespace Intel.RealSense
                 confWindow.SwapLabels();
         }
 
+        /// <summary>
+        /// Open advanced filter settings window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FilterSettingsBT_Click(object sender, RoutedEventArgs e)
         {
             if (settingsOpened)
@@ -316,6 +320,11 @@ namespace Intel.RealSense
             confWindow.Closing += ClosingSettings;
         }
 
+        /// <summary>
+        /// Reaction to closing advanced filter settings window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void ClosingSettings(object sender, CancelEventArgs e)
         {
             settingsOpened = false;

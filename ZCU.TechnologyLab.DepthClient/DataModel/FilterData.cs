@@ -1,32 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Class holding information about filters
+    /// </summary>
     public class FilterData : NotifyingClass
     {
+        /// <summary> MainViewModel from main window </summary>
         MainViewModel mvm;
 
-        // filters
+        /// <summary> Filters - enabled/disabled </summary>
         private readonly bool[] _filters = Enumerable.Repeat(true, 6).ToArray();
+        /// <summary> Visible points </summary>
         private bool _pointFilter = true;
 
-        // filter values
+        /// <summary> Max triangle length </summary>
         private double _thresholdSlider = 0.2;
+
+        // Decimation filter
+        /// <summary> Decimation filter linear scale factor </summary>
         private int _linScaleFac = 2;
+
+        // Thresholding filter
+        /// <summary> Thresholding filter min depth </summary>
         private float _minValueTh = 0.15f;
+        /// <summary> Thresholding filter max depth </summary>
         private float _maxValueTh = 2f;
+        
+        // Spatial filter
+        /// <summary> Spatial filter iterations </summary>
         private int _iterationsSpat = 2;
+        /// <summary> Spatial filter strength (1-alpha) </summary>
         private float _alphaSpat = 0.5f; // 1-0.5
+        /// <summary> Spatial filter  delta </summary>
         private int _deltaSpat = 20;
+        /// <summary> Spatial filter hole filling method </summary>
         private int _holeSpat = 0;
+
+        // Temporal filter
+        /// <summary> Temporal filter strength (1-alpha) </summary>
         private float _alphaTemp = 0.6f; // 1-0.4
+        /// <summary> Temporal filter delta </summary>
         private int _deltaTemp = 20;
+        /// <summary> Temporal filter persistency method </summary>
         private int _persIndex = 3;
+        
+        // Hole filter
+        /// <summary> Hole filter hole filling method </summary>
         private int _holeMethod = 1;
 
         public double ThresholdSlider
@@ -224,10 +246,10 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             }
         }
 
-        public FilterData()
-        {
-        }
-
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mvm"> MainViewModel from main window </param>
         public FilterData(MainViewModel mvm)
         {
             this.mvm = mvm;

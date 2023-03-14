@@ -16,6 +16,9 @@ using System.Text.RegularExpressions;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
+    /// <summary>
+    /// Data model for windows, holds logic processing the data in the application
+    /// </summary>
     public class MainViewModel : NotifyingClass
     {
         /* [DllImport("kernel32.dll", SetLastError = true)]

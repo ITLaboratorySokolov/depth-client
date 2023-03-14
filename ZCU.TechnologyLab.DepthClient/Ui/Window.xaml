@@ -5,7 +5,7 @@
         xmlns:HelixToolkit="http://helix-toolkit.org/wpf"
         xmlns:forms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
-        Closing="control_Closing"
+        Closing="Control_Closing"
         Title="DepthMesh" Height="666" Width="954" ResizeMode="CanMinimize">
     <Window.DataContext>
         <viewModels:MainViewModel/>
@@ -46,7 +46,7 @@
                     <MenuItem Name="NameMNI" Header="Client _name" Click="SetName_Click"/>
                     <MenuItem Name="LanguageMNI" Header="Set to _CZ" Click="LanguageSwap_Click"/>
                 </MenuItem>
-                <TextBox TextChanged="TextBoxBase_OnTextChanged" Text="{Binding ServerUrl }" />
+                <TextBox TextChanged="ServerURL_OnTextChanged" Text="{Binding ServerUrl }" />
 
             </Menu>
             <Menu Grid.Column="1">
@@ -454,7 +454,7 @@
                                     HorizontalAlignment="Left" Width="76" Command="{Binding ReloadMesh}"
                                     Canvas.Right="90" Canvas.Top="10"/>
                             <Button Name="ResetBT" Content="Reset View" VerticalAlignment="Center"
-                                    HorizontalAlignment="Left" Width="76" Click="Button_Click" Canvas.Right="10"
+                                    HorizontalAlignment="Left" Width="76" Click="ResetView_Click" Canvas.Right="10"
                                     Canvas.Top="10" />
 
                         </Canvas>

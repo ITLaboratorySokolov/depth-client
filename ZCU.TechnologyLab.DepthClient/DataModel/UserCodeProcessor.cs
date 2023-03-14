@@ -4,6 +4,9 @@ using PythonExecutionLibrary;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Class for processing user code
+    /// </summary>
     internal class UserCodeProcessor
     {
         /// <summary> Message of the last error </summary>
