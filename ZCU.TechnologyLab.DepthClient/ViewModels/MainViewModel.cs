@@ -793,7 +793,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 if (res)
                 {
                     this.Message = langContr.ConnectedToSer + ServerUrl;
-                    this.ConnectBtnLbl = langContr.Disconnect;
+                    this.ConnectBtnLbl = langContr.DisconnectMNI;
                 }
                 else
                 {
@@ -841,7 +841,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 connection._connected = !connection._connected;
 
-                this.ConnectBtnLbl = connection._connected ? langContr.Disconnect : langContr.Connect;
+                this.ConnectBtnLbl = connection._connected ? langContr.DisconnectMNI : langContr.Connect;
                 EnabledButtons = connection._connected;
             }
            
@@ -852,7 +852,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SessionClient_Disconnected(object sender, Exception e)
+        private void SessionClient_Disconnected(Exception e)
         {
             // If disconnected automatically - change buttons
             UpdateMenuItems();
@@ -867,7 +867,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             if (connection.GetSessionState() != SessionState.Connected)
                 return;
 
-            WorldObjectDto wo = await connection.GetWorldObject(MESH_NAME);
+            WorldObjectDto wo = await connection.GetWorldObject(MESH_NAME + "_" + clientName);
             // WorldObjectDto tex = await connection.GetWorldObject(MESH_TEXTURE_NAME);
 
             if (wo == null) // || tex == null)
@@ -935,7 +935,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
                 byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int)).Serialize(new int[] { frame.Width, frame.Height });
 
-                var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", MESH_TEXTURE_NAME, frame.UVs);
+                var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", frame.UVs, frame.Width, frame.Height, "RGB", frame.Colors);
                 properties.Add("TextureFormat", texFormat);
                 properties.Add("TextureSize", texSize);
                 properties.Add("Texture", frame.Colors);

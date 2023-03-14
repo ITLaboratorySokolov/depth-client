@@ -17,9 +17,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         string _serverMN = "_Server";
 
-        string _disconnect = "Disconnect";
-        string _connect = "Connect";
-        
+        bool _connected;
+        string _connectMNI = "Connect";
+        string _disconnectMNI = "Disconnect";
+
         string _sendMeshMNI = "_Send Mesh";
         string _deleteMeshMNI = "_Delete Mesh";
         string _dwnldMeshMNI = "_Download Mesh";
@@ -172,8 +173,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string NoCamOrSer { get => noCamOrSer; set => noCamOrSer = value; }
         public string NoMesh { get => noMesh; set => noMesh = value; }
         public string NoCam { get => noCam; set => noCam = value; }
-        public string Disconnect { get => _disconnect; set => _disconnect = value; }
-        public string Connect { get => _connect; set => _connect = value; }
+        public string Connect { get => _connectMNI; set => _connectMNI = value; }
         public string CantConnect { get => cantConnect; set => cantConnect = value; }
         public string ConnectedToSer { get => connectedToSer; set => connectedToSer = value; }
         public string Connecting { get => connecting; set => connecting = value; }
@@ -240,9 +240,29 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string HoleMethod1ToolTip { get => _holeMethod1ToolTip; set => _holeMethod1ToolTip = value; }
         public string HoleMethod2ToolTip { get => _holeMethod2ToolTip; set => _holeMethod2ToolTip = value; }
         public string SpHoleLBLToolTip { get => _spHoleLBLToolTip; set => _spHoleLBLToolTip = value; }
+        public string DisconnectMNI { get => _disconnectMNI; set => _disconnectMNI = value; }
 
         public LanguageController()
         {
+
+        }
+
+        internal string GetConnectText(string txt)
+        {
+            if (lang == "CZ")
+            {
+                if (txt == "Connect")
+                    return _connectMNI;
+                else
+                    return _disconnectMNI;
+            }
+            else
+            {
+                if (txt == "Připojit")
+                    return _connectMNI;
+                else
+                    return _disconnectMNI;
+            }
 
         }
 
@@ -255,13 +275,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             if (lang == "CZ")
             {
+
                 FileHeader = "_Složka";
                 OpenBAG = "_Otevřít BAG";
                 OpenCamera = "_Připojit kameru";
                 SavePLY = "_Uložit PLY";
-
-                _disconnect = "Odpojit";
-                _connect = "Připojit";
 
                 ServerMN = "_Server";
                 SendMeshMNI = "_Poslat mesh";
@@ -275,11 +293,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 LanguageMNI = "Přepnout do _EN";
                 SetNameMNI = "Jméno klienta";
 
+                _connectMNI = "Připojit";
+                DisconnectMNI = "Odpojit";
+
                 SnapshotBT = "Snímek";
                 ResetBT = "Reset náhl.";
                 ApplyCodeBT = "Provést";
 
-                DecimateLBL = "Decimovat trojúh.";
+                DecimateLBL = "Decimační filtr";
                 ThresholdLBL = "Oříznout";
                 HoleLBL = "Záplatování děr";
 
@@ -387,8 +408,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 OpenCamera = "_Open Camera";
                 SavePLY = "_Save PLY";
 
-                _disconnect = "Disconnect";
-                _connect = "Connect";
+                _connectMNI = "Connect";
+                DisconnectMNI = "Disconnect";
 
                 ServerMN = "_Server";
                 SendMeshMNI = "_Send Mesh";
@@ -406,7 +427,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 ResetBT = "Reset view";
                 ApplyCodeBT = "Apply";
 
-                DecimateLBL = "Decimate triang.";
+                DecimateLBL = "Decimation filter";
                 ThresholdLBL = "Thresholding";
                 HoleLBL = "Hole filling";
 

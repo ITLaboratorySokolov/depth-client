@@ -110,7 +110,7 @@ namespace Intel.RealSense
         public ProcessingWindow()
         {
             InstanceWindow = this;
-            InitializeComponent();
+            // InitializeComponent();
 
 
             try
@@ -156,6 +156,7 @@ namespace Intel.RealSense
             }
 
             InitializeComponent();
+            LanguageSwap_Click(null, null);
         }
 
         private bool allowExit = false;
@@ -253,6 +254,8 @@ namespace Intel.RealSense
             var langCont = dc.LangContr;
             langCont.SwapLanguage();
 
+            ConnectMNI.Header = langCont.GetConnectText(ConnectMNI.Header.ToString());
+
             FileMN.Header = langCont.FileHeader;
             BagMNI.Header = langCont.OpenBAG;
             CameraMNI.Header = langCont.OpenCamera;
@@ -266,6 +269,7 @@ namespace Intel.RealSense
 
             SettingsMN.Header = langCont.SettingsMN;
             LanguageMNI.Header = langCont.LanguageMNI;
+            NameMNI.Header = langCont.SetNameMNI;
 
             ServerMN.Header = langCont.ServerMN;
 

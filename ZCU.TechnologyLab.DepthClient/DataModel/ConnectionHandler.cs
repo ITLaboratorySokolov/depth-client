@@ -38,7 +38,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// Set up connection to a server.
         /// </summary>
         /// <returns> True if successful, false if not </returns>
-        public async Task<bool> Connect(string serverUrl, EventHandler<Exception> onDisconnected)
+        public async Task<bool> Connect(string serverUrl, Action<Exception> onDisconnected)
         {
             var restClient = new RestDataClient(serverUrl);
             _dataConnection = new ServerDataAdapter(restClient);
@@ -106,7 +106,10 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             WorldObjectDto wo;
             try
             {
-                wo = await _dataConnection.GetWorldObjectAsync(name);
+                bool res = await _dataConnection.ContainsWorldObjectAsync(name);
+                if (res)
+                    wo = await _dataConnection.GetWorldObjectAsync(name);
+                else throw new Exception("Object not found on server");
             }
             catch
             {
@@ -126,21 +129,27 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         {
             try
             {
-                //if object already on server wanna update instead
-                await _dataConnection.AddWorldObjectAsync(wo);
+                // is object already on server
+                bool res = await _dataConnection.ContainsWorldObjectAsync(wo.Name);
+                if (!res)
+                    await _dataConnection.AddWorldObjectAsync(wo);
+                else
+                {
+                    var w = new WorldObjectUpdateDto
+                    {
+                        Type = wo.Type,
+                        Properties = wo.Properties,
+                        Position = wo.Position,
+                        Scale = wo.Scale,
+                        Rotation = wo.Rotation
+                    };
+
+                    await _dataConnection.UpdateWorldObjectAsync(wo.Name, w);
+                }
             }
             catch (Exception ex)
             {
-                var w = new WorldObjectUpdateDto
-                {
-                    Type = wo.Type,
-                    Properties = wo.Properties,
-                    Position = wo.Position,
-                    Scale = wo.Scale,
-                    Rotation = wo.Rotation
-                };
-
-                await _dataConnection.UpdateWorldObjectAsync(wo.Name, w);
+                  
                 return false;
             }
 
@@ -156,7 +165,11 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         {
             try
             {
-                await this._dataConnection.RemoveWorldObjectAsync(name);
+                bool res = await _dataConnection.ContainsWorldObjectAsync(name);
+                if (res)
+                    await this._dataConnection.RemoveWorldObjectAsync(name);
+                else throw new Exception("Object not found on server");
+
             }
             catch (Exception ex)
             {
