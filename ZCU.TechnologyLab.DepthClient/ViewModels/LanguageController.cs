@@ -170,7 +170,7 @@
         public string NoCamOrSer { get => noCamOrSer; set => noCamOrSer = value; }
         public string NoMesh { get => noMesh; set => noMesh = value; }
         public string NoCam { get => noCam; set => noCam = value; }
-        public string Connect { get => _connectMNI; set => _connectMNI = value; }
+        public string ConnectMNI { get => _connectMNI; set => _connectMNI = value; }
         public string CantConnect { get => cantConnect; set => cantConnect = value; }
         public string ConnectedToSer { get => connectedToSer; set => connectedToSer = value; }
         public string Connecting { get => connecting; set => connecting = value; }
@@ -433,8 +433,7 @@
                 DecimateLBL = "Decimation filter";
                 ThresholdLBL = "Thresholding";
                 HoleLBL = "Hole filling";
-
-
+                
                 Smoothing = "Smoothing";
                 SpatialLBL = "Spatial";
                 TemporalLBL = "Temporal";

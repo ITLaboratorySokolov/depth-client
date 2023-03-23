@@ -48,13 +48,13 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <returns> Created world object </returns>
         public static WorldObjectDto CreateMeshWO(RealS.MeshFrame frame, string name)
         {
-            byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
-            byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int)).Serialize(new int[] { frame.Width, frame.Height });
+            // byte[] texFormat = new StringSerializer("TextureFormat").Serialize("RGB");
+            // byte[] texSize = new ArraySerializer<int>("TextureSize", sizeof(int)).Serialize(new int[] { frame.Width, frame.Height });
 
             var properties = new RawMeshSerializer().Serialize(frame.Vertices, frame.TempFaces, "Triangle", frame.UVs, frame.Width, frame.Height, "RGB", frame.Colors);
-            properties.Add("TextureFormat", texFormat);
-            properties.Add("TextureSize", texSize);
-            properties.Add("Texture", frame.Colors);
+            // properties.Add("TextureFormat", texFormat);
+            // properties.Add("TextureSize", texSize);
+            // properties.Add("Texture", frame.Colors);
 
             var w = new WorldObjectDto
             {
@@ -63,7 +63,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                 Position = new RemoteVectorDto(),
                 Properties = properties,
                 Scale = new RemoteVectorDto() { X = 1, Y = 1, Z = 1 },
-                Rotation = new RemoteVectorDto()
+                Rotation = new RemoteVectorDto() { X = 0, Y = 0, Z = 180 }
             };
             w.Position.X = 0;
             w.Position.Y = 0;

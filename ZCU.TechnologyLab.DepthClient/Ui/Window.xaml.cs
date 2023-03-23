@@ -36,6 +36,8 @@ namespace Intel.RealSense
         private FilterConfigurationWindow confWindow;
         /// <summary> Allow exiting app </summary>
         private bool allowExit = false;
+        /// <summary> Exiting thread </summary>
+        Thread exitThread;
 
         /// <summary>
         /// Constructor
@@ -143,16 +145,25 @@ namespace Intel.RealSense
                 return;
             }
 
+            // exit has been already called & is being executed
+            if (exitThread != null && exitThread.IsAlive)
+                return;
+
+            // create new exit thread
             var t = new Thread(() =>
             {
                 //video feed has finished we can close connection and window
                 RealS.Exit();
                 allowExit = true;
 
+                // TODO hangs if i manage to click close more than once. fix!!!
                 Action action = () => Close();
-                Dispatcher.Invoke(DispatcherPriority.Normal, action);
+                Dispatcher.Invoke(DispatcherPriority.Normal, action); 
                 Console.WriteLine("Exit");
             });
+            exitThread = t;
+
+            // start the thread
             t.Start();
         }
 
@@ -253,7 +264,7 @@ namespace Intel.RealSense
             var langCont = dc.LangContr;
             langCont.SwapLanguage();
 
-            ConnectMNI.Header = langCont.GetConnectText(ConnectMNI.Header.ToString());
+            dc.ConnectBtnLbl = langCont.GetConnectText(ConnectMNI.Header.ToString());
 
             FileMN.Header = langCont.FileHeader;
             BagMNI.Header = langCont.OpenBAG;

@@ -633,7 +633,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 }
                 else
                 {
-                    this.ConnectBtnLbl = langContr.Connect;
+                    this.ConnectBtnLbl = langContr.ConnectMNI;
                     this.Message = langContr.CantConnect + connection.ErrorMessage;
                 }
 
@@ -648,7 +648,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 bool res = await connection.DisConnect();
                 if (res)
                 {
-                    this.ConnectBtnLbl = langContr.Connect;
+                    this.ConnectBtnLbl = langContr.ConnectMNI;
                     Message = langContr.Disconnected;
                 }
                 else
@@ -672,7 +672,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 connection._connected = !connection._connected;
 
-                this.ConnectBtnLbl = connection._connected ? langContr.DisconnectMNI : langContr.Connect;
+                this.ConnectBtnLbl = connection._connected ? langContr.DisconnectMNI : langContr.ConnectMNI;
                 EnabledButtons = connection._connected;
             }
            
