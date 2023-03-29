@@ -134,16 +134,18 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         internal static RealS.MeshFrame CreateMeshFrameFromWO(WorldObjectDto wo)
         {
             RealS.MeshFrame meshFr = new RealS.MeshFrame();
-            meshFr.Faces = new RawMeshSerializer().IndicesSerializer.Deserialize(wo.Properties);
+            RawMeshSerializer rms = new RawMeshSerializer();
+            meshFr.Faces = rms.IndicesSerializer.Deserialize(wo.Properties);
             meshFr.TempFaces = new int[meshFr.Faces.Length];
-            meshFr.Vertices = new RawMeshSerializer().VerticesSerializer.Deserialize(wo.Properties);
-            meshFr.UVs = new RawMeshSerializer().UvSerializer.Deserialize(wo.Properties);
+            meshFr.Vertices = rms.VerticesSerializer.Deserialize(wo.Properties);
+            meshFr.UVs = rms.UvSerializer.Deserialize(wo.Properties);
+            meshFr.Width = rms.DiffuseTextureWidthSerializer.Deserialize(wo.Properties);
+            meshFr.Colors = rms.DiffuseTexturePixelsSerializer.Deserialize(wo.Properties);
 
-            ArraySerializer<int> arrser = new ArraySerializer<int>("TextureSize", sizeof(int));
-            var wah = arrser.Deserialize(wo.Properties);
-
-            meshFr.Width = wah[0]; // new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
-            meshFr.Colors = wo.Properties["Texture"]; // new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
+            // ArraySerializer<int> arrser = new ArraySerializer<int>("TextureSize", sizeof(int));
+            // var wah = arrser.Deserialize(wo.Properties);
+            //meshFr.Width = wah[0]; // new RawBitmapSerializer().WidthSerializer.Deserialize(tex.Properties);
+            // meshFr.Colors = wo.Properties["Texture"]; // new RawBitmapSerializer().PixelsSerializer.Deserialize(tex.Properties);
 
             return meshFr;
         }

@@ -112,6 +112,7 @@
         string _spatialLBLToolTip = "Edge preserving smoothing using 1D filters";
         string _temporalLBLToolTip = "Smoothing using past frames";
         string _triangleThLBLToolTip = "Filtering out triangles with edges that are too long";
+        string _funcHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
 
         // Filter configuration
         string _decLinScaleLBLToolTip = "How much is the created mesh scaled down";
@@ -239,6 +240,7 @@
         public string SpHoleLBLToolTip { get => _spHoleLBLToolTip; set => _spHoleLBLToolTip = value; }
         public string DisconnectMNI { get => _disconnectMNI; set => _disconnectMNI = value; }
         public string NoUserCode { get => noUserCode; set => noUserCode = value; }
+        public string FuncHeaderLBLToolTip { get => _funcHeaderLBLToolTip; set => _funcHeaderLBLToolTip = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -381,6 +383,7 @@
                 SpatialLBLToolTip = "Vyhlazování zachovávající hrany, používá 1D filtry";
                 TemporalLBLToolTip = "Vyhlazování používající předchozí snímky";
                 TriangleThLBLToolTip = "Odfiltruje trojúhelníky s příliš dlouhými hranami";
+                FuncHeaderLBLToolTip = "Hlavička uživatelské funkce, points - seznam se souřadnicemi bodů, uvs - seznam se souřadnicemi do textury, faces - seznam s indexy vrcholů trojúhelníků";
 
                 DecLinScaleLBLToolTip = "Kolikrát je vytvořená mesh zmenšena";
                 DisparityLBLToolTip = "Vyhlazování v doméně reprezentující rozdíl mezi projekcemi levé a pravé kamery";
@@ -510,6 +513,7 @@
                 SpHoleLBLToolTip = "Horizontal hole-filling mode";
                 TemporalLBLToolTip = "Smoothing using past frames";
                 TriangleThLBLToolTip = "Filtering out triangles with edges that are too long";
+                FuncHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
 
                 DecLinScaleLBLToolTip = "How much is the created mesh scaled down";
                 DisparityLBLToolTip = "Smoothing in domain that represents the difference between projections of left and right cameras";

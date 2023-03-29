@@ -38,6 +38,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string MODEL_PROPERTY = "Model";
         public const string FRAME_PROPERTY = "Frame";
         public const string USER_CODE = "UserCode";
+        public const string ENABLED_URL = "EnabledURL";
 
         private string clientName = "DepthClient1";
 
@@ -86,6 +87,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         ConnectionHandler connection;
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
+        private bool _enabledURL = true;
 
         // language controller
         LanguageController langContr;
@@ -209,6 +211,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string ClientName { get => clientName; set => clientName = value; }
         public LanguageController LangContr { get => langContr; set => langContr = value; }
         public FilterData FiltData { get => filtData; set => filtData = value; }
+        public bool EnabledURL { get => _enabledURL; set => _enabledURL = value; }
+
 
         public ICommand Connect { get; private set; }
         public ICommand SendMesh { get; private set; }
@@ -630,11 +634,13 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     this.Message = langContr.ConnectedToSer + ServerUrl;
                     this.ConnectBtnLbl = langContr.DisconnectMNI;
+                    _enabledURL = false;
                 }
                 else
                 {
                     this.ConnectBtnLbl = langContr.ConnectMNI;
                     this.Message = langContr.CantConnect + connection.ErrorMessage;
+                    _enabledURL = true;
                 }
 
             }
@@ -650,10 +656,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     this.ConnectBtnLbl = langContr.ConnectMNI;
                     Message = langContr.Disconnected;
+                    _enabledURL = true;
                 }
                 else
                 {
                     this.Message = langContr.CantConnect + connection.ErrorMessage;
+                    _enabledURL = true;
                 }
 
             }
@@ -661,6 +669,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             // Update menu items
             UpdateMenuItems();
             connection._inConnectProcess = false;
+            RaisePropertyChanged(ENABLED_URL);
         }
 
         /// <summary>

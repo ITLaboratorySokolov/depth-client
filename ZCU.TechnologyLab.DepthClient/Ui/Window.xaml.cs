@@ -308,6 +308,8 @@ namespace Intel.RealSense
             TemporalLBL.ToolTip = langCont.TemporalLBLToolTip;
             TriangleThLBL.ToolTip = langCont.TriangleThLBLToolTip;
 
+            FuncHeaderLBL.ToolTip = langCont.FuncHeaderLBLToolTip;
+
             if (confWindow != null)
                 confWindow.SwapLabels();
         }

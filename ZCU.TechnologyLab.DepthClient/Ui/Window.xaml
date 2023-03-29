@@ -46,7 +46,7 @@
                     <MenuItem Name="NameMNI" Header="Client _name" Click="SetName_Click"/>
                     <MenuItem Name="LanguageMNI" Header="Set to _CZ" Click="LanguageSwap_Click"/>
                 </MenuItem>
-                <TextBox TextChanged="ServerURL_OnTextChanged" Text="{Binding ServerUrl }" />
+                <TextBox TextChanged="ServerURL_OnTextChanged" Text="{Binding ServerUrl }" IsEnabled="{Binding EnabledURL}" />
 
             </Menu>
             <Menu Grid.Column="1">
@@ -393,7 +393,7 @@
 
 
                         <Slider Grid.Row="8" Grid.Column="1" Value="{Binding FiltData.ThresholdSlider}" Margin="0,5,45,26"
-                                Name="triangleSlider" Minimum="0.02" Maximum="2" Grid.RowSpan="2" />
+                                Name="triangleSlider" Minimum="0.02" Maximum="2" Grid.RowSpan="2" LargeChange="0.01"/>
                         <Label Name="TriangleThLBL" ToolTip="Filtering out triangles with &#x0a;edges that are too long" Grid.Row="8" Grid.Column="0" Content="Triangle threshold:"/>
                         <!--"{}Triangle Thres:{0:#,0.00}"-->
                         <Label x:Name="TriangleThLBL_Copy" Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=triangleSlider}"
@@ -461,7 +461,7 @@
                     </Grid>
                 </DockPanel>
                 <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}" Height="20"/>
-                <TextBlock HorizontalAlignment="Right" Margin="0,5,0,0" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Text="def Edit_poitcloud(points, uvs, faces):" Height="32" Width="248" Grid.ColumnSpan="2"/>
+                <TextBlock x:Name="FuncHeaderLBL" HorizontalAlignment="Right" Margin="0,5,0,0" ToolTip="Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices"  Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Text="def Edit_poitcloud(points, uvs, faces):" Height="32" Width="248" Grid.ColumnSpan="2"/>
 
                 <avalon:TextEditor Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35"
                                    SyntaxHighlighting="Python"
