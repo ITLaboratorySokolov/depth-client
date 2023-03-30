@@ -245,7 +245,7 @@ namespace Intel.RealSense
             var dc = DataContext as MainViewModel;
             var langCont = dc.LangContr;
 
-            NameDialog inputDialog = new NameDialog(langCont.NameQuestion, dc.ClientName);
+            QuestionDialog inputDialog = new QuestionDialog(langCont.NameQuestion, dc.ClientName);
             if (inputDialog.ShowDialog() == true)
             {
                 dc.ClientName = inputDialog.Answer;
