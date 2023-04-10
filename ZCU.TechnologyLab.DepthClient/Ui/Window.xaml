@@ -33,17 +33,17 @@
                     <MenuItem Name="PlyMNI" Header="_Save PLY" Command="{Binding SavePly}" IsEnabled="{Binding SavePlyBtnEnable}" />
                 </MenuItem>
                 <MenuItem Name="ServerMN" Header="_Server">
-                    <MenuItem Name="ConnectMNI" Header="{Binding ConnectBtnLbl}" Command="{Binding Connect}" />
+                    <MenuItem Name="ConnectMNI" Header="{Binding ConnectBtnLbl}" Command="{Binding Connect}" IsEnabled="{Binding EnableConnect}" />
                     <MenuItem Name="SendMeshMNI" Header="_Send Mesh" Command="{Binding SendMesh}" IsEnabled="{Binding EnabledButtons}" />
                     <MenuItem Name="DeleteMeshMNI" Header="_Delete Mesh" Command="{Binding RemoveMesh}" IsEnabled="{Binding EnabledButtons}" />
                     <MenuItem Name="DwnldMeshMNI" Header="_Download Mesh" Command="{Binding DownloadMesh}"
                               IsEnabled="{Binding EnabledButtons}" />
                 </MenuItem>
                 <MenuItem Name="PythonMN" Header="_Python">
-                    <MenuItem Name="PythonPathMNI" Header="_Set path to python" Command="{Binding SetPythonPath}" />
+                    <MenuItem Name="PythonPathMNI" Header="_Set path to python" Command="{Binding SetPythonPath}" IsEnabled="{Binding DllEnabled}" />
                 </MenuItem>
                 <MenuItem Name="SettingsMN" Header="_Settings">
-                    <MenuItem Name="NameMNI" Header="Client _name" Click="SetName_Click"/>
+                    <MenuItem Name="NameMNI" Header="Client _name" Click="SetName_Click" IsEnabled="{Binding EnabledURL}"/>
                     <MenuItem Name="LanguageMNI" Header="Set to _CZ" Click="LanguageSwap_Click"/>
                 </MenuItem>
                 <TextBox TextChanged="ServerURL_OnTextChanged" Text="{Binding ServerUrl }" IsEnabled="{Binding EnabledURL}" />
@@ -433,7 +433,7 @@
                             <!--  Remember to add light to the scene  -->
                             <HelixToolkit:DefaultLights></HelixToolkit:DefaultLights>
                             <!--  The content of this visual is defined in MainViewModel.cs  -->
-                            <HelixToolkit:PointsVisual3D Points="{Binding Points}" Size="1" Color="Red" Transform="{Binding ModelTF}" />
+                            <HelixToolkit:PointsVisual3D Points="{Binding Points}" Size="3" Color="Red" Transform="{Binding ModelTF}" />
                             <ModelVisual3D Content="{Binding Model}" />
                             <!-- <HelixToolkit:LinesVisual3D Content="{Binding Lines}" /> -->
 

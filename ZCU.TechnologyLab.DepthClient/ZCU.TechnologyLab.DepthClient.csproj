@@ -35,8 +35,8 @@
     <Reference Include="Python.Runtime">
       <HintPath>..\..\..\PythonExectution\PythonExectution\bin\Debug\net6.0\Python.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="PythonExecutionLibrary">
-      <HintPath>..\..\..\PythonExectution\PythonExecutionLibrary\bin\Debug\netstandard2.0\PythonExecutionLibrary.dll</HintPath>
+    <Reference Include="ZCU.PythonExecutionLibrary">
+      <HintPath>..\..\..\PythonExectution\PythonExecutionLibrary\bin\Debug\netstandard2.0\ZCU.PythonExecutionLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
 

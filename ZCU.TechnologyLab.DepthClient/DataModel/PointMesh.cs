@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Globalization;
 using Python.Runtime;
-using PythonExecutionLibrary;
+using ZCU.PythonExecutionLibrary;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
-    internal class PointCloud : IReturnable
+    /// <summary>
+    /// Class representing a mesh
+    /// </summary>
+    internal class PointMesh : IReturnable
     {
         public float[] points;
         public float[] uvs;
@@ -13,6 +16,11 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
 
         CultureInfo baseCulture = new CultureInfo("en-US");
 
+        /// <summary>
+        /// Set parameters of point mesh from PyObject list
+        /// </summary>
+        /// <param name="lst"> Py object </param>
+        /// <returns> True if successful false if not </returns>
         public bool SetParameters(PyObject lst)
         {
             try
@@ -21,6 +29,8 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                     throw new Exception();
                 if (lst[1].Length() / 2 != lst[0].Length() / 3)
                     throw new Exception();
+
+                long vertCount = (lst[0].Length() / 3);
 
                 points = new float[lst[0].Length()];
                 uvs = new float[lst[1].Length()];
@@ -56,11 +66,13 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
                     int t2 = lst[2][i + 1].ToInt32(baseCulture);
                     int t3 = lst[2][i + 2].ToInt32(baseCulture);
 
+                    if (t1 < 0 || t2 < 0 || t3 < 0 || t1 >= vertCount || t2 >= vertCount || t3 >= vertCount)
+                        throw new Exception("Invalid vertex index");
+
                     faces[i + 0] = t1;
                     faces[i + 1] = t2;
                     faces[i + 2] = t3;
                 }
-
             } catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);

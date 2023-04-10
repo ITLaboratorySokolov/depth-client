@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using PythonExecutionLibrary;
+using ZCU.PythonExecutionLibrary;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
@@ -24,16 +24,26 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         }
 
         /// <summary>
+        /// Get status of python engine initialization
+        /// Once initialized, python dll cannot be set again
+        /// </summary>
+        /// <returns></returns>
+        public bool GetStatusOfInit()
+        {
+            return pythonExecutor.initializedOnce;
+        }
+
+        /// <summary>
         /// Execute python user code
         /// </summary>
         /// <param name="code"> Python function code </param>
         /// <param name="varValues"> Variables and their values </param>
         /// <returns> Edited point cloud </returns>
-        public async Task<PointCloud> ExecuteUserCode(string code, Dictionary<string, object> varValues)
+        public async Task<PointMesh> ExecuteUserCode(string code, Dictionary<string, object> varValues)
         {
-            PointCloud pc = await Task<PointCloud>.Run(() =>
+            PointMesh pc = await Task<PointMesh>.Run(() =>
             {
-                PointCloud cloud = new PointCloud();
+                PointMesh cloud = new PointMesh();
                 List<string> paramNames = new List<string>(varValues.Keys);
 
                 string pycode = pythonExecutor.CreateCode("userFunc", paramNames, varValues, code);

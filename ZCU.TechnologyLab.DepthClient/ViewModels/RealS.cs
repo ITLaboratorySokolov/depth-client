@@ -4,18 +4,21 @@ using System.Threading;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
+    /// <summary>
+    /// Class used to work with external C++ library controlling the connected camera
+    /// </summary>
     public static class RealS
     {
-        // New Frames cannot be obtained
+        /// <summary> New Frames cannot be obtained </summary>
         private static bool NewFramesForbidden { get; set; } = true;
 
-        // Init was successfully called
+        /// <summary> Init was successfully called </summary>
         public static bool Started { get; set; }
 
-        // Name of last initialized .bag file
+        /// <summary> Name of last initialized .bag file </summary>
         public static string? BagFile { get; private set; }
 
-        // Number of allocated frames
+        /// <summary> Number of allocated frames </summary>
         public static volatile int FramesAllocated;
 
         static class RealSenseWrapper
@@ -61,9 +64,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             public static extern unsafe void UpdateFilters(bool* filterss, float* filter_data);
         }
 
-        // Initializes depth stream from file or camera
-        // If filePath is empty, camera stream is chosen
-        // return if successfully opened stream
+        /// <summary>
+        /// Initializes depth stream from file or camera 
+        /// If filePath is empty, camera stream is chosen
+        /// </summary>
+        /// <param name="filePath"> Path to file </param>
+        /// <returns> return true if successfully opened stream </returns>
         public static bool Init(string filePath)
         {
             lock (syncLock)
@@ -88,7 +94,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         private static readonly object syncLock = new object();
 
-        // Waits until all Frames are disposed and then shuts down the stream
+        /// <summary>
+        /// Waits until all Frames are disposed and then shuts down the stream 
+        /// </summary>
         public static void Exit()
         {
             lock (syncLock)
@@ -104,6 +112,19 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
+        /// <summary>
+        /// Update filters in C++ library
+        /// 
+        /// Order of filter parameters
+        /// 1. Decimation filter - linear scale factor,
+        /// 2. Threshold filter - min value, max value,
+        /// 3. Spatial smoothing - number of iterations, alpha, delta, hole filling method,
+        /// 4. Temporal smoothing - alpha, delta, persistency index
+        /// 5. Hole filling - method
+        /// 
+        /// </summary>
+        /// <param name="enables"> Which filters are enabled </param>
+        /// <param name="filterData"> Parameters of filters </param>
         public static void updateFilters(bool[] enables, float[] filterData)
         {
             unsafe
@@ -118,17 +139,21 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
-        // Managed memory block that can be recycled
+        /// <summary>
+        /// Managed memory block that can be recycled 
+        /// </summary>
         public class DepthFrameBuffer
         {
             public ushort[] Depths = Array.Empty<ushort>();
             public byte[] Colors = Array.Empty<byte>();
             public int Width, Height;
         }
-    
 
-        // Frame read from unmanaged memory, after use Dispose
-        // Depth Map + Colorized Depth Map
+
+        /// <summary>
+        /// Frame read from unmanaged memory, after use Dispose 
+        /// Depth Map + Colorized Depth Map
+        /// </summary>
         public struct DepthFrame : IDisposable
         {
             public IntPtr Pointer;
@@ -206,8 +231,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
         }
 
-        // Frame read from unmanaged memory
-        // Mesh + Ply File as binary data
+        /// <summary>
+        /// Frame read from unmanaged memory 
+        /// Mesh + Ply File as binary data
+        /// </summary>
         public struct MeshFrame
         {
             public float[] Vertices;

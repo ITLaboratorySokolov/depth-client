@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Constants
+    /// </summary>
     internal class Constants
     {
         // property names

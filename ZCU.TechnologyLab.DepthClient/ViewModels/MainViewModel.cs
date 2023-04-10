@@ -32,6 +32,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private const string MESSAGE_PROPERTY = "Message";
         private const string CNTCBTLB_PROPERTY = "ConnectBtnLbl";
         private const string EN_BTN_PROPERTY = "EnabledButtons";
+        private const string DIS_CONNECT_PROPERTY = "EnableConnect";
         private const string EN_APPLY_PROPERTY = "EnabledApply";
         private const string AUTO_PROPERTY = "AutoEnabledLbl";
         private const string SAVE_PLY_BTN_PROPERTY = "SavePlyBtnEnable";
@@ -39,6 +40,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public const string FRAME_PROPERTY = "Frame";
         public const string USER_CODE = "UserCode";
         public const string ENABLED_URL = "EnabledURL";
+        public const string DLLENABLED = "DllEnabled";
 
         private string clientName = "DepthClient1";
 
@@ -56,6 +58,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         // signifiers
         private bool _savePlyBtnEnable;
         private bool _enabledButtons;
+        private bool _enableConnect;
         private bool _enabledApply;
 
         // filters
@@ -88,6 +91,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private string _autoLbl="AutoSend: OFF";
         private bool _autoEnable;
         private bool _enabledURL = true;
+        private bool _dllEnabled = true;
 
         // language controller
         LanguageController langContr;
@@ -185,6 +189,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(AUTO_PROPERTY);
             }
         }
+
         public bool EnabledButtons
         {
             get => this._enabledButtons;
@@ -194,6 +199,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(EN_BTN_PROPERTY);
             }
         }
+        public bool EnableConnect 
+        { 
+            get => _enableConnect;
+            set 
+            { 
+                _enableConnect = value;
+                RaisePropertyChanged(DIS_CONNECT_PROPERTY);
+            } 
+        }
+
 
         public int AutoInterval { get; set; } = 10;
 
@@ -206,6 +221,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(EN_APPLY_PROPERTY);
             }
         }
+
+        public bool DllEnabled
+        {
+            get => _dllEnabled;
+            set { 
+                _dllEnabled = value;
+                RaisePropertyChanged(DLLENABLED);
+            }
+        }
+
 
         public string PythonPath { get => _pythonPath; set => _pythonPath = value; }
         public string ClientName { get => clientName; set => clientName = value; }
@@ -240,6 +265,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             LoadConfig();
             ucp = new UserCodeProcessor(_pythonPath);
             EnabledApply = true;
+            EnableConnect = true;
 
             // Create reactions
             this.Connect = new Command(this.OnConnect);
@@ -255,7 +281,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
             // Set up default view
             OnConnectCamera();
-            // BuildMeshDefault();
 
             // Set up timer
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
@@ -343,7 +368,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             vars.Add("faces", Frame.TempFaces);
 
             // execute code
-            PointCloud res = await ucp.ExecuteUserCode(UserCode, vars);
+            PointMesh res = await ucp.ExecuteUserCode(UserCode, vars);
             if (res == null)
             {
                 // error occured
@@ -366,9 +391,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 frame.Vertices = res.points;
                 frame.UVs = res.uvs;
-                frame.TempFaces = res.faces;
+                frame.TempFaces = new int[res.faces.Length];
                 frame.Faces = new int[res.faces.Length];
                 Array.Copy(res.faces, frame.Faces, frame.Faces.Length);
+                Array.Copy(res.faces, frame.TempFaces, frame.TempFaces.Length);
 
                 Frame = frame;
                 Message = langContr.CodeExec;
@@ -376,6 +402,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 BuildMesh(Frame);
             }
 
+            if (ucp.GetStatusOfInit())
+                DllEnabled = false;
             EnabledApply = true;
         }
 
@@ -618,7 +646,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         private async void OnConnect()
         {
             // Currently connecting
-            if (connection._inConnectProcess)
+            if (connection._inConnectProcess) // || connection.GetSessionState() == SessionState.Reconnecting)
                 return;
 
             connection._inConnectProcess = true;
@@ -635,6 +663,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                     this.Message = langContr.ConnectedToSer + ServerUrl;
                     this.ConnectBtnLbl = langContr.DisconnectMNI;
                     _enabledURL = false;
+                    connection.SessionClient.Reconnecting += ClientReconnecting;
+                    connection.SessionClient.Reconnected += ClientReconnected;
                 }
                 else
                 {
@@ -684,7 +714,16 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 this.ConnectBtnLbl = connection._connected ? langContr.DisconnectMNI : langContr.ConnectMNI;
                 EnabledButtons = connection._connected;
             }
-           
+        }
+
+        /// <summary>
+        /// Update menu items if application is currently reconnecting
+        /// </summary>
+        private void ReconnectingMenuItems()
+        {
+            EnableConnect = false;
+            EnabledButtons = false;
+            ConnectBtnLbl = langContr.ReconnectMNI;
         }
 
         /// <summary>
@@ -693,8 +732,30 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// <param name="e"> Exception </param>
         private void SessionClient_Disconnected(Exception e)
         {
+            EnableConnect = true;
             UpdateMenuItems();
             Message = langContr.Disconnected;
+        }
+
+        /// <summary>
+        /// Action called when client looses connection to server and is trying to reconnect
+        /// </summary>
+        /// <param name="e"></param>
+        private void ClientReconnecting(Exception e)
+        {
+            ReconnectingMenuItems();
+            Message = langContr.Reconnecting;
+        }
+
+        /// <summary>
+        /// Action called when client reconnects to server
+        /// </summary>
+        private void ClientReconnected()
+        {
+            ConnectBtnLbl = langContr.DisconnectMNI;
+            EnableConnect = true;
+            UpdateMenuItems();
+            Message = langContr.Reconnected;
         }
 
         /// <summary>

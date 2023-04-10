@@ -5,6 +5,9 @@ using System.Windows.Media.Imaging;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Class providing methods to process a bitmap
+    /// </summary>
     internal class BitmapProcessor
     {
         /// <summary>

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
-using System.Linq;
 
 namespace ObjParser
 {
+	/// <summary>
+	/// Class representing an obj file
+	/// </summary>
 	public class Obj
 	{
 		public float[] VertexList;
@@ -27,6 +27,11 @@ namespace ObjParser
 			CultureInfo.CurrentCulture = new CultureInfo("en-US");
 		}
 
+		/// <summary>
+		/// Write to obj file
+		/// </summary>
+		/// <param name="path"> Path to file </param>
+		/// <param name="headerStrings"> Header </param>
 		public void WriteObjFile(string path, string[] headerStrings)
 		{
 			using (var outStream = File.OpenWrite(path))
@@ -55,6 +60,11 @@ namespace ObjParser
 			}
 		}
 
+		/// <summary>
+		/// Write header to file
+		/// </summary>
+		/// <param name="writer"> Used writer </param>
+		/// <param name="headerStrings"> Header </param>
 		private void WriteHeader(StreamWriter writer, string[] headerStrings)
 		{
 			if (headerStrings == null || headerStrings.Length == 0)

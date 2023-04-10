@@ -7,13 +7,14 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
-using ZCU.TechnologyLab.Common.Serialization.Bitmap;
 using ZCU.TechnologyLab.Common.Serialization.Mesh;
-using ZCU.TechnologyLab.Common.Serialization.Properties;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 
 namespace ZCU.TechnologyLab.DepthClient.DataModel
 {
+    /// <summary>
+    /// Class providing methods for processing a mesh
+    /// </summary>
     internal class MeshProcessor
     {
         /// <summary>

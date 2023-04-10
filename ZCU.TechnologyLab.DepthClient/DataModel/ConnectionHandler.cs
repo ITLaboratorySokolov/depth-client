@@ -23,6 +23,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         private ServerDataAdapter _dataConnection;
         /// <summary> SignalR session </summary>
         private SignalRSession _sessionClient;
+        public SignalRSession SessionClient { get => _sessionClient; set => _sessionClient = value; }
         /// <summary> Server session adapter </summary>
         private ServerSessionAdapter _sessionConnection;
 
@@ -34,13 +35,14 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// </summary>
         public string ErrorMessage { get { string msg = errorMessage; errorMessage = ""; return msg; } set => errorMessage = value; }
 
+
         /// <summary>
         /// Get session state
         /// </summary>
         /// <returns> Session state </returns>
         public SessionState GetSessionState()
         {
-            return _sessionClient.State;
+            return SessionClient.State;
         }
 
         /// <summary>
@@ -54,16 +56,16 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
 
             var signalrClient = new SignalRSession(serverUrl, "virtualWorldHub");
             signalrClient.Disconnected += onDisconnected;
-            _sessionClient = signalrClient;
+            SessionClient = signalrClient;
 
             _sessionConnection = new ServerSessionAdapter(signalrClient);
 
             try
             {
-                if (_sessionClient is { State: SessionState.Connected })
-                    await _sessionClient.StopSessionAsync();
+                if (SessionClient is { State: SessionState.Connected })
+                    await SessionClient.StopSessionAsync();
 
-                await _sessionClient.StartSessionAsync();
+                await SessionClient.StartSessionAsync();
             }
             catch (Exception e)
             {
@@ -82,7 +84,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         {
             try
             {
-                await _sessionClient.StopSessionAsync();
+                await SessionClient.StopSessionAsync();
             }
             catch (Exception e)
             {
@@ -98,8 +100,8 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <returns> True if disconnected, false if not </returns>
         public bool IsClientDisconnected()
         {
-            if ((!this._connected && this._sessionClient.State == SessionState.Connected)
-                 || (this._connected && this._sessionClient.State == SessionState.Closed))
+            if ((!this._connected && this.SessionClient.State == SessionState.Connected)
+                 || (this._connected && this.SessionClient.State == SessionState.Closed))
                 return true;
 
             return false;

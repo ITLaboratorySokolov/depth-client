@@ -20,56 +20,147 @@ int main(const char** args)
 	Start("d435i_walk_around.bag");
 }
 
-
 /**
 Class to encapsulate a filter alongside its options
 */
 class filter_options
 {
-public:
-	filter_options(const std::string name, rs2::filter& filter);
-	filter_options(filter_options&& other);
-	std::string filter_name; //Friendly name of the filter
-	rs2::filter& filter; //The filter in use
-	std::atomic_bool is_enabled; //A boolean controlled by the user that determines whether to apply the filter or not
-};
-
-/**
-Constructor for filter_options, takes a name and a filter.
-*/
-filter_options::filter_options(const std::string name, rs2::filter& flt) :
-	filter_name(name),
-	filter(flt),
-	is_enabled(true)
-{
-	const std::array<rs2_option, 5> possible_filter_options = {
-		RS2_OPTION_FILTER_MAGNITUDE,
-		RS2_OPTION_FILTER_SMOOTH_ALPHA,
-		RS2_OPTION_MIN_DISTANCE,
-		RS2_OPTION_MAX_DISTANCE,
-		RS2_OPTION_FILTER_SMOOTH_DELTA
+	public:
+		filter_options(const std::string name, rs2::filter& filter);
+		filter_options(filter_options&& other);
+		std::string filter_name; //Friendly name of the filter
+		rs2::filter& filter; //The filter in use
+		std::atomic_bool is_enabled; //A boolean controlled by the user that determines whether to apply the filter or not
 	};
 
-	//Go over each filter option and create a slider for it
-	for (rs2_option opt : possible_filter_options)
+	/**
+	Constructor for filter_options, takes a name and a filter.
+	*/
+	filter_options::filter_options(const std::string name, rs2::filter& flt) :
+		filter_name(name),
+		filter(flt),
+		is_enabled(true)
 	{
-		if (flt.supports(opt))
+		const std::array<rs2_option, 5> possible_filter_options = {
+			RS2_OPTION_FILTER_MAGNITUDE,
+			RS2_OPTION_FILTER_SMOOTH_ALPHA,
+			RS2_OPTION_MIN_DISTANCE,
+			RS2_OPTION_MAX_DISTANCE,
+			RS2_OPTION_FILTER_SMOOTH_DELTA
+		};
+	
+		//Go over each filter option and create a slider for it
+		for (rs2_option opt : possible_filter_options)
 		{
-			rs2::option_range range = flt.get_option_range(opt);
-			std::string opt_name = flt.get_option_name(opt);
-			std::string prefix = "Filter ";
+			if (flt.supports(opt))
+			{
+				rs2::option_range range = flt.get_option_range(opt);
+				std::string opt_name = flt.get_option_name(opt);
+				std::string prefix = "Filter ";
+			}
 		}
 	}
+	
+	/**
+	Copy constructor for filter_options
+	*/
+	filter_options::filter_options(filter_options&& other) :
+		filter_name(std::move(other.filter_name)),
+		filter(other.filter),
+		is_enabled(other.is_enabled.load())
+	{
 }
 
-filter_options::filter_options(filter_options&& other) :
-	filter_name(std::move(other.filter_name)),
-	filter(other.filter),
-	is_enabled(other.is_enabled.load())
+// Atomic boolean to allow thread safe way to stop the thread
+std::atomic_bool stopped(false);
+// Processing thread
+std::thread processing_thread;
+// Frame queue
+rs2::frame_queue filteredQueue;
+
+// Mutex for sensitive operations
+std::mutex m_mutex;
+
+// Pipeline
+rs2::pipeline* pipe;
+
+// Declare filters
+std::vector<filter_options> filters;
+rs2::decimation_filter dec_filter(2); // Decimation - reduces depth frame density
+rs2::threshold_filter thr_filter; // Threshold  - removes values outside recommended range
+rs2::spatial_filter spat_filter; // Spatial    - edge-preserving spatial smoothing
+rs2::temporal_filter temp_filter; // Temporal   - reduces temporal noise
+rs2::hole_filling_filter hole_filter; // Hole filling
+rs2::align align_to_depth(RS2_STREAM_DEPTH); // Align filter
+
+// Declare disparity transform from depth to disparity and vice versa
+std::string disparity_filter_name = "Disparity";
+rs2::disparity_transform depth_to_disparity(true);
+rs2::disparity_transform disparity_to_depth(false);
+
+// Colorizer filter
+rs2::colorizer color_map;
+// Colored depth frame
+rs2::frame colored_depth;
+
+// Buffers
+std::vector<uint16_t> depthBuffer;
+std::vector<uint8_t> colorBuffer;
+std::vector<uint8_t> textureBuffer;
+std::vector<float> uvBuffer;
+
+// Point cloud data
+rs2::pointcloud pc;
+rs2::points points;
+
+/// <summary>
+/// Update filters
+/// </summary>
+/// <param name="filterss"> Array with booleans - is given filter enabled or not </param>
+/// <param name="filter_data"> Array with filter parameters </param>
+void UpdateFilters(bool* filterss, float* filter_data)
 {
+	for (int i = 0; i < filters.size(); ++i)
+		filters[i].is_enabled = filterss[i];
+
+	std::thread updating_thread(([filterss, filter_data]
+		{
+			m_mutex.lock();
+
+			// Decimation
+			filters[0].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[0]);
+
+			// Threshold
+			filters[1].filter.set_option(RS2_OPTION_MIN_DISTANCE, filter_data[1]);
+			filters[1].filter.set_option(RS2_OPTION_MAX_DISTANCE, filter_data[2]);
+
+			// Spatial
+			filters[3].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[3]);
+			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[4]);
+			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[5]);
+			filters[3].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[6]);
+
+			// Temporal
+			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[7]);
+			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[8]);
+			filters[4].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[9]);
+
+			// Hole filling filter
+			filters[5].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[10]);
+
+			m_mutex.unlock();
+		}));
+
+	updating_thread.join();
+
 }
 
-
+/// <summary>
+/// Look for device with streams
+/// </summary>
+/// <param name="stream_requests"> Streams to look for </param>
+/// <param name="out_serial"> Name of device </param>
+/// <returns> True if device located false if not </returns>
 bool device_with_streams(std::vector<rs2_stream> stream_requests, std::string& out_serial)
 {
 	rs2::context ctx;
@@ -110,6 +201,7 @@ bool device_with_streams(std::vector<rs2_stream> stream_requests, std::string& o
 		if (found_all_streams)
 			return true;
 	}
+
 	// After scanning all devices, not all requested streams were found
 	for (auto& type : unavailable_streams)
 	{
@@ -129,90 +221,35 @@ bool device_with_streams(std::vector<rs2_stream> stream_requests, std::string& o
 			throw std::runtime_error(
 				"The requested stream: " + std::to_string(type) +
 				", for the demo is not supported by connected devices!");
-		// stream type
+			// stream type
 		}
 	}
 	return false;
 }
 
-// Atomic boolean to allow thread safe way to stop the thread
-std::atomic_bool stopped(false);
-std::thread processing_thread;
-rs2::frame_queue filteredQueue;
-std::vector<filter_options> filters;
-std::mutex m_mutex;
-
-rs2::pipeline* pipe;
-
-// Declare filters
-rs2::decimation_filter dec_filter(2); // Decimation - reduces depth frame density
-rs2::threshold_filter thr_filter; // Threshold  - removes values outside recommended range
-rs2::spatial_filter spat_filter; // Spatial    - edge-preserving spatial smoothing
-rs2::temporal_filter temp_filter; // Temporal   - reduces temporal noise
-rs2::hole_filling_filter hole_filter; // Hole filling
-
-// Declare disparity transform from depth to disparity and vice versa
-std::string disparity_filter_name = "Disparity";
-rs2::disparity_transform depth_to_disparity(true);
-rs2::disparity_transform disparity_to_depth(false);
-
-void UpdateFilters(bool* filterss, float* filter_data)
-{
-	for (int i = 0; i < filters.size(); ++i)
-		filters[i].is_enabled = filterss[i];
-
-	std::thread updating_thread(([filterss, filter_data]
-		{
-			m_mutex.lock();
-
-			// Decimation
-			filters[0].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[0]);
-
-			// Threshold
-			filters[1].filter.set_option(RS2_OPTION_MIN_DISTANCE, filter_data[1]);
-			filters[1].filter.set_option(RS2_OPTION_MAX_DISTANCE, filter_data[2]);
-
-			// Disparity
-
-			// Spatial
-			filters[3].filter.set_option(RS2_OPTION_FILTER_MAGNITUDE, filter_data[3]);
-			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[4]);
-			filters[3].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[5]);
-			filters[3].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[6]);
-
-
-			// Temporal
-			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, filter_data[7]);
-			filters[4].filter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, filter_data[8]);
-			filters[4].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[9]);
-
-
-			// Hole filling filter
-			filters[5].filter.set_option(RS2_OPTION_HOLES_FILL, filter_data[10]);
-
-			m_mutex.unlock();
-		}));
-
-	updating_thread.join();
-
-}
-rs2::align align_to_depth(RS2_STREAM_DEPTH);
-
+/// <summary>
+/// Start - stream from camera or file
+/// </summary>
+/// <param name="filePath"> Path to file </param>
+/// <returns> True if successfull false if not </returns>
 bool Start(const char* filePath) try
 {
+	// create pipeline
 	pipe = new rs2::pipeline;
+	
+	// load input file
 	std::string file = filePath;
-
 	std::cout << "LibRealSense - " << RS2_API_VERSION_STR << ": from " << (strlen(filePath) != 0
 		                                                                       ? "file: " + file
 		                                                                       : "camera") << std::endl;
-
+	
+	// create config
 	rs2::config cfg;
 	cfg.enable_stream(RS2_STREAM_DEPTH);
 	cfg.enable_stream(RS2_STREAM_COLOR);
 
+	// load device name
 	std::string serial;
-
 	if (!file.empty()) { cfg.enable_device_from_file(file, true); }
 	else
 	{
@@ -223,9 +260,11 @@ bool Start(const char* filePath) try
 		}
 	}
 
+	// enable device
 	if (!serial.empty())
 		cfg.enable_device(serial);
 
+	// start pipeline
 	pipe->start(cfg);
 
 	m_mutex.lock();
@@ -239,31 +278,28 @@ bool Start(const char* filePath) try
 	filters.emplace_back("Temporal", temp_filter);
 	filters.emplace_back("Hole", hole_filter);
 
+	// enable all
 	for (auto& filter_options : filters)
 	{
-		//if (filter_options.filter_name == "Decimate")
 		filter_options.is_enabled = true;
 	}
 	m_mutex.unlock();
 
-
-	// Declare depth colorizer for pretty visualization of depth data
-
-	stopped = false;
-
-
 	// Create a thread for getting frames from the device and process them
 	// to prevent UI thread from blocking due to long computations.
+	stopped = false;
 	processing_thread = std::thread([]
 	{
 		while (!stopped) //While application is running
 		{
 			m_mutex.lock();
 
-			rs2::frameset data = pipe->wait_for_frames(); // Wait for next set of frames from the camera
+			// Wait for next set of frames from the camera
+			rs2::frameset data = pipe->wait_for_frames();
 			auto d2 = align_to_depth.process(data);
 
-			rs2::frame depth_frame = d2.get_depth_frame(); //Take the depth frame from the frameset
+			//Take the depth frame from the frameset
+			rs2::frame depth_frame = d2.get_depth_frame();
 			if (depth_frame == NULL) { // Should not happen but if the pipeline is configured differently
 				m_mutex.unlock();
 				return; //  it might not provide depth and we don't want to crash
@@ -271,7 +307,8 @@ bool Start(const char* filePath) try
 
 			rs2::frame filtered = depth_frame; // Does not copy the frame, only adds a reference
 
-			//The implemented flow of the filters pipeline is in the following order:
+			// Apply filters
+			// The implemented flow of the filters pipeline is in the following order:
 			/* Apply filters.
 			1. apply decimation filter
 			2. apply threshold filter
@@ -281,7 +318,6 @@ bool Start(const char* filePath) try
 			6. revert the results back (if step Disparity filter was applied
 			to depth domain (each post processing block is optional and can be applied independantly).
 			*/
-
 			bool revert_disparity = false;
 			for (int i = 0; i < filters.size() - 1; i++) // (auto&& filter : filters)
 			{
@@ -324,7 +360,6 @@ bool Start(const char* filePath) try
 			bundler.start(filteredQueue);
 
 			//filteredQueue.enqueue(filtered);
-
 			bundler.invoke(d2.get_color_frame());
 			bundler.invoke(filtered);
 
@@ -354,6 +389,9 @@ catch
 	return false;
 }
 
+/// <summary>
+/// Exit processing thread
+/// </summary>
 void Exit()
 {
 	if (pipe == nullptr)
@@ -364,11 +402,18 @@ void Exit()
 	pipe = nullptr;
 }
 
+/// <summary>
+/// Delete depth frame
+/// </summary>
+/// <param name="depths"></param>
 void DropDepthFrame(uint16_t* depths)
 {
 	//free(depths);
 }
 
+/// <summary>
+/// Delete frame
+/// </summary>
 void DropFrame(float* items, int* indices, uint8_t* ply)
 {
 	free(items);
@@ -376,9 +421,9 @@ void DropFrame(float* items, int* indices, uint8_t* ply)
 	free(ply);
 }
 
-rs2::colorizer color_map;
-rs2::frame colored_depth;
-
+/// <summary>
+/// Update point and colorized depth data
+/// </summary>
 void update_data(rs2::frame_queue& data, rs2::frame& colorized_depth, rs2::points& points, rs2::pointcloud& pc,
                  rs2::colorizer& color_map)
 {
@@ -391,11 +436,9 @@ void update_data(rs2::frame_queue& data, rs2::frame& colorized_depth, rs2::point
 	}
 }
 
-std::vector<uint16_t> depthBuffer;
-std::vector<uint8_t> colorBuffer;
-std::vector<uint8_t> textureBuffer;
-std::vector<float> uvBuffer;
-
+/// <summary>
+/// Get depth and color frame
+/// </summary>
 bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height)try
 {
 	rs2::frameset f;
@@ -404,12 +447,8 @@ bool GetFrameOnce(uint16_t** depths, uint8_t** colors, int* width, int* height)t
 	{
 		rs2::depth_frame df = f.get_depth_frame();
 
-		//points = pc.calculate(f); // Generate pointcloud from the depth data
 		colored_depth = color_map.process(df); // Colorize the depth frame with a color map
 		rs2::video_frame video(colored_depth);
-
-		//	*height = video.get_profile().format();
-		//	pc.map_to(colorized_depth); // Map the colored depth to the point cloud
 
 		*width = df.get_width();
 		*height = df.get_height();
@@ -436,6 +475,10 @@ catch (std::exception& e)
 	return false;
 }
 
+/// <summary>
+/// Distance between two vectors
+/// </summary>
+/// <returns> Distance </returns>
 float dist2(const rs2_vector& a, const rs2_vector& b)
 {
 	auto x = a.x - b.x;
@@ -444,15 +487,29 @@ float dist2(const rs2_vector& a, const rs2_vector& b)
 	return x * x + y * y + z * z;
 }
 
+/// <summary>
+/// Is vector zero vector
+/// </summary>
+/// <returns> True if yes, false if not </returns>
 bool isZero(rs2_vector& v)
 {
 	return v.x == 0 || v.y == 0 || v.z == 0;
 
 }
+
+/// <summary>
+/// Generate faces
+/// </summary>
+/// <param name="faces"></param>
+/// <param name="vertices"></param>
+/// <param name="width"></param>
+/// <param name="height"></param>
+/// <param name="facesCount"></param>
 void generateFaces(int* faces, float* vertices, int width, int height, int& facesCount)
 {
 	facesCount = 0;
 
+	// Create triangles in a triangle grid - neighbour and one above, one above and one above neigbour
 	for (int i = 0; i < height - 1; ++i)
 	{
 		int lineStart = i * width;
@@ -462,22 +519,21 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 			facesCount += 6;
 			const float epsilon = 1;
 
-
 			int s = lineStart + j;
 			*faces++ = s;
 			*faces++ = s + width;
 			*faces++ = s + 1;
 
 			 {
-				//invalid triangle
+				// Test for invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
 				auto& v2 = (rs2_vector&)vertices[*(faces - 1) * 3];
 
-				if (dist2(v0, v1) > epsilon
+				if (dist2(v0, v1) > epsilon		// Too distant
 					|| dist2(v1, v2) > epsilon
 					|| dist2(v2, v0) > epsilon
-					|| isZero(v0)||isZero(v1)||isZero(v2))
+					|| isZero(v0)||isZero(v1)||isZero(v2)) // Hole
 				{
 					faces -= 3;
 					facesCount -= 3;
@@ -488,15 +544,15 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 			*faces++ = s + width + 1;
 			*faces++ = s + 1;
 			 {
-				//invalid triangle
+				// Test for invalid triangle
 				auto& v0 = (rs2_vector&)vertices[*(faces - 3) * 3];
 				auto& v1 = (rs2_vector&)vertices[*(faces - 2) * 3];
 				auto& v2 = (rs2_vector&)vertices[*(faces - 1) * 3];
 
-				if (dist2(v0, v1) > epsilon
+				if (dist2(v0, v1) > epsilon		// Too distant
 					|| dist2(v1, v2) > epsilon
 					|| dist2(v2, v0) > epsilon
-					|| isZero(v0) || isZero(v1) || isZero(v2))
+					|| isZero(v0) || isZero(v1) || isZero(v2)) // Hole
 				{
 					faces -= 3;
 					facesCount -= 3;
@@ -506,6 +562,9 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 	}
 }
 
+/// <summary>
+/// Write triangle mesh to obj
+/// </summary>
 void writeToObj(const std::string& filePath, float* vertices, int* faces, int vertexCount, int facesCount)
 {
 	std::ofstream myfile;
@@ -543,6 +602,14 @@ void writeToObj(const std::string& filePath, float* vertices, int* faces, int ve
 }
 
 
+/// <summary>
+/// Get color in texture for uv coordinates
+/// </summary>
+/// <param name="texture"> Video frame </param>
+/// <param name="texture_data"> Texture data </param>
+/// <param name="u"> U </param>
+/// <param name="v"> V </param>
+/// <returns></returns>
 std::array<uint8_t, 3> get_texcolor(const rs2::video_frame& texture, const uint8_t* texture_data, float u, float v)
 {
 	const int w = texture.get_width(), h = texture.get_height();
@@ -552,10 +619,9 @@ std::array<uint8_t, 3> get_texcolor(const rs2::video_frame& texture, const uint8
 	return {texture_data[idx], texture_data[idx + 1], texture_data[idx + 2]};
 }
 
-rs2::pointcloud pc;
-
-rs2::points points;
-
+/// <summary>
+/// Export triangle mesh to ply
+/// </summary>
 std::string export_to_ply_string(const rs2::points& p, const rs2::video_frame& color)
 {
 	const bool use_texcoords = true;
@@ -769,7 +835,10 @@ std::string export_to_ply_string(const rs2::points& p, const rs2::video_frame& c
 	}
 }
 
-
+/// <summary>
+/// Get frame - generate ply and triangle mesh
+/// </summary>
+/// <returns> True if successful </returns>
 bool GetFrame(
 	float** vertices,
 	int** faces,
@@ -783,9 +852,10 @@ bool GetFrame(
 	int* plyLength,
 	int* width)
 {
+	// Wait for frame
 	rs2::frameset frameset = filteredQueue.wait_for_frame();
-
 	auto color = frameset.get_color_frame();
+	
 	*width = color.get_width();
 
 	// Tell pointcloud object to map to this color frame
@@ -795,14 +865,6 @@ bool GetFrame(
 
 	// Generate the pointcloud and texture mappings
 	points = pc.calculate(depth);
-
-	// Upload the color frame to OpenGL
-	//app_state.tex.upload(color);
-
-	// Draw the pointcloud
-	//draw_pointcloud(app.width(), app.height(), app_state, points);
-
-	//points.export_to_ply("my_ply.ply", color);
 
 	//=================ply=====================
 	{
@@ -840,8 +902,7 @@ bool GetFrame(
 	*faces = (int*)malloc((depth.get_width() - 1) * (depth.get_height() - 1) * 2 * 3 * sizeof(int));
 	generateFaces(*faces, *vertices, depth.get_width(), depth.get_height(), *faceCount);
 
-
-	//writeToObj("C:/Users/minek/Desktop/killme.obj", *vertices, *faces, *vertexCount, *faceCount);
+	// writeToObj("C:/Users/minek/Desktop/killme.obj", *vertices, *faces, *vertexCount, *faceCount);
 	
 	return true;
 }

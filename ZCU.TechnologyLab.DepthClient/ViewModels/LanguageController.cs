@@ -15,6 +15,7 @@
 
         string _connectMNI = "Connect";
         string _disconnectMNI = "Disconnect";
+        string _reconnectMNI = "Reconnecting";
 
         string _sendMeshMNI = "_Send Mesh";
         string _deleteMeshMNI = "_Delete Mesh";
@@ -64,6 +65,8 @@
         string cantConnect = "Cannot connect to server: ";
         string connectedToSer = "Connected to server: ";
         string disconnected = "Disconnected from server";
+        string reconnecting = "Trying to reconncet to server";
+        string reconnected = "Reconnceted to server";
         string meshNotOnSer = "Mesh not found on server";
         string serUnavail = "Server currently unavailible";
         string meshSent = "Mesh & Ply File Sent to server as ";
@@ -241,6 +244,9 @@
         public string DisconnectMNI { get => _disconnectMNI; set => _disconnectMNI = value; }
         public string NoUserCode { get => noUserCode; set => noUserCode = value; }
         public string FuncHeaderLBLToolTip { get => _funcHeaderLBLToolTip; set => _funcHeaderLBLToolTip = value; }
+        public string Reconnecting { get => reconnecting; set => reconnecting = value; }
+        public string Reconnected { get => reconnected; set => reconnected = value; }
+        public string ReconnectMNI { get => _reconnectMNI; set => _reconnectMNI = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -267,7 +273,7 @@
         }
 
         /// <summary>
-        /// Swap language
+        /// Swap language between CZ and EN
         /// </summary>
         internal void SwapLanguage()
         {
@@ -298,6 +304,8 @@
 
                 _connectMNI = "Připojit";
                 DisconnectMNI = "Odpojit";
+                _reconnectMNI = "Připojování";
+
 
                 SnapshotBT = "Snímek";
                 ResetBT = "Reset náhl.";
@@ -335,6 +343,8 @@
                 cantConnect = "Nelze se připojit k serveru: ";
                 connectedToSer = "Připojeno k serveru: ";
                 disconnected = "Odpojeno od serveru";
+                reconnecting = "Probíhá připojování k serveru";
+                reconnected = "Připojeno k serveru";
                 meshNotOnSer = "Mesh se nenachází na serveru";
                 serUnavail = "Server momentálně nedostupný";
                 meshSent = "Mesh & Ply soubory poslány na server jako ";
@@ -416,6 +426,7 @@
 
                 _connectMNI = "Connect";
                 DisconnectMNI = "Disconnect";
+                _reconnectMNI = "Reconnecting";
 
                 ServerMN = "_Server";
                 SendMeshMNI = "_Send Mesh";
@@ -465,6 +476,8 @@
                 cantConnect = "Cannot connect to server: ";
                 connectedToSer = "Connected to server: ";
                 disconnected = "Disconnected from server";
+                reconnecting = "Trying to reconncet to server";
+                reconnected = "Reconnceted to server";
                 meshNotOnSer = "Mesh not found on server";
                 serUnavail = "Server currently unavailible";
                 meshSent = "Mesh & Ply File sent to server as ";
