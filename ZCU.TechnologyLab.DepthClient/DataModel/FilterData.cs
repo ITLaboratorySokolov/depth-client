@@ -143,7 +143,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _minValueTh = value;
                 mvm.OnFilterChange();
-                RaisePropertyChanged("MinValueTh");
+                RaisePropertyChanged("MinValueТh");
             }
         }
 
@@ -273,7 +273,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         {
             ThresholdSlider = 0.2;
             LinScaleFac = 2;
-            MinValueТh= 0.15f;
+            MinValueТh = 0.15f;
             MaxValueTh = 2f;
 
             IterationsSpat = 2;
