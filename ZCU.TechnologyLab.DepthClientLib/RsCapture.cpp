@@ -14,6 +14,7 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 #include <librealsense2/hpp/rs_export.hpp>
 #include <mutex>
+#include <algorithm>
 
 int main(const char** args)
 {
@@ -560,6 +561,7 @@ void generateFaces(int* faces, float* vertices, int width, int height, int& face
 			}
 		}
 	}
+
 }
 
 /// <summary>

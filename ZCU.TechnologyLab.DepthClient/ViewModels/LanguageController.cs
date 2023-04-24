@@ -112,7 +112,7 @@
         string _decimateLBLTooltip = "Decreases the size of the created mesh";
         string _thresholdLBLTooltip = "Cuts off objects too close/far";
         string _holeLBLTooltip = "Fills in holes in scanned data";
-        string _spatialLBLToolTip = "Edge preserving smoothing using 1D filters";
+        string _spatialLBLToolTip = "Edge preserving smoothing";
         string _temporalLBLToolTip = "Smoothing using past frames";
         string _triangleThLBLToolTip = "Filtering out triangles with edges that are too long";
         string _funcHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
@@ -390,7 +390,7 @@
                 DecimateLBLTooltip = "Zmenšuje velikost vytvořené meshe";
                 ThresholdLBLTooltip = "Odstraní objekty moc blízko/daleko";
                 HoleLBLTooltip = "Záplatuje díry v naskenovaných datech";
-                SpatialLBLToolTip = "Vyhlazování zachovávající hrany, používá 1D filtry";
+                SpatialLBLToolTip = "Vyhlazování zachovávající hrany";
                 TemporalLBLToolTip = "Vyhlazování používající předchozí snímky";
                 TriangleThLBLToolTip = "Odfiltruje trojúhelníky s příliš dlouhými hranami";
                 FuncHeaderLBLToolTip = "Hlavička uživatelské funkce, points - seznam se souřadnicemi bodů, uvs - seznam se souřadnicemi do textury, faces - seznam s indexy vrcholů trojúhelníků";
@@ -522,7 +522,7 @@
                 DecimateLBLTooltip = "Decreases the size of the created mesh";
                 ThresholdLBLTooltip = "Cuts off objects too close/far";
                 HoleLBLTooltip = "Fills in holes in scanned data";
-                SpatialLBLToolTip = "Edge preserving smoothing using 1D filters";
+                SpatialLBLToolTip = "Edge preserving smoothing";
                 SpHoleLBLToolTip = "Horizontal hole-filling mode";
                 TemporalLBLToolTip = "Smoothing using past frames";
                 TriangleThLBLToolTip = "Filtering out triangles with edges that are too long";

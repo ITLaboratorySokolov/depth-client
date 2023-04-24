@@ -143,6 +143,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _minValueTh = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("MinValueTh");
             }
         }
 
@@ -153,6 +154,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _maxValueTh = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("MaxValueTh");
             }
         }
 
@@ -163,6 +165,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _alphaSpat = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("AlphaSpat");
             }
         }
 
@@ -173,6 +176,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _deltaSpat = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("DeltaSpat");
             }
         }
 
@@ -183,6 +187,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _alphaTemp = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("AlphaTemp");
             }
         }
 
@@ -193,6 +198,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _deltaTemp = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("DeltaTemp");
             }
         }
 
@@ -203,6 +209,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _linScaleFac = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("LinScaleFac");
             }
         }
 
@@ -213,6 +220,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _iterationsSpat = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("IterationsSpat");
             }
         }
 
@@ -223,6 +231,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _holeSpat = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("HoleSpat");
             }
         }
 
@@ -233,6 +242,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _persIndex = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("PersIndex");
             }
         }
 
@@ -243,6 +253,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             {
                 _holeMethod = value;
                 mvm.OnFilterChange();
+                RaisePropertyChanged("HoleMethod");
             }
         }
 
@@ -255,5 +266,26 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             this.mvm = mvm;
         }
 
+        /// <summary>
+        /// Set values of parameters back to default
+        /// </summary>
+        public void SetToDefault()
+        {
+            ThresholdSlider = 0.2;
+            LinScaleFac = 2;
+            MinValueТh= 0.15f;
+            MaxValueTh = 2f;
+
+            IterationsSpat = 2;
+            AlphaSpat = 0.5f; // 1-0.5
+            DeltaSpat = 20;
+            HoleSpat = 0;
+
+            AlphaTemp = 0.6f; // 1-0.4
+            DeltaTemp = 20;
+            PersIndex = 3;
+
+            HoleMethod = 1;
+        }
     }
 }

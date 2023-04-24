@@ -153,6 +153,62 @@ namespace ZCU.TechnologyLab.DepthClient.Ui
             PersistencyDropdown.IsOpen = false;
             PersistencyDropdown.Content = content;
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel dc = (DataContext as MainViewModel);
+            dc.ResetFilters.Execute(null);
+
+            int persVal = dc.FiltData.PersIndex;
+            string persS = "None";
+            switch (persVal)
+            {
+                case 0:
+                    persS = "Disabled";
+                    break;
+                case 1:
+                    persS = "Valid in 8/8";
+                    break;
+                case 2:
+                    persS = "Valid in 2/last 3";
+                    break;
+                case 3:
+                    persS = "Valid in 2/last 4";
+                    break;
+                case 4:
+                    persS = "Valid in 2/8";
+                    break;
+                case 5:
+                    persS = "Valid in 1/last 2";
+                    break;
+                case 6:
+                    persS = "Valid in 1/last 5";
+                    break;
+                case 7:
+                    persS = "Valid in 1/last 8";
+                    break;
+                case 8:
+                    persS = "Persist Indefinitely";
+                    break;
+            }
+            PersistencyDropdown.Content = persS;
+
+            int holeVal = dc.FiltData.HoleMethod;
+            string holeS = "None";
+            switch (holeVal)
+            {
+                case 0:
+                    holeS = "fill__from__left";
+                    break;
+                case 1:
+                    holeS = "farest__from__around";
+                    break;
+                case 2:
+                    holeS = "nearest__from__around";
+                    break;
+            }
+            HoleDropdown.Content = holeS;
+        }
     }
 
 }

@@ -88,7 +88,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         // networking
         ConnectionHandler connection;
-        private string _autoLbl="AutoSend: OFF";
+        private string _autoLbl = "AutoSend: OFF";
         private bool _autoEnable;
         private bool _enabledURL = true;
         private bool _dllEnabled = true;
@@ -98,7 +98,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         #region PublicProperties
 
-        public static string ServerUrl { get; set; } = "https://localhost:57370/";
+        public static string ServerUrl { get; set; } = "";
 
         public Point3DCollection Points
         {
@@ -199,14 +199,14 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 RaisePropertyChanged(EN_BTN_PROPERTY);
             }
         }
-        public bool EnableConnect 
-        { 
+        public bool EnableConnect
+        {
             get => _enableConnect;
-            set 
-            { 
+            set
+            {
                 _enableConnect = value;
                 RaisePropertyChanged(DIS_CONNECT_PROPERTY);
-            } 
+            }
         }
 
 
@@ -225,7 +225,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public bool DllEnabled
         {
             get => _dllEnabled;
-            set { 
+            set {
                 _dllEnabled = value;
                 RaisePropertyChanged(DLLENABLED);
             }
@@ -236,7 +236,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string ClientName { get => clientName; set => clientName = value; }
         public LanguageController LangContr { get => langContr; set => langContr = value; }
         public FilterData FiltData { get => filtData; set => filtData = value; }
-        public bool EnabledURL { get => _enabledURL; set => _enabledURL = value; }
+        public bool EnabledURL { get => _enabledURL; 
+            set { _enabledURL = value; RaisePropertyChanged(ENABLED_URL); } }
 
 
         public ICommand Connect { get; private set; }
@@ -249,6 +250,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand ReloadMesh { get; private set; }
         public ICommand EditPointcloud { get; private set; }
         public ICommand SetPythonPath { get; private set; }
+        public ICommand ResetFilters { get; private set; }
 
         #endregion
 
@@ -278,6 +280,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.ReloadMesh = new Command(this.OnSnapshot);
             this.EditPointcloud = new Command(this.OnApplyClicked);
             this.SetPythonPath = new Command(this.OnSetPythonPath);
+            this.ResetFilters = new Command(this.OnResetFilters);
 
             // Set up default view
             OnConnectCamera();
@@ -298,8 +301,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             {
                 var lines = File.ReadAllLines(cfpth);
                 _pythonPath = lines[0];
-                if (lines.Length > 1)
-                    clientName = lines[1].Trim();
+                ServerUrl = lines[1];
+                if (lines.Length > 2)
+                    clientName = lines[2].Trim();
                 else
                     clientName = "DefaultClient";
             }
@@ -387,12 +391,18 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             else
             {
                 // set recieved data
-                var frame = Frame;
-
-                frame.Vertices = res.points;
-                frame.UVs = res.uvs;
-                frame.TempFaces = new int[res.faces.Length];
-                frame.Faces = new int[res.faces.Length];
+                var frame = new RealS.MeshFrame
+                {
+                    Vertices = res.points,
+                    UVs = res.uvs,
+                    TempFaces = new int[res.faces.Length],
+                    Faces = new int[res.faces.Length],
+                    Ply = Frame.Ply,
+                    Colors = Frame.Colors,
+                    Width = Frame.Width
+                };
+                //Frame;
+                
                 Array.Copy(res.faces, frame.Faces, frame.Faces.Length);
                 Array.Copy(res.faces, frame.TempFaces, frame.TempFaces.Length);
 
@@ -600,6 +610,44 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         }
 
         /// <summary>
+        /// Reset filter values back to defaults
+        /// </summary>
+        internal void OnResetFilters()
+        {
+            if (!RealS.Started)
+            {
+                Message = langContr.NoCam;
+                return;
+            }
+
+            FiltData.SetToDefault();
+            float[] fD = new float[] {
+                // Decimation filter
+                FiltData.LinScaleFac,
+                
+                // Threshold filter
+                FiltData.MinValueТh,
+                FiltData.MaxValueTh,
+                
+                // Spatial smoothing
+                FiltData.IterationsSpat,
+                1-FiltData.AlphaSpat,
+                FiltData.DeltaSpat,
+                FiltData.HoleSpat,
+                
+                // Temporal smoothing
+                1-FiltData.AlphaTemp,
+                FiltData.DeltaTemp,
+                FiltData.PersIndex,
+
+                // Hole filling
+                FiltData.HoleMethod
+            };
+
+            RealS.updateFilters(FiltData.Filters, fD);
+        }
+
+        /// <summary>
         /// Filters changed
         /// - create new array with filter data
         /// - send to realsense
@@ -662,7 +710,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     this.Message = langContr.ConnectedToSer + ServerUrl;
                     this.ConnectBtnLbl = langContr.DisconnectMNI;
-                    _enabledURL = false;
+                    EnabledURL = false;
                     connection.SessionClient.Reconnecting += ClientReconnecting;
                     connection.SessionClient.Reconnected += ClientReconnected;
                 }
@@ -670,7 +718,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     this.ConnectBtnLbl = langContr.ConnectMNI;
                     this.Message = langContr.CantConnect + connection.ErrorMessage;
-                    _enabledURL = true;
+                    EnabledURL = true;
                 }
 
             }
@@ -686,12 +734,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 {
                     this.ConnectBtnLbl = langContr.ConnectMNI;
                     Message = langContr.Disconnected;
-                    _enabledURL = true;
+                    EnabledURL = true;
                 }
                 else
                 {
                     this.Message = langContr.CantConnect + connection.ErrorMessage;
-                    _enabledURL = true;
+                    EnabledURL = true;
                 }
 
             }
@@ -699,7 +747,6 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             // Update menu items
             UpdateMenuItems();
             connection._inConnectProcess = false;
-            RaisePropertyChanged(ENABLED_URL);
         }
 
         /// <summary>
@@ -713,6 +760,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
                 this.ConnectBtnLbl = connection._connected ? langContr.DisconnectMNI : langContr.ConnectMNI;
                 EnabledButtons = connection._connected;
+                EnabledURL = !connection._connected;
             }
         }
 
@@ -754,7 +802,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         {
             ConnectBtnLbl = langContr.DisconnectMNI;
             EnableConnect = true;
-            UpdateMenuItems();
+            EnabledButtons = true;
             Message = langContr.Reconnected;
         }
 
@@ -776,6 +824,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             var mesh = MeshProcessor.CreateMeshFrameFromWO(wo);
+            _frame = mesh;
             BuildMesh(mesh);
         }
 

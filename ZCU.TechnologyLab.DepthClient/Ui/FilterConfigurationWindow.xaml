@@ -28,12 +28,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+
+
 
         <Label Name="DecimateLBL" Grid.Row="0" Grid.Column="0" Content="Decimation filter parameters" />
         <Label Name="DecLinScaleLBL" ToolTip="How much is the created mesh scaled down" Grid.Row="1" Grid.Column="0" Margin="20, 0, 0, 0" Content="Linear scale factor" />
@@ -139,6 +142,9 @@
                 </Grid>
             </extToolkit:DropDownButton.DropDownContent>
         </extToolkit:DropDownButton>
+
+        <Button Grid.Column="1" Content="Reset" HorizontalAlignment="Right" Margin="0,5,5,0" VerticalAlignment="Center" Click="Button_Click"/>
+        
         <!--Slider Grid.Row="15" Grid.Column="1" Value="{Binding ThresholdSlider}" Margin="26,5,26,5"
                                 Name="holeSlider" Minimum="0.02" Maximum="2" /-->
 
