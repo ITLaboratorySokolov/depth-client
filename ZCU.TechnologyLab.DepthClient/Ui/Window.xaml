@@ -55,10 +55,11 @@
                         <DockPanel HorizontalAlignment="Right" />
                     </ItemsPanelTemplate>
                 </Menu.ItemsPanel>
-                <WindowsFormsHost Width="40">
-                    <forms:NumericUpDown Value="1" ValueChanged="NumericUpDown_OnValueChanged" Minimum="1" />
+                <TextBlock Text="Interval:" Name="AutoSendTime" />
+                <WindowsFormsHost Width="50">
+                    <forms:NumericUpDown Value="1" ValueChanged="NumericUpDown_OnValueChanged" Minimum="1"/>
                 </WindowsFormsHost>
-                <MenuItem Name="AutoMenu" Header="{Binding AutoEnabledLbl}"
+                <MenuItem Name="AutoMenu" Header="{Binding AutoEnabledLbl}" ToolTip="Click to turn on/off autosend"
                           Click="AutoMenu_OnClick" />
             </Menu>
         </Grid>

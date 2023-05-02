@@ -301,6 +301,8 @@ namespace Intel.RealSense
             FilterSettingsBT.Content = langCont.FilterSettingsBT;
             HoleLBL.Content = langCont.HoleLBL;
 
+            AutoSendTime.ToolTip = langCont.AutosendIntToolTip;
+            AutoMenu.ToolTip = langCont.AutosendToolTip;
             DecimateLBL.ToolTip = langCont.DecimateLBLTooltip;
             ThresholdLBL.ToolTip = langCont.ThresholdLBLTooltip;
             HoleLBL.ToolTip = langCont.HoleLBLTooltip;

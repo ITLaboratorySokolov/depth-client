@@ -116,6 +116,8 @@
         string _temporalLBLToolTip = "Smoothing using past frames";
         string _triangleThLBLToolTip = "Filtering out triangles with edges that are too long";
         string _funcHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
+        string _autosendToolTip = "Click to turn on/off autosend";
+        string _autosendIntToolTip = "Resend interval in seconds";
 
         // Filter configuration
         string _decLinScaleLBLToolTip = "How much is the created mesh scaled down";
@@ -247,6 +249,8 @@
         public string Reconnecting { get => reconnecting; set => reconnecting = value; }
         public string Reconnected { get => reconnected; set => reconnected = value; }
         public string ReconnectMNI { get => _reconnectMNI; set => _reconnectMNI = value; }
+        public string AutosendToolTip { get => _autosendToolTip; set => _autosendToolTip = value; }
+        public string AutosendIntToolTip { get => _autosendIntToolTip; set => _autosendIntToolTip = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -394,6 +398,8 @@
                 TemporalLBLToolTip = "Vyhlazování používající předchozí snímky";
                 TriangleThLBLToolTip = "Odfiltruje trojúhelníky s příliš dlouhými hranami";
                 FuncHeaderLBLToolTip = "Hlavička uživatelské funkce, points - seznam se souřadnicemi bodů, uvs - seznam se souřadnicemi do textury, faces - seznam s indexy vrcholů trojúhelníků";
+                AutosendToolTip = "Klikněte pro zapnutí/vypnutí automatického posílání na server";
+                AutosendIntToolTip = "Délka intervalu po kterém se odesílá na server ve vteřinách";
 
                 DecLinScaleLBLToolTip = "Kolikrát je vytvořená mesh zmenšena";
                 DisparityLBLToolTip = "Vyhlazování v doméně reprezentující rozdíl mezi projekcemi levé a pravé kamery";
@@ -527,6 +533,8 @@
                 TemporalLBLToolTip = "Smoothing using past frames";
                 TriangleThLBLToolTip = "Filtering out triangles with edges that are too long";
                 FuncHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
+                AutosendToolTip = "Click to turn on/off autosend";
+                AutosendIntToolTip = "Resend interval in seconds";
 
                 DecLinScaleLBLToolTip = "How much is the created mesh scaled down";
                 DisparityLBLToolTip = "Smoothing in domain that represents the difference between projections of left and right cameras";
