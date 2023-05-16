@@ -71,7 +71,9 @@
         string serUnavail = "Server currently unavailible";
         string meshSent = "Mesh & Ply File Sent to server as ";
         string meshNotSent = "Mesh & Ply File Updated on server";
-        string meshRemoved = "Ply & Mesh removed from server";
+        string meshRemoved = "Mesh removed from server";
+        string meshPlyRemoved = "Ply & Mesh removed from server";
+        string plyRemoved = "Ply removed from server";
         string meshAndPlyNotFound = "No Ply & Mesh found on server";
         string openedRSFile = "Opened RealSense file";
         string couldNotOpen = "Could not open file";
@@ -251,6 +253,8 @@
         public string ReconnectMNI { get => _reconnectMNI; set => _reconnectMNI = value; }
         public string AutosendToolTip { get => _autosendToolTip; set => _autosendToolTip = value; }
         public string AutosendIntToolTip { get => _autosendIntToolTip; set => _autosendIntToolTip = value; }
+        public string MeshPlyRemoved { get => meshPlyRemoved; set => meshPlyRemoved = value; }
+        public string PlyRemoved { get => plyRemoved; set => plyRemoved = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -353,7 +357,9 @@
                 serUnavail = "Server momentálně nedostupný";
                 meshSent = "Mesh & Ply soubory poslány na server jako ";
                 meshNotSent = "Mesh & Ply soubory updatovány na serveru";
-                meshRemoved = "Mesh & Ply soubory odstraněný ze serveru";
+                meshRemoved = "Mesh soubor odstraněný ze serveru";
+                meshPlyRemoved = "Mesh & Ply soubor odstraněný ze serveru";
+                plyRemoved = "Ply soubor odstraněný ze serveru";
                 meshAndPlyNotFound = "No Ply & Mesh found on server";
                 openedRSFile = "Otevřen RealSense soubor";
                 couldNotOpen = "Soubor nelze otevřít";
@@ -488,7 +494,9 @@
                 serUnavail = "Server currently unavailible";
                 meshSent = "Mesh & Ply File sent to server as ";
                 meshNotSent = "Mesh & Ply File updated on server";
-                meshRemoved = "Mesh & Ply File removed from server";
+                meshRemoved = "Mesh removed from server";
+                meshPlyRemoved = "Ply & Mesh removed from server";
+                plyRemoved = "Ply removed from server";
                 meshAndPlyNotFound = "No Ply & Mesh found on server";
                 openedRSFile = "Opened RealSense file";
                 couldNotOpen = "Could not open file";

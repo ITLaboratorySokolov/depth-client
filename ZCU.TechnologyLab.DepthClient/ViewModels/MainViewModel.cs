@@ -889,8 +889,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             bool mRes = await connection.RemoveWorldObject(MESH_NAME + "_" + clientName);
             bool pRes = await connection.RemoveWorldObject(PLY_NAME + "_" + clientName);
 
-            if (mRes && pRes) // && tMes)
+            if (mRes && pRes)
+                this.Message = langContr.MeshPlyRemoved;
+            else if (mRes)
                 this.Message = langContr.MeshRemoved;
+            else if (pRes)
+                this.Message = langContr.PlyRemoved;
             else
                 this.Message = langContr.MeshAndPlyNotFound;
         }
