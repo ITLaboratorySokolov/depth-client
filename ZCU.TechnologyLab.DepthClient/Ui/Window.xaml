@@ -46,7 +46,7 @@
                     <MenuItem Name="NameMNI" Header="Client _name" Click="SetName_Click" IsEnabled="{Binding EnabledURL}"/>
                     <MenuItem Name="LanguageMNI" Header="Set to _CZ" Click="LanguageSwap_Click"/>
                 </MenuItem>
-                <TextBox TextChanged="ServerURL_OnTextChanged" Text="{Binding ServerUrl }" IsEnabled="{Binding EnabledURL}" />
+                <TextBox TextChanged="ServerURL_OnTextChanged" Width="150" Text="{Binding ServerUrl }" IsEnabled="{Binding EnabledURL}" />
 
             </Menu>
             <Menu Grid.Column="1">

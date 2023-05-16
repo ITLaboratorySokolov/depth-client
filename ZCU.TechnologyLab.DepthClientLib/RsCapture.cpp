@@ -3,7 +3,6 @@
 
 #include "RsCapture.h"
 
-
 #include <map>
 #include <string>
 #include <thread>
