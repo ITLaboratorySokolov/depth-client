@@ -27,16 +27,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\vendor\common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common\ZCU.TechnologyLab.Common.csproj" />
-    <ProjectReference Include="..\vendor\server\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer\ZCU.TechnologyLab.VirtualWorldServer.csproj" />
     <ProjectReference Include="..\ZCU.TechnologyLab.DepthClientLib\ZCU.TechnologyLab.DepthClientLib.vcxproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Python.Runtime">
-      <HintPath>..\..\..\PythonExectution\PythonExectution\bin\Debug\net6.0\Python.Runtime.dll</HintPath>
+      <HintPath>..\Python.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="ZCU.PythonExecutionLibrary">
-      <HintPath>..\..\..\PythonExectution\PythonExecutionLibrary\bin\Debug\netstandard2.0\ZCU.PythonExecutionLibrary.dll</HintPath>
+      <HintPath>..\ZCU.PythonExecutionLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
 
