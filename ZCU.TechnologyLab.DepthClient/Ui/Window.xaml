@@ -379,7 +379,7 @@
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding FiltData.Filter5}" />
                         <Label Name="HoleLBL" ToolTip="Fills in holes in scanned data" Grid.Row="2" Grid.Column="0" Content="Hole filling" />
-                        
+
                         <Label Name="SmoothingLBL" Grid.Row="4" Grid.Column="0" Content="Smooting" />
 
                         <CheckBox Grid.Row="5" Grid.Column="1" x:Name="Filter3" HorizontalAlignment="Left"
@@ -399,7 +399,7 @@
                         <!--"{}Triangle Thres:{0:#,0.00}"-->
                         <Label x:Name="TriangleThLBL_Copy" Grid.Row="8" Grid.Column="1" Content="{Binding Value, ElementName=triangleSlider}"
                             ContentStringFormat="{}{0:#,0.00}" Margin="100,0,5,26" Grid.RowSpan="2"/>
-                        
+
                         <CheckBox Grid.Row="9" Grid.Column="1" x:Name="PointFilter" HorizontalAlignment="Left"
                                   Margin="0,5,0,0"
                                   VerticalAlignment="Top" IsChecked="{Binding FiltData.PointFilter}" />
@@ -461,8 +461,17 @@
                         </Canvas>
                     </Grid>
                 </DockPanel>
-                <Button x:Name="ApplyCodeBT" Grid.Column="3" Content="Apply" HorizontalAlignment="Right" Width="76" Grid.Row="2" VerticalAlignment="Bottom" Margin="0,0,10,10" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}" Height="20"/>
                 <TextBlock x:Name="FuncHeaderLBL" HorizontalAlignment="Right" Margin="0,5,0,0" ToolTip="Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices"  Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Text="def Edit_poitcloud(points, uvs, faces):" Height="32" Width="248" Grid.ColumnSpan="2"/>
+                <Button x:Name="RunBT" ToolTip="Run code" HorizontalAlignment="Right" Width="25" Height="25" VerticalAlignment="Top" Command="{Binding EditPointcloud}" IsEnabled="{Binding EnabledApply}" Grid.Row="2" Grid.Column="1" Margin="0,30,10,0">
+                    <Image Source="/Sprites/startIcon.png"></Image>
+                </Button>
+                <Button x:Name="LoadFileBT" ToolTip="Open .py file" HorizontalAlignment="Left" Width="25" Height="25" VerticalAlignment="Top" Command="{Binding LoadFile}" Click="LoadedFileBT_Click" IsEnabled="{Binding EnabledApply}" Grid.Row="2" Grid.Column="0" Margin="45,30,10,0">
+                    <Image Source="/Sprites/openIcon.png"></Image>
+                </Button>
+                <Button x:Name="StoreToFileBT" ToolTip="Save code to .py file" HorizontalAlignment="Left" Width="25" Height="25" VerticalAlignment="Top" Command="{Binding SaveFile}" IsEnabled="{Binding EnabledApply}" Grid.Row="2" Grid.Column="0" Margin="10,30,10,0">
+                    <Image Source="/Sprites/saveIcon.png"></Image>
+                </Button>
+
 
                 <avalon:TextEditor Name="CodeBlock" Grid.Column="3" Grid.Row="2" Margin="10,10,10,35"
                                    SyntaxHighlighting="Python"
@@ -481,8 +490,8 @@
                         </Paragraph>
                     </FlowDocument>
                 </RichTextBox-->
-                <Label Focusable="False" x:Name="messageLbl" IsEnabled="False"
-                       Content="{Binding Message}" Grid.ColumnSpan="4" Margin="2,145,101,3" Grid.Row="2" />
+                <Label Focusable="True" x:Name="messageLbl" IsEnabled="True" Foreground="Gray"
+                       Content="{Binding Message}" Grid.ColumnSpan="4" Margin="2,145,10,3" Grid.Row="2" MouseLeftButtonUp="OpenConsole" />
             </Grid>
 
         </DockPanel>

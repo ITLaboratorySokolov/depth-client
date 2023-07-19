@@ -85,6 +85,8 @@
         string nameChange = "Client name changed to: ";
 
         string noUserCode = "No code to execute";
+        string loadFileErr = "File couldn't be read";
+        string loadFileSucc = "Code loaded from file";
 
         // FILTER CONFIGURATION WINDOW UI
         string decFilt = "Decimation filter parameters";
@@ -120,6 +122,9 @@
         string _funcHeaderLBLToolTip = "Header of the user function, points - list with vertex coordinates, uvs - list with texture coordinates, faces - list with triangle indices";
         string _autosendToolTip = "Click to turn on/off autosend";
         string _autosendIntToolTip = "Resend interval in seconds";
+        string _runBT = "Run code";
+        string _saveBT = "Save code to .py file";
+        string _loadBT = "Load .py file";
 
         // Filter configuration
         string _decLinScaleLBLToolTip = "How much is the created mesh scaled down";
@@ -255,6 +260,13 @@
         public string AutosendIntToolTip { get => _autosendIntToolTip; set => _autosendIntToolTip = value; }
         public string MeshPlyRemoved { get => meshPlyRemoved; set => meshPlyRemoved = value; }
         public string PlyRemoved { get => plyRemoved; set => plyRemoved = value; }
+        public string LoadFileErr { get => loadFileErr; set => loadFileErr=value; }
+        public string LoadFileSucc { get => loadFileSucc; set => loadFileSucc=value; }
+        public string PySaved { get; internal set; }
+        public string PySavedErr { get; internal set; }
+        public string RunBT { get => _runBT; set => _runBT = value; }
+        public string SavePyBT { get => _saveBT; set => _saveBT = value; }
+        public string LoadPyBT { get => _loadBT; set => _loadBT = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -332,6 +344,10 @@
 
                 FilterSettingsBT = "Pokročilé nastavení";
 
+                RunBT = "Spustit kód";
+                SavePyBT = "Uložit kód do .py souboru";
+                LoadPyBT = "Načíst .py soubor";
+
                 //
 
                 py_dialog_Title = "Vyberte python.dll soubor";
@@ -371,6 +387,10 @@
                 NameChange = "Jméno kienta změněno na: ";
 
                 NoUserCode = "Žádný uživatelský kód";
+                loadFileErr = "Soubor nemohl být přečten";
+                loadFileSucc = "Uživatelský kód načten ze souboru";
+                PySaved = "Uživatelský kód uložen do souboru";
+                PySavedErr = "Uživatelský kód se nepodařilo uložit";
 
                 //
                 DecFilt = "Parametry decimace trojúhelníků";
@@ -469,6 +489,10 @@
 
                 FilterSettingsBT = "Advanced settings";
 
+                RunBT = "Run code";
+                SavePyBT = "Save code to .py file";
+                LoadPyBT = "Load .py file";
+
                 //
 
                 py_dialog_Title = "Select python.dll file";
@@ -508,6 +532,10 @@
                 NameChange = "Client name changed to: ";
 
                 NoUserCode = "No code to execute";
+                loadFileErr = "File couldn't be read";
+                loadFileSucc = "Code loaded from file";
+                PySaved = "Code saved to file";
+                PySavedErr = "Code was not successfully saved";
 
                 // 
                 DecFilt = "Decimation filter parameters";

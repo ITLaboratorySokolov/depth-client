@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +40,11 @@ namespace Intel.RealSense
         /// <summary> Exiting thread </summary>
         Thread exitThread;
 
+        /// <summary> Is console window opened </summary>
+        private bool consoleOpened;
+        /// <summary> Console window </summary>
+        private ConsoleWindow consWindow;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -64,7 +70,7 @@ namespace Intel.RealSense
                     {
                         if (!RealS.Started)
                             continue;
-                        
+
                         // get depth frame
                         using var frames = RealS.DepthFrame.Obtain(buffer);
                         if (!frames.HasValue)
@@ -158,7 +164,7 @@ namespace Intel.RealSense
 
                 // TODO hangs if i manage to click close more than once. fix!!!
                 Action action = () => Close();
-                Dispatcher.Invoke(DispatcherPriority.Normal, action); 
+                Dispatcher.Invoke(DispatcherPriority.Normal, action);
                 Console.WriteLine("Exit");
             });
             exitThread = t;
@@ -236,6 +242,31 @@ namespace Intel.RealSense
         }
 
         /// <summary>
+        /// Refresh user code after loading from file
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LoadedFileBT_Click(object sender, RoutedEventArgs e)
+        {
+            MainViewModel mvm = DataContext as MainViewModel;
+
+            // create new exit thread
+            var t = new Thread(() =>
+            {
+                while (!mvm.FinishedLoad)
+                    Thread.Sleep(1);
+
+                Action action = new Action(() => { CodeBlock.Text = mvm.UserCode; });
+                Dispatcher.Invoke(DispatcherPriority.Normal, action);
+                mvm.FinishedLoad = false;
+            });
+            exitThread = t;
+
+            // start the thread
+            t.Start();
+        }
+
+        /// <summary>
         /// Open setting client name dialog
         /// </summary>
         /// <param name="sender"></param>
@@ -285,7 +316,7 @@ namespace Intel.RealSense
 
             SettingsMN.Header = langCont.SettingsMN;
 
-            ApplyCodeBT.Content = langCont.ApplyCodeBT;
+            //ApplyCodeBT.Content = langCont.ApplyCodeBT;
             SnapshotBT.Content = langCont.SnapshotBT;
             ResetBT.Content = langCont.ResetBT;
 
@@ -309,6 +340,9 @@ namespace Intel.RealSense
             SpatialLBL.ToolTip = langCont.SpatialLBLToolTip;
             TemporalLBL.ToolTip = langCont.TemporalLBLToolTip;
             TriangleThLBL.ToolTip = langCont.TriangleThLBLToolTip;
+            RunBT.ToolTip = langCont.RunBT;
+            LoadFileBT.ToolTip = langCont.LoadPyBT;
+            StoreToFileBT.ToolTip = langCont.SavePyBT;
 
             FuncHeaderLBL.ToolTip = langCont.FuncHeaderLBLToolTip;
 
@@ -345,5 +379,36 @@ namespace Intel.RealSense
             settingsOpened = false;
             confWindow = null;
         }
+        
+        /// <summary>
+        /// Open console window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenConsole(object sender, RoutedEventArgs e)
+        {
+            if (consoleOpened)
+                return;
+
+            consoleOpened = true;
+            var dc = DataContext as MainViewModel;
+            var langCont = dc.LangContr;
+
+            consWindow = new ConsoleWindow(dc);
+            consWindow.Show();
+            consWindow.Closing += ClosingConsole;
+        }
+
+        /// <summary>
+        /// Reaction to closing console window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ClosingConsole(object sender, CancelEventArgs e)
+        {
+            consoleOpened = false;
+            consWindow = null;
+        }
+
     }
 }

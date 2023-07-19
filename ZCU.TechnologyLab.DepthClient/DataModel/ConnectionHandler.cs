@@ -62,6 +62,8 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
 
             try
             {
+                await SessionClient.InitializeAsync();
+
                 if (SessionClient is { State: SessionState.Connected })
                     await SessionClient.StopSessionAsync();
 

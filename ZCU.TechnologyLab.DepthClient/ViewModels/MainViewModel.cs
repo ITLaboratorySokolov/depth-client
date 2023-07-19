@@ -13,6 +13,7 @@ using ZCU.TechnologyLab.Common.Entities.DataTransferObjects;
 using ZCU.TechnologyLab.Common.Connections.Client.Session;
 using ZCU.TechnologyLab.DepthClient.DataModel;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace ZCU.TechnologyLab.DepthClient.ViewModels
 {
@@ -63,6 +64,9 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
 
         // filters
         FilterData filtData;
+
+        // console
+        ConsoleData consoleData;
 
         // timer
         private DispatcherTimer timer;
@@ -136,6 +140,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             set
             {
                 this._message = value;
+                ConsData.AddToConsole(value);
                 RaisePropertyChanged(MESSAGE_PROPERTY);
             }
         }
@@ -236,9 +241,10 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public string ClientName { get => clientName; set => clientName = value; }
         public LanguageController LangContr { get => langContr; set => langContr = value; }
         public FilterData FiltData { get => filtData; set => filtData = value; }
+        public ConsoleData ConsData { get => consoleData; set => consoleData = value; }
         public bool EnabledURL { get => _enabledURL; 
             set { _enabledURL = value; RaisePropertyChanged(ENABLED_URL); } }
-
+        public bool FinishedLoad { get; internal set; }
 
         public ICommand Connect { get; private set; }
         public ICommand SendMesh { get; private set; }
@@ -251,6 +257,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public ICommand EditPointcloud { get; private set; }
         public ICommand SetPythonPath { get; private set; }
         public ICommand ResetFilters { get; private set; }
+        public ICommand SaveFile { get; private set; }
+        public ICommand LoadFile { get; private set; }
 
         #endregion
 
@@ -260,6 +268,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         public MainViewModel()
         {
             FiltData = new FilterData(this);
+            ConsData = new ConsoleData();
 
             this.langContr = new LanguageController();
             connection = new ConnectionHandler();
@@ -281,6 +290,8 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.EditPointcloud = new Command(this.OnApplyClicked);
             this.SetPythonPath = new Command(this.OnSetPythonPath);
             this.ResetFilters = new Command(this.OnResetFilters);
+            this.SaveFile = new Command(this.OnSaveFile);
+            this.LoadFile = new Command(this.OnLoadFile);
 
             // Set up default view
             OnConnectCamera();
@@ -300,7 +311,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             if (File.Exists(cfpth))
             {
                 var lines = File.ReadAllLines(cfpth);
-                _pythonPath = lines[0];
+
+                if (lines[0].EndsWith(".dll") && File.Exists(lines[0]))
+                    _pythonPath = lines[0];
+                else
+                    _pythonPath = "./Resources"; ///python37.dll";
+                
                 ServerUrl = lines[1];
                 if (lines.Length > 2)
                     clientName = lines[2].Trim();
@@ -327,6 +343,65 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 Message = langContr.PySuccess;
                 ucp = new UserCodeProcessor(dialog.FileName);
             }
+        }
+
+        // ------------- USER CODE -------------
+
+        /// <summary>
+        /// Load python code file
+        /// </summary>
+        private void OnLoadFile()
+        {
+            FinishedLoad = false;
+            OpenFileDialog openDialog = new OpenFileDialog();
+
+            openDialog.Filter = "Python files (*.py)|*.py|All files (*.*)|*.*";
+            openDialog.FilterIndex = 1;
+            //openDialog.RestoreDirectory = true;
+            openDialog.CheckFileExists = true;
+            openDialog.InitialDirectory = "";
+            var success = openDialog.ShowDialog();
+            if (success != null && success.Value)
+            {
+                if (!File.Exists(openDialog.FileName))
+                {
+                    // TODO add message
+                    Message = langContr.LoadFileErr;
+                    return;
+                }
+                
+                Message = langContr.LoadFileSucc;
+                var t = new Thread(() =>
+                {
+                    // read all text
+                    string newCode = File.ReadAllText(openDialog.FileName);
+                    UserCode = newCode;
+                    FinishedLoad = true;
+                });
+                t.Start();
+            }
+        }
+
+        /// <summary>
+        /// Save code to .py file
+        /// </summary>
+        private void OnSaveFile()
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            saveDialog.Filter = "py files (*.py)|*.py|All files (*.*)|*.*";
+            saveDialog.FilterIndex = 1;
+            saveDialog.InitialDirectory = "";
+
+            var success = saveDialog.ShowDialog();
+            if (success.HasValue && success.Value)
+            {
+                File.WriteAllText(saveDialog.FileName, UserCode);
+                Message = langContr.PySaved;
+            }
+            else
+                Message = langContr.PySavedErr;
+            saveDialog.Reset();
         }
 
         /// <summary>
@@ -372,7 +447,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             vars.Add("faces", Frame.TempFaces);
 
             // execute code
-            PointMesh res = await ucp.ExecuteUserCode(UserCode, vars);
+            PointMesh res = await ucp.ExecuteUserCode(UserCode, vars, ConsData);
             if (res == null)
             {
                 // error occured
@@ -412,10 +487,11 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 BuildMesh(Frame);
             }
 
-            if (ucp.GetStatusOfInit())
-                DllEnabled = false;
+            DllEnabled = false;
             EnabledApply = true;
         }
+
+        // -------------------------------------------------------------------
 
         /// <summary>
         /// Update Auto send label
