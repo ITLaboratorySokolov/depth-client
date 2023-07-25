@@ -17,6 +17,8 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         public bool _inConnectProcess;
         /// <summary> Is connected  </summary>
         public bool _connected;
+        /// <summary> Was last time an object was sent to server an update or not </summary>
+        public bool wasAnUpdate;
 
         // networking
         /// <summary> Server data adapter </summary>
@@ -140,14 +142,18 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <returns> True if successfull, false if not </returns>
         public async Task<bool> SendWorldObject(WorldObjectDto wo)
         {
+            // TODO returns if send or update!
+
             try
             {
+                wasAnUpdate = false;
                 // is object already on server
                 bool res = await _dataConnection.ContainsWorldObjectAsync(wo.Name);
                 if (!res)
                     await _dataConnection.AddWorldObjectAsync(wo);
                 else
                 {
+                    wasAnUpdate = true;
                     var w = new WorldObjectUpdateDto
                     {
                         Type = wo.Type,
@@ -162,7 +168,6 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             }
             catch (Exception ex)
             {
-                  
                 return false;
             }
 

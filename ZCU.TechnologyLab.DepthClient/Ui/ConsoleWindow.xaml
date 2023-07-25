@@ -19,6 +19,6 @@
                 <local:PutCursorAtEndTextBoxBehavior/>
             </i:Interaction.Behaviors>
         </TextBox>
-
+        
     </Grid>
 </Window>

@@ -294,7 +294,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             this.LoadFile = new Command(this.OnLoadFile);
 
             // Set up default view
-            OnConnectCamera();
+            //OnConnectCamera();
 
             // Set up timer
             this.timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1000) };
@@ -315,7 +315,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 if (lines[0].EndsWith(".dll") && File.Exists(lines[0]))
                     _pythonPath = lines[0];
                 else
-                    _pythonPath = "./Resources"; ///python37.dll";
+                    _pythonPath = "./Resources/python37.dll";
                 
                 ServerUrl = lines[1];
                 if (lines.Length > 2)
@@ -891,6 +891,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
 
             WorldObjectDto wo = await connection.GetWorldObject(MESH_NAME + "_" + clientName);
+            WorldObjectDto woP = await connection.GetWorldObject(PLY_NAME+ "_" + clientName);
             // WorldObjectDto tex = await connection.GetWorldObject(MESH_TEXTURE_NAME);
 
             if (wo == null) // || tex == null)
@@ -899,7 +900,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
                 return;
             }
 
-            var mesh = MeshProcessor.CreateMeshFrameFromWO(wo);
+            var mesh = MeshProcessor.CreateMeshFrameFromWO(wo, woP);
             _frame = mesh;
             BuildMesh(mesh);
         }
@@ -952,7 +953,12 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
             }
 
             if (resM && resP)
-                Message = langContr.MeshSent + MESH_NAME + "," + PLY_NAME + ", " + MESH_TEXTURE_NAME;
+            {
+                if (connection.wasAnUpdate)
+                    Message = langContr.MeshUpdated;
+                else
+                    Message = langContr.MeshSent + MESH_NAME + "_" + clientName + ", " + PLY_NAME + "_" + clientName;
+            }
             else
                 Message = langContr.MeshNotSent;
         }
@@ -1010,7 +1016,7 @@ namespace ZCU.TechnologyLab.DepthClient.ViewModels
         /// <summary>
         /// Connect camera
         /// </summary>
-        private void OnConnectCamera()
+        public void OnConnectCamera()
         {
             var t = new Thread(() =>
             {

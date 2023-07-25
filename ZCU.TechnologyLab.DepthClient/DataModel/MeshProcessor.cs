@@ -132,7 +132,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         /// <param name="wo"> World object with mesh data </param>
         /// <param name="tex"> World object with texture data </param>
         /// <returns> Mesh frame </returns>
-        internal static RealS.MeshFrame CreateMeshFrameFromWO(WorldObjectDto wo)
+        internal static RealS.MeshFrame CreateMeshFrameFromWO(WorldObjectDto wo, WorldObjectDto woP = null)
         {
             RealS.MeshFrame meshFr = new RealS.MeshFrame();
             RawMeshSerializer rms = new RawMeshSerializer();
@@ -142,6 +142,10 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             meshFr.UVs = rms.UvSerializer.Deserialize(wo.Properties);
             meshFr.Width = rms.DiffuseTextureWidthSerializer.Deserialize(wo.Properties);
             meshFr.Colors = rms.DiffuseTexturePixelsSerializer.Deserialize(wo.Properties);
+
+            if (woP != null)
+                if (woP.Properties.ContainsKey("Data"))
+                    meshFr.Ply = woP.Properties["Data"];
 
             // ArraySerializer<int> arrser = new ArraySerializer<int>("TextureSize", sizeof(int));
             // var wah = arrser.Deserialize(wo.Properties);

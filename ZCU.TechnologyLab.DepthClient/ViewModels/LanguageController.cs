@@ -70,7 +70,8 @@
         string meshNotOnSer = "Mesh not found on server";
         string serUnavail = "Server currently unavailible";
         string meshSent = "Mesh & Ply File Sent to server as ";
-        string meshNotSent = "Mesh & Ply File Updated on server";
+        string meshUpdated = "Mesh & Ply File Updated on server";
+        string meshNotSent = "Mesh & Ply File were not sent to server";
         string meshRemoved = "Mesh removed from server";
         string meshPlyRemoved = "Ply & Mesh removed from server";
         string plyRemoved = "Ply removed from server";
@@ -267,6 +268,7 @@
         public string RunBT { get => _runBT; set => _runBT = value; }
         public string SavePyBT { get => _saveBT; set => _saveBT = value; }
         public string LoadPyBT { get => _loadBT; set => _loadBT = value; }
+        public string MeshUpdated { get => meshUpdated; set => meshUpdated = value; }
 
         /// <summary>
         /// Get translated connect/disconnect menu item text
@@ -372,9 +374,10 @@
                 meshNotOnSer = "Mesh se nenachází na serveru";
                 serUnavail = "Server momentálně nedostupný";
                 meshSent = "Mesh & Ply soubory poslány na server jako ";
-                meshNotSent = "Mesh & Ply soubory updatovány na serveru";
-                meshRemoved = "Mesh soubor odstraněný ze serveru";
-                meshPlyRemoved = "Mesh & Ply soubor odstraněný ze serveru";
+                meshUpdated = "Mesh & Ply soubory updatovány na serveru";
+                meshNotSent = "Mesh & Ply soubory nebyly poslány na server";
+                meshRemoved = "Mesh soubor odstraněn ze serveru";
+                meshPlyRemoved = "Mesh & Ply soubor odstraněny ze serveru";
                 plyRemoved = "Ply soubor odstraněný ze serveru";
                 meshAndPlyNotFound = "No Ply & Mesh found on server";
                 openedRSFile = "Otevřen RealSense soubor";
@@ -517,7 +520,8 @@
                 meshNotOnSer = "Mesh not found on server";
                 serUnavail = "Server currently unavailible";
                 meshSent = "Mesh & Ply File sent to server as ";
-                meshNotSent = "Mesh & Ply File updated on server";
+                meshUpdated = "Mesh & Ply File updated on server";
+                meshNotSent = "Mesh & Ply File were not sent to server";
                 meshRemoved = "Mesh removed from server";
                 meshPlyRemoved = "Ply & Mesh removed from server";
                 plyRemoved = "Ply removed from server";

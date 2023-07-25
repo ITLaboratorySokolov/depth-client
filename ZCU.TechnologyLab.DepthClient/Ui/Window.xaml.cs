@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using ZCU.TechnologyLab.DepthClient.DataModel;
 using ZCU.TechnologyLab.DepthClient.Ui;
 using ZCU.TechnologyLab.DepthClient.ViewModels;
 using Application = System.Windows.Application;
@@ -44,6 +45,7 @@ namespace Intel.RealSense
         private bool consoleOpened;
         /// <summary> Console window </summary>
         private ConsoleWindow consWindow;
+        ConsoleData cd;
 
         /// <summary>
         /// Constructor
@@ -94,6 +96,10 @@ namespace Intel.RealSense
             }
 
             InitializeComponent();
+
+            MainViewModel mvm = DataContext as MainViewModel;
+            mvm.OnConnectCamera();
+
             LanguageSwap_Click(null, null);
         }
 

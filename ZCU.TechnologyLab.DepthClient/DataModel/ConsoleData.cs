@@ -11,7 +11,8 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
         public TextBox Console { get => console;
                                  set => console = value; }
 
-        public string ConsoleText { get => consoleText; set { consoleText = value; RaisePropertyChanged("ConsoleText"); } }
+        public string ConsoleText { get => consoleText; 
+                                    set { consoleText = value; RaisePropertyChanged("ConsoleText"); } }
 
         public void AddToConsole(string text)
         {
@@ -20,7 +21,7 @@ namespace ZCU.TechnologyLab.DepthClient.DataModel
             ConsoleText += text;
         }
 
-            public void ClearConsole()
+        public void ClearConsole()
         {
             ConsoleText = string.Empty;
             Console.Dispatcher.Invoke(() =>
